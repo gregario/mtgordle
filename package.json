@@ -8,7 +8,7 @@
     "start": "next start",
     "export": "next build",
     "build:data": "node scripts/build-card-data.mjs",
-    "test": "node --test tests/"
+    "test": "node --test tests/*.mjs"
   },
   "dependencies": {
     "next": "14.2.3",
