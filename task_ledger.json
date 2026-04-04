@@ -1,0 +1,278 @@
+{
+  "milestones": [
+    {
+      "name": "foundation-data-pipeline",
+      "stories": [
+        {
+          "id": "project-scaffold",
+          "name": "Next.js Project Scaffold + Vercel Config",
+          "status": "pending",
+          "depends_on": [],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "scryfall-data-pipeline",
+          "name": "Scryfall Build-Time Data Pipeline",
+          "status": "pending",
+          "depends_on": [
+            "project-scaffold"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "curated-card-pools",
+          "name": "Curated Card Pool JSON (930 Cards with Placeholder Lore)",
+          "status": "pending",
+          "depends_on": [
+            "scryfall-data-pipeline"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "autocomplete-index",
+          "name": "Autocomplete Name Index (Full Scryfall Pool)",
+          "status": "pending",
+          "depends_on": [
+            "scryfall-data-pipeline"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "fix-rarity-type-mismatch",
+          "name": "Fix Card.rarity type to include 'special'",
+          "status": "pending",
+          "depends_on": [],
+          "acceptance_criteria": [
+            {
+              "id": "AC-FIX-RARITY-001",
+              "description": "Card.rarity type union in src/types/card.ts includes 'special' alongside common/uncommon/rare/mythic"
+            },
+            {
+              "id": "AC-FIX-RARITY-002",
+              "description": "All rarity values in card-details.json are valid members of the Card.rarity TypeScript union"
+            },
+            {
+              "id": "AC-FIX-RARITY-003",
+              "description": "npm run build and npm test pass with zero errors after the type change"
+            }
+          ],
+          "fix_metadata": {
+            "source_gap_id": "imp-rarity-type-mismatch",
+            "root_cause": "implementation_bug",
+            "priority": "medium",
+            "scope_files": ["src/types/card.ts"],
+            "do_not_repeat": [],
+            "approach": "Add '| \"special\"' to the rarity type union in src/types/card.ts line 18"
+          }
+        }
+      ]
+    },
+    {
+      "name": "core-game-loop",
+      "stories": [
+        {
+          "id": "tier-selection",
+          "name": "Tier Selection Screen (Home)",
+          "status": "pending",
+          "depends_on": [],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "clue-progression-engine",
+          "name": "6-Round Clue Progression Engine",
+          "status": "pending",
+          "depends_on": [
+            "tier-selection",
+            "curated-card-pools"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "fuzzy-autocomplete",
+          "name": "Guess Input with Fuzzy Autocomplete",
+          "status": "pending",
+          "depends_on": [
+            "autocomplete-index",
+            "curated-card-pools"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "pass-mechanic",
+          "name": "Pass Mechanic + Round Advancement",
+          "status": "pending",
+          "depends_on": [
+            "clue-progression-engine"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "win-lose-detection",
+          "name": "Win/Lose Detection + Score Calculation",
+          "status": "pending",
+          "depends_on": [
+            "clue-progression-engine"
+          ],
+          "acceptance_criteria": []
+        }
+      ]
+    },
+    {
+      "name": "post-solve-experience",
+      "stories": [
+        {
+          "id": "post-solve-layout",
+          "name": "Post-Solve Screen Layout",
+          "status": "pending",
+          "depends_on": [
+            "win-lose-detection"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "share-grid-generation",
+          "name": "Share Grid Generation (Mana Pip Header + Emoji Squares)",
+          "status": "pending",
+          "depends_on": [
+            "win-lose-detection"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "copy-to-clipboard",
+          "name": "Copy to Clipboard + Configurable URL",
+          "status": "pending",
+          "depends_on": [
+            "share-grid-generation"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "lore-blurb-display",
+          "name": "Lore Blurb Display (Variable Depth)",
+          "status": "pending",
+          "depends_on": [
+            "post-solve-layout"
+          ],
+          "acceptance_criteria": []
+        }
+      ]
+    },
+    {
+      "name": "stats-streaks-persistence",
+      "stories": [
+        {
+          "id": "localstorage-stats-engine",
+          "name": "localStorage Stats Engine (Per-Tier Tracking)",
+          "status": "pending",
+          "depends_on": [
+            "win-lose-detection"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "streak-tracking",
+          "name": "Streak Tracking (Current, Max, Win %)",
+          "status": "pending",
+          "depends_on": [
+            "localstorage-stats-engine"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "score-distribution-chart",
+          "name": "Personal Score Distribution Bar Chart",
+          "status": "pending",
+          "depends_on": [
+            "localstorage-stats-engine"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "stats-post-solve-integration",
+          "name": "Stats Integration into Post-Solve Screen",
+          "status": "pending",
+          "depends_on": [
+            "post-solve-layout",
+            "score-distribution-chart"
+          ],
+          "acceptance_criteria": []
+        }
+      ]
+    },
+    {
+      "name": "practice-mode",
+      "stories": [
+        {
+          "id": "practice-card-pool",
+          "name": "Practice Card Pool (100+100 Separate Cards)",
+          "status": "pending",
+          "depends_on": [
+            "curated-card-pools"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "practice-mode-flow",
+          "name": "Practice Mode Flow (Random Selection, Same Mechanic)",
+          "status": "pending",
+          "depends_on": [
+            "clue-progression-engine",
+            "practice-card-pool"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "practice-mode-ui",
+          "name": "Practice Mode UI (No Share, No Stats Contribution)",
+          "status": "pending",
+          "depends_on": [
+            "practice-mode-flow"
+          ],
+          "acceptance_criteria": []
+        }
+      ]
+    },
+    {
+      "name": "visual-polish-theming",
+      "stories": [
+        {
+          "id": "dark-light-theming",
+          "name": "Dark/Light Auto Theming (System Preference)",
+          "status": "pending",
+          "depends_on": [
+            "project-scaffold"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "mana-pip-rendering",
+          "name": "Mana Pip SVG Rendering System",
+          "status": "pending",
+          "depends_on": [
+            "clue-progression-engine"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "mobile-first-layout",
+          "name": "Mobile-First Responsive Layout",
+          "status": "pending",
+          "depends_on": [
+            "post-solve-layout"
+          ],
+          "acceptance_criteria": []
+        },
+        {
+          "id": "spoiler-protection",
+          "name": "Spoiler Protection on Inbound Share Links",
+          "status": "pending",
+          "depends_on": [
+            "copy-to-clipboard"
+          ],
+          "acceptance_criteria": []
+        }
+      ]
+    }
+  ]
+}
