@@ -158,3 +158,52 @@ export function getRoundActions(actions: RoundAction[]): RoundActionIndicator[] 
 export function getRoundActionDisplay(round: number): string {
   return `Round ${round} of ${TOTAL_ROUNDS}`;
 }
+
+// ---------------------------------------------------------------------------
+// Win/lose detection — score calculation and game-over state
+// ---------------------------------------------------------------------------
+
+/**
+ * Game outcome with score and display string.
+ */
+export interface GameOutcome {
+  won: boolean;
+  score: number | null;    // 1-6 if won, null if lost
+  scoreDisplay: string;    // "3/6" or "X/6"
+}
+
+/**
+ * Calculate the score from round actions.
+ * Score = the round number (1-indexed) of the correct guess.
+ * Returns null if no correct guess was made (X/6).
+ */
+export function calculateScore(actions: RoundAction[]): number | null {
+  for (let i = 0; i < actions.length; i++) {
+    const action = actions[i];
+    if (action.type === 'guess' && action.isCorrect) {
+      return i + 1; // 1-indexed round number
+    }
+  }
+  return null;
+}
+
+/**
+ * Whether the game is over: either solved or all 6 rounds exhausted.
+ */
+export function isGameOver(round: number, actions: RoundAction[], solved: boolean): boolean {
+  if (solved) return true;
+  // Game ends when we're on round 6 and have taken 6 actions (round 6 action completed)
+  if (round >= TOTAL_ROUNDS && actions.length >= TOTAL_ROUNDS) return true;
+  return false;
+}
+
+/**
+ * Derive the full game outcome from round actions.
+ */
+export function getGameOutcome(actions: RoundAction[]): GameOutcome {
+  const score = calculateScore(actions);
+  if (score !== null) {
+    return { won: true, score, scoreDisplay: `${score}/6` };
+  }
+  return { won: false, score: null, scoreDisplay: 'X/6' };
+}

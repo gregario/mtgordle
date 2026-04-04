@@ -11,7 +11,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Card, GameTier, RoundAction } from '@/types/card';
 import { getPuzzleNumber, getCardIndex } from '@/config';
-import { filterCardsByPool, canPass, applyPass, applyGuess, getRoundActions } from '@/lib/game-engine';
+import { filterCardsByPool, canPass, applyPass, applyGuess, getRoundActions, isGameOver, getGameOutcome } from '@/lib/game-engine';
+import type { GameOutcome } from '@/lib/game-engine';
 import CardFrame from '@/components/CardFrame';
 import GuessInput from '@/components/GuessInput';
 import { validateGuess } from '@/lib/guess-validator.mjs';
@@ -31,6 +32,8 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
   const [guessResult, setGuessResult] = useState<'correct' | 'wrong' | null>(null);
   const [roundActions, setRoundActions] = useState<RoundAction[]>([]);
   const [solved, setSolved] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [outcome, setOutcome] = useState<GameOutcome | null>(null);
 
   useEffect(() => {
     async function loadCard() {
@@ -70,7 +73,7 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
   }, [tier, mode]);
 
   const handleGuess = useCallback((guessName: string) => {
-    if (!card || round > 6) return;
+    if (!card || gameOver) return;
 
     const result = validateGuess(guessName, card);
     setGuessResult(result.isCorrect ? 'correct' : 'wrong');
@@ -83,9 +86,18 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
       setSolved(true);
     }
 
-    // Clear the result flash after a short delay
-    setTimeout(() => setGuessResult(null), 1200);
-  }, [card, round, roundActions]);
+    // Check if game is over after this action
+    const over = isGameOver(applied.nextRound, applied.actions, result.isCorrect);
+    if (over) {
+      const gameOutcome = getGameOutcome(applied.actions);
+      setOutcome(gameOutcome);
+      // Delay transition so feedback flash is visible
+      setTimeout(() => setGameOver(true), 1200);
+    } else {
+      // Clear the result flash after a short delay
+      setTimeout(() => setGuessResult(null), 1200);
+    }
+  }, [card, round, roundActions, gameOver]);
 
   const handlePass = useCallback(() => {
     if (!canPass(round, solved)) return;
@@ -113,6 +125,75 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
 
   const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
   const modeLabel = mode === 'practice' ? 'Practice' : `#${puzzleNumber}`;
+
+  // ── Post-solve screen (AC-FA1-026) ────────────────────────────
+  if (gameOver && outcome) {
+    return (
+      <div
+        data-testid="post-solve"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-md)',
+          alignItems: 'center',
+          textAlign: 'center',
+        }}
+      >
+        <h2
+          style={{
+            fontSize: 'var(--font-size-xl, 2rem)',
+            fontWeight: 700,
+          }}
+        >
+          {tierLabel} {modeLabel}
+        </h2>
+        <div
+          data-testid="score-display"
+          style={{
+            fontSize: '3rem',
+            fontWeight: 800,
+            color: outcome.won ? 'var(--color-correct)' : 'var(--color-wrong)',
+          }}
+        >
+          {outcome.scoreDisplay}
+        </div>
+        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600 }}>
+          {outcome.won ? 'You got it!' : 'Better luck next time'}
+        </p>
+        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-muted)' }}>
+          The answer was <strong>{card.name}</strong>
+        </p>
+        {/* Card art reveal */}
+        <div style={{ maxWidth: '300px', width: '100%' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={card.image_uri}
+            alt={card.name}
+            style={{ width: '100%', borderRadius: 'var(--radius-lg, 12px)' }}
+          />
+        </div>
+        {/* Round history */}
+        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+          {(() => {
+            const indicators = getRoundActions(roundActions);
+            const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' };
+            return indicators.map((action, i) => (
+              <div
+                key={i}
+                title={action.type}
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: ACTION_COLORS[action.color],
+                }}
+              />
+            ));
+          })()}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', alignItems: 'center' }}>
@@ -201,8 +282,8 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         <GuessInput
           poolCards={poolCards}
           onGuess={handleGuess}
-          disabled={round >= 6 || solved}
-          placeholder={solved ? 'Solved!' : round >= 6 ? 'Game over' : 'Type a card name...'}
+          disabled={gameOver || solved}
+          placeholder={solved ? 'Solved!' : gameOver ? 'Game over' : 'Type a card name...'}
         />
         {canPass(round, solved) && (
           <button
