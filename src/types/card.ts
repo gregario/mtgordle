@@ -15,7 +15,7 @@ export interface Card {
   oracle_text: string;            // full rules text
   oracle_text_first_line: string; // first paragraph of rules text
   flavor_text: string | null;
-  rarity: 'common' | 'uncommon' | 'rare' | 'mythic';
+  rarity: 'common' | 'uncommon' | 'rare' | 'mythic' | 'special';
   set: string;                    // set code, e.g. "isd"
   set_name: string;               // e.g. "Innistrad"
   artist: string;
