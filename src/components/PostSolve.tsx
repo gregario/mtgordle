@@ -6,6 +6,7 @@ import type { GameOutcome } from '@/lib/game-engine';
 import { getRoundActions } from '@/lib/game-engine';
 import { generateShareText } from '@/lib/share-grid';
 import { BASE_URL } from '@/config';
+import { isPlaceholderLore, formatLoreBlurb, getGenericLoreMessage } from '@/lib/lore-blurb.mjs';
 
 const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } as const;
 
@@ -150,7 +151,7 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
         />
       </div>
 
-      {/* AC-FA4-004: Lore blurb displayed below card art */}
+      {/* AC-FA7-001–004: Lore blurb with variable depth formatting */}
       <div
         data-testid="lore-blurb"
         style={{
@@ -162,7 +163,17 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
           lineHeight: 1.6,
         }}
       >
-        {card.lore_blurb}
+        {isPlaceholderLore(card.lore_blurb, card.name) ? (
+          <p style={{ margin: 0, fontStyle: 'italic' }}>
+            {getGenericLoreMessage({ name: card.name, type_line: card.type_line, set_name: card.set_name })}
+          </p>
+        ) : (
+          formatLoreBlurb(card.lore_blurb).map((para, i) => (
+            <p key={i} style={{ margin: i === 0 ? 0 : '0.5em 0 0 0' }}>
+              {para}
+            </p>
+          ))
+        )}
       </div>
 
       {/* AC-FA4-005: Personal stats section below lore blurb */}
