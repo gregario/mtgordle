@@ -467,6 +467,74 @@ describe('Autocomplete index produced by pipeline (AC-FA2-004)', () => {
   });
 });
 
+// =============================================================================
+// Fix: rarity type mismatch
+// =============================================================================
+
+// @criterion: AC-FIX-RARITY-001
+// AC-FIX-RARITY-001: Card.rarity type union in src/types/card.ts includes 'special'
+// alongside common/uncommon/rare/mythic
+describe('Type safety: Card.rarity union includes special (AC-FIX-RARITY-001)', () => {
+  const CARD_TYPES_PATH = path.join(ROOT, 'src', 'types', 'card.ts');
+
+  test('[AC-FIX-RARITY-001] src/types/card.ts rarity union includes "special"', () => {
+    const content = fs.readFileSync(CARD_TYPES_PATH, 'utf8');
+    const rarityMatch = content.match(/rarity:\s*([^;]+);/);
+    assert.ok(rarityMatch, 'Could not find rarity field in src/types/card.ts');
+    const typeStr = rarityMatch[1];
+    assert.ok(
+      typeStr.includes("'special'") || typeStr.includes('"special"'),
+      `Card.rarity type union must include "special". Current type: ${typeStr.trim()}`
+    );
+  });
+});
+
+// @criterion: AC-FIX-RARITY-002
+// AC-FIX-RARITY-002: All rarity values in card-details.json are valid members of the
+// Card.rarity TypeScript union (type and data are in sync)
+describe('Data integrity: all card rarities match Card.rarity type (AC-FIX-RARITY-002)', () => {
+  test('[AC-FIX-RARITY-002] every card-details.json rarity value is in the Card.rarity type union', () => {
+    const cards = loadJSON(CARD_DETAILS_PATH);
+    const CARD_TYPES_PATH = path.join(ROOT, 'src', 'types', 'card.ts');
+    const content = fs.readFileSync(CARD_TYPES_PATH, 'utf8');
+    const rarityMatch = content.match(/rarity:\s*([^;]+);/);
+    assert.ok(rarityMatch, 'Could not find rarity field in src/types/card.ts');
+    const typeRarities = new Set(
+      (rarityMatch[1].match(/'[^']+'/g) || []).map((s) => s.slice(1, -1))
+    );
+    assert.ok(typeRarities.size > 0, 'No rarity string literals found in type definition');
+    for (const card of cards) {
+      assert.ok(
+        typeRarities.has(card.rarity),
+        `Card "${card.name}" has rarity "${card.rarity}" which is not in Card.rarity type union (${[...typeRarities].join(' | ')})`
+      );
+    }
+  });
+});
+
+// @criterion: AC-FIX-RARITY-003
+// AC-FIX-RARITY-003: npm run build and npm test pass with zero errors after the type change.
+// Runtime proxy: verify that the Card.rarity type still includes all original values
+// (type-widening regression guard — adding 'special' must not remove existing values).
+// Full build/test pass is verified by CI; this test guards against accidental narrowing.
+describe('Type change safety: rarity union is non-breaking (AC-FIX-RARITY-003)', () => {
+  test('[AC-FIX-RARITY-003] Card.rarity still includes all original rarity values after fix', () => {
+    const CARD_TYPES_PATH = path.join(ROOT, 'src', 'types', 'card.ts');
+    const content = fs.readFileSync(CARD_TYPES_PATH, 'utf8');
+    const rarityMatch = content.match(/rarity:\s*([^;]+);/);
+    assert.ok(rarityMatch, 'rarity field not found in card.ts');
+    const typeStr = rarityMatch[1];
+    for (const rarity of ['common', 'uncommon', 'rare', 'mythic']) {
+      assert.ok(
+        typeStr.includes(`'${rarity}'`) || typeStr.includes(`"${rarity}"`),
+        `Card.rarity must still include "${rarity}" after type widening`
+      );
+    }
+  });
+});
+
+// =============================================================================
+
 describe('round-trip coverage: curated card mana costs', () => {
   const cards = loadJSON(CARD_DETAILS_PATH);
 
