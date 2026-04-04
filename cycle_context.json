@@ -1,0 +1,167 @@
+{
+  "_schema_version": "1.0",
+  "_project_name": "MTGordle",
+  "_cycle_number": 1,
+  "vision": {
+    "name": "MTGordle",
+    "feature_areas": [
+      {
+        "name": "foundation-data-pipeline",
+        "description": "See seed_spec/spec-*-foundation-data-pipeline.md",
+        "status": "pending"
+      },
+      {
+        "name": "core-game-loop",
+        "description": "See seed_spec/spec-*-core-game-loop.md",
+        "status": "pending"
+      },
+      {
+        "name": "post-solve-experience",
+        "description": "See seed_spec/spec-*-post-solve-experience.md",
+        "status": "pending"
+      },
+      {
+        "name": "stats-streaks-persistence",
+        "description": "See seed_spec/spec-*-stats-streaks-persistence.md",
+        "status": "pending"
+      },
+      {
+        "name": "practice-mode",
+        "description": "See seed_spec/spec-*-practice-mode.md",
+        "status": "pending"
+      },
+      {
+        "name": "visual-polish-theming",
+        "description": "See seed_spec/spec-*-visual-polish-theming.md",
+        "status": "pending"
+      }
+    ],
+    "infrastructure": {
+      "needs_database": true,
+      "needs_auth": false,
+      "needs_payments": false,
+      "deployment_target": "cloudflare-workers"
+    }
+  },
+  "product_standard": {
+    "inherits": [
+      "global",
+      "domain/web"
+    ],
+    "overrides": [],
+    "additions": []
+  },
+  "active_spec": {
+    "type": "seed",
+    "feature_areas": [
+      "foundation-data-pipeline",
+      "core-game-loop",
+      "post-solve-experience",
+      "stats-streaks-persistence",
+      "practice-mode",
+      "visual-polish-theming"
+    ],
+    "spec_files": [],
+    "design_file": null
+  },
+  "library_heuristics": [],
+  "reference_products": [],
+  "previous_evaluations": [],
+  "evaluation_deltas": [],
+  "implemented": [
+    "package.json with Next.js 14.2.3 static export + npm scripts",
+    "next.config.mjs with output:'export', trailingSlash, unoptimized images",
+    "tsconfig.json with strict mode and App Router paths",
+    "vercel.json with outputDirectory:'out' and nextjs framework",
+    ".gitignore excluding node_modules/.next/out/.scryfall-cache/ but including public/data/",
+    "scripts/build-card-data.mjs — Scryfall bulk data pipeline (Node.js built-ins only)",
+    "public/data/card-details.json — 930 curated cards (365+365+100+100 across 4 pools)",
+    "public/data/autocomplete-index.json — 36,606 unique Oracle card names, 745KB",
+    "src/app/globals.css — CSS custom properties light/dark themes with MTG parchment palette",
+    "src/components/Layout.tsx — centered column 480px max-width base layout",
+    "src/app/layout.tsx — App Router root layout with metadata",
+    "src/app/page.tsx — placeholder home page",
+    "src/app/terms/page.tsx — WotC/Wordle fan-game disclaimer",
+    "src/config.ts — EPOCH_DATE, getPuzzleNumber(), getCardIndex()",
+    "src/types/card.ts — Card, CardPool, GameState, GameResult, PlayerStats TypeScript interfaces",
+    "tests/foundation.test.mjs — 32 passing tests across 7 suites"
+  ],
+  "skipped": [
+    {
+      "task": "staging-deployment",
+      "reason": "Vercel CLI not authenticated — no VERCEL_TOKEN or local auth session found",
+      "blocker_type": "infrastructure",
+      "unblocked_by": "Run 'npx vercel login' or set VERCEL_TOKEN environment variable, then 'npx vercel --prod'",
+      "blocks_feature_areas": []
+    }
+  ],
+  "divergences": [
+    "Scryfall API requires both User-Agent AND Accept headers (not just User-Agent) — script updated accordingly",
+    "Bulk data endpoint is /bulk-data (list) not /bulk-data/oracle-cards — the oracle_cards entry is found by type filter",
+    "Scryfall serves bulk data gzip-encoded — pipeline decompresses on the fly via zlib.createGunzip()",
+    "Scryfall includes rarity:'special' for some promo/bonus-sheet cards — test and types updated to allow it",
+    "Autocomplete sort uses localeCompare (locale-aware) not simple byte comparison",
+    "mtgordle initialized as its own git repository (projects/ is gitignored in the Rouge monorepo)"
+  ],
+  "factory_decisions": [
+    "Used /bulk-data list endpoint and filtered by type:'oracle_cards' rather than /bulk-data/oracle-cards",
+    "Kept special rarity cards eligible for pools — they are valid playable cards",
+    "Curation uses edhrec_rank as primary signal with iconic-set and flavor-text bonuses",
+    "Cache stores decompressed JSON (not gzip) for simplicity of re-use"
+  ],
+  "factory_questions": [],
+  "evaluation_report": null,
+  "deployment_url": null,
+  "foundation_completion": {
+    "schema_ready": false,
+    "schema_ready_note": "No SQL schema needed — this is a pure static app. localStorage persistence (PlayerStats) is the data layer; types defined in src/types/card.ts",
+    "auth_ready": false,
+    "auth_ready_note": "No auth required per vision.json (needs_auth: false)",
+    "integrations_ready": {
+      "scryfall-pipeline": true,
+      "vercel": false,
+      "vercel_note": "vercel.json configured and build verified; deploy blocked by missing Vercel auth credentials"
+    },
+    "ui_scaffold_ready": true,
+    "deploy_ready": false,
+    "deploy_ready_note": "Build succeeds (next build + static export). Vercel deploy requires authentication.",
+    "fixtures_ready": true,
+    "blocking_gaps": [
+      "Vercel staging deploy: Vercel CLI not authenticated. Run 'npx vercel login' then 'npx vercel --prod' from projects/mtgordle/"
+    ],
+    "file_counts": {
+      "source_files": 7,
+      "test_files": 1,
+      "test_count": 32,
+      "card_count": 930,
+      "autocomplete_names": 36606
+    },
+    "pool_counts": {
+      "simple_daily": 365,
+      "cryptic_daily": 365,
+      "simple_practice": 100,
+      "cryptic_practice": 100
+    },
+    "data_sizes": {
+      "card_details_kb": 994.2,
+      "autocomplete_kb_uncompressed": 745,
+      "autocomplete_kb_gzipped": 241,
+      "autocomplete_under_500kb_gzip": true
+    }
+  },
+  "infrastructure": {
+    "staging_url": null,
+    "production_url": null,
+    "supabase_ref": null,
+    "sentry_dsn": null
+  },
+  "retry_counts": {},
+  "previous_cycles": [],
+  "supabase": {
+    "project_ref": null,
+    "slot_acquired": false,
+    "connection_string": null
+  },
+  "_current_milestone": null,
+  "_current_story": null
+}
