@@ -167,7 +167,7 @@
         "foundation-data-pipeline",
         "core-game-loop"
       ],
-      "notes": "36,606 unique Oracle card names. 745KB uncompressed, 241KB gzipped (under 500KB AC met). Already implemented during foundation phase \u2014 verified REUSE, no new code needed."
+      "notes": "36,606 unique Oracle card names. 745KB uncompressed, 241KB gzipped (under 500KB AC met). Already implemented during foundation phase — verified REUSE, no new code needed."
     },
     {
       "task": "mana-symbol-scaffold",
@@ -189,7 +189,7 @@
         "post-solve-experience",
         "visual-polish-theming"
       ],
-      "notes": "parseMana('{2}{U}{B}') \u2192 ['2','U','B']. tokenCategory() classifies generic/colour/hybrid/phyrexian. colorIdentityEmoji() for share grid. <ManaSymbol token='U'/> and <ManaCost cost='{2}{U}{B}'/> SVG components. No external font dependency."
+      "notes": "parseMana('{2}{U}{B}') → ['2','U','B']. tokenCategory() classifies generic/colour/hybrid/phyrexian. colorIdentityEmoji() for share grid. <ManaSymbol token='U'/> and <ManaCost cost='{2}{U}{B}'/> SVG components. No external font dependency."
     },
     {
       "task": "tier-selection",
@@ -209,7 +209,7 @@
       ],
       "tests_added": 15,
       "tests_passing": 15,
-      "notes": "Home screen shows Simple #N and Cryptic #N daily puzzle options with descriptions, Practice mode entry, and T&Cs footer link. TierSelection is a client component that hydrates puzzle number from EPOCH_DATE on mount. Stub play routes created for /play/simple, /play/cryptic, /play/practice \u2014 game board will be implemented in clue-progression-engine story. Build produces 8 static routes, 95.9KB first-load JS on home."
+      "notes": "Home screen shows Simple #N and Cryptic #N daily puzzle options with descriptions, Practice mode entry, and T&Cs footer link. TierSelection is a client component that hydrates puzzle number from EPOCH_DATE on mount. Stub play routes created for /play/simple, /play/cryptic, /play/practice — game board will be implemented in clue-progression-engine story. Build produces 8 static routes, 95.9KB first-load JS on home."
     },
     {
       "task": "clue-progression-engine",
@@ -235,7 +235,7 @@
       ],
       "tests_added": 65,
       "tests_passing": 65,
-      "notes": "6-round clue progression engine with CSS card frame (63:88 ratio). Game engine in src/lib/game-engine.ts: getVisibleClues(), getCardBorderColor(), getCardFrameGradient(), getRound5Content(), filterCardsByPool(). CardFrame component renders MTG card with progressive reveal \u2014 empty regions show color-identity gradient, art fills in on round 6. GameBoard loads correct daily card by tier+date via fetch + filterCardsByPool. 65-test suite covers all 9 ACs: card loading, clue data per round, visibility matrix, border/gradient generation, pool filtering, frame proportions, required clue fields for all 730 daily cards. 175 total tests passing. Build succeeds: 8 static routes, 97.9KB first-load JS on play pages."
+      "notes": "6-round clue progression engine with CSS card frame (63:88 ratio). Game engine in src/lib/game-engine.ts: getVisibleClues(), getCardBorderColor(), getCardFrameGradient(), getRound5Content(), filterCardsByPool(). CardFrame component renders MTG card with progressive reveal — empty regions show color-identity gradient, art fills in on round 6. GameBoard loads correct daily card by tier+date via fetch + filterCardsByPool. 65-test suite covers all 9 ACs: card loading, clue data per round, visibility matrix, border/gradient generation, pool filtering, frame proportions, required clue fields for all 730 daily cards. 175 total tests passing. Build succeeds: 8 static routes, 97.9KB first-load JS on play pages."
     },
     {
       "task": "fuzzy-autocomplete",
@@ -258,7 +258,7 @@
       ],
       "tests_added": 46,
       "tests_passing": 46,
-      "notes": "Two-pass fuzzy search: fast multi-word substring filter (O(n) scan, <5ms typical) + Fuse.js fuzzy fallback for typo recovery (<200ms warm). Nickname resolution via separate Fuse index \u2014 nickname matches rank above name matches. Guess validator with normalizeCardName() and validateGuess() supports exact match, case-insensitive, and nickname match types. GuessInput React component with ARIA combobox, keyboard navigation, dropdown. GameBoard uses validateGuess for guess checking. 195 total tests passing across 6 test files."
+      "notes": "Two-pass fuzzy search: fast multi-word substring filter (O(n) scan, <5ms typical) + Fuse.js fuzzy fallback for typo recovery (<200ms warm). Nickname resolution via separate Fuse index — nickname matches rank above name matches. Guess validator with normalizeCardName() and validateGuess() supports exact match, case-insensitive, and nickname match types. GuessInput React component with ARIA combobox, keyboard navigation, dropdown. GameBoard uses validateGuess for guess checking. 195 total tests passing across 6 test files."
     },
     {
       "task": "pass-mechanic",
@@ -315,20 +315,20 @@
   "skipped": [
     {
       "task": "staging-deployment",
-      "reason": "Vercel CLI not authenticated \u2014 no VERCEL_TOKEN or local auth session found",
+      "reason": "Vercel CLI not authenticated — no VERCEL_TOKEN or local auth session found",
       "blocker_type": "infrastructure",
       "unblocked_by": "Run 'npx vercel login' or set VERCEL_TOKEN environment variable, then 'npx vercel --prod'",
       "blocks_feature_areas": []
     }
   ],
   "divergences": [
-    "Scryfall API requires both User-Agent AND Accept headers (not just User-Agent) \u2014 script updated accordingly",
-    "Bulk data endpoint is /bulk-data (list) not /bulk-data/oracle-cards \u2014 the oracle_cards entry is found by type filter",
-    "Scryfall serves bulk data gzip-encoded \u2014 pipeline decompresses on the fly via zlib.createGunzip()",
-    "Scryfall includes rarity:'special' for some promo/bonus-sheet cards \u2014 test and types updated to allow it",
+    "Scryfall API requires both User-Agent AND Accept headers (not just User-Agent) — script updated accordingly",
+    "Bulk data endpoint is /bulk-data (list) not /bulk-data/oracle-cards — the oracle_cards entry is found by type filter",
+    "Scryfall serves bulk data gzip-encoded — pipeline decompresses on the fly via zlib.createGunzip()",
+    "Scryfall includes rarity:'special' for some promo/bonus-sheet cards — test and types updated to allow it",
     "Autocomplete sort uses localeCompare (locale-aware) not simple byte comparison",
     "mtgordle initialized as its own git repository (projects/ is gitignored in the Rouge monorepo)",
-    "AC-FA3-002 long multi-word query performance target relaxed to 200ms (from 100ms) \u2014 Fuse.js inherently slower on multi-word queries against 36K items. Single-word and short queries meet <100ms. In browser UX, debounced input means users type incrementally (short prefixes resolve fast before full query is typed)."
+    "AC-FA3-002 long multi-word query performance target relaxed to 200ms (from 100ms) — Fuse.js inherently slower on multi-word queries against 36K items. Single-word and short queries meet <100ms. In browser UX, debounced input means users type incrementally (short prefixes resolve fast before full query is typed)."
   ],
   "factory_decisions": [
     {
@@ -349,7 +349,7 @@
       "decision": "Used /bulk-data list endpoint + type filter for Scryfall oracle cards",
       "context": "Scryfall data pipeline URL resolution",
       "alternatives_considered": [
-        "/bulk-data/oracle-cards direct \u2014 returns 404 on current API"
+        "/bulk-data/oracle-cards direct — returns 404 on current API"
       ],
       "rationale": "Actual API structure discovered during implementation",
       "confidence": "high",
@@ -361,7 +361,7 @@
       "decision": "Kept rarity:'special' cards eligible for pools",
       "context": "Card pool curation rarity filter",
       "alternatives_considered": [
-        "Exclude special \u2014 removes valid recognisable cards like The List reprints"
+        "Exclude special — removes valid recognisable cards like The List reprints"
       ],
       "rationale": "Special rarity cards are playable and recognisable; exclusion reduces pool quality",
       "confidence": "high",
@@ -385,11 +385,11 @@
       ]
     },
     {
-      "decision": "Inline SVG circles for mana symbols \u2014 no external font/asset dependency",
+      "decision": "Inline SVG circles for mana symbols — no external font/asset dependency",
       "context": "Mana symbol foundation scaffold; needed by core-game-loop Round 1 and visual-polish-theming",
       "alternatives_considered": [
-        "mana-font npm package \u2014 adds font loading overhead",
-        "mtg-vectors SVG files \u2014 high quality but ~100 SVG files to bundle"
+        "mana-font npm package — adds font loading overhead",
+        "mtg-vectors SVG files — high quality but ~100 SVG files to bundle"
       ],
       "rationale": "Zero dependencies, correct MTG colour palette, full size control. visual-polish-theming milestone can upgrade to mtg-vectors if desired.",
       "confidence": "high",
@@ -404,7 +404,7 @@
       "alternatives_considered": [
         "Duplicate mapping in share utility"
       ],
-      "rationale": "Mana colour \u2192 emoji is a mana domain concern; DRY",
+      "rationale": "Mana colour → emoji is a mana domain concern; DRY",
       "confidence": "high",
       "affects": [
         "src/lib/mana.ts",
@@ -412,13 +412,13 @@
       ]
     },
     {
-      "decision": "scryfall-data-pipeline story already fully implemented during foundation phase \u2014 verified, no new code needed",
+      "decision": "scryfall-data-pipeline story already fully implemented during foundation phase — verified, no new code needed",
       "context": "Story building phase dispatched for scryfall-data-pipeline, but foundation already built scripts/build-card-data.mjs, card-details.json (930 cards), and autocomplete-index.json (36,606 names). All 5 ACs verified passing.",
       "alternatives_considered": [
         "Rebuild from scratch (wasteful, identical output)",
         "Add pipeline unit tests (foundation eval noted this as acceptable gap for committed build artifacts)"
       ],
-      "rationale": "Search Before Building audit found all tasks are REUSE \u2014 existing implementation fully satisfies AC-FA2-001 through AC-FA2-005. 32 foundation tests + 37 mana tests all passing (84 total). No code changes warranted.",
+      "rationale": "Search Before Building audit found all tasks are REUSE — existing implementation fully satisfies AC-FA2-001 through AC-FA2-005. 32 foundation tests + 37 mana tests all passing (84 total). No code changes warranted.",
       "confidence": "high",
       "affects": [
         "scripts/build-card-data.mjs",
@@ -430,7 +430,7 @@
       "decision": "Search Before Building audit for tier-selection story",
       "context": "Pre-implementation code reuse analysis",
       "alternatives_considered": [],
-      "rationale": "Found: 1 EXTEND (page.tsx placeholder \u2192 full tier selection), 0 BUILD from scratch. Key reuse: getPuzzleNumber() from src/config.ts, Layout component, CSS custom properties, existing Link/routing patterns from terms page.",
+      "rationale": "Found: 1 EXTEND (page.tsx placeholder → full tier selection), 0 BUILD from scratch. Key reuse: getPuzzleNumber() from src/config.ts, Layout component, CSS custom properties, existing Link/routing patterns from terms page.",
       "confidence": "high",
       "affects": [
         "src/app/page.tsx",
@@ -441,8 +441,8 @@
       "decision": "Static play routes (/play/simple, /play/cryptic, /play/practice) instead of dynamic [tier] route",
       "context": "Next.js static export requires generateStaticParams for dynamic routes, which adds complexity",
       "alternatives_considered": [
-        "/play/[tier] dynamic route with generateStaticParams \u2014 cleaner URL structure but requires explicit enumeration anyway",
-        "Query params (?tier=simple) \u2014 loses clean URLs"
+        "/play/[tier] dynamic route with generateStaticParams — cleaner URL structure but requires explicit enumeration anyway",
+        "Query params (?tier=simple) — loses clean URLs"
       ],
       "rationale": "Three static routes is simpler and more explicit for a static export. Each page can have tier-specific metadata later. The clue-progression-engine story will likely refactor these to share a game component.",
       "confidence": "high",
@@ -454,10 +454,10 @@
     },
     {
       "decision": "TierSelection as client component with useEffect for puzzle number",
-      "context": "Puzzle number depends on current date \u2014 cannot be computed at build time for static export",
+      "context": "Puzzle number depends on current date — cannot be computed at build time for static export",
       "alternatives_considered": [
-        "Server component with Date() \u2014 would freeze puzzle number at build time",
-        "Middleware rewrite \u2014 not available in static export"
+        "Server component with Date() — would freeze puzzle number at build time",
+        "Middleware rewrite — not available in static export"
       ],
       "rationale": "Client-side hydration ensures puzzle number is always current. Null initial state avoids hydration mismatch.",
       "confidence": "high",
@@ -466,13 +466,13 @@
       ]
     },
     {
-      "decision": "curated-card-pools story already fully implemented during foundation phase \u2014 verified, no new code needed",
+      "decision": "curated-card-pools story already fully implemented during foundation phase — verified, no new code needed",
       "context": "Story building phase dispatched for curated-card-pools, but foundation already built public/data/card-details.json with 930 cards across 4 pools (365 simple-daily, 365 cryptic-daily, 100 simple-practice, 100 cryptic-practice). All 8 ACs (AC-FA2-006 through AC-FA2-013) verified passing via 14 foundation tests covering structure, pool sizes, uniqueness, and required fields.",
       "alternatives_considered": [
         "Rebuild card pools from scratch (wasteful, identical output)",
         "Add separate test file for card pools (foundation.test.mjs already covers all ACs comprehensively)"
       ],
-      "rationale": "Search Before Building audit found all tasks are REUSE \u2014 existing implementation fully satisfies all acceptance criteria. 84 total tests passing (32 foundation + 37 mana + 15 tier-selection). Zero overlap between pools validated by both pipeline and tests. No code changes warranted.",
+      "rationale": "Search Before Building audit found all tasks are REUSE — existing implementation fully satisfies all acceptance criteria. 84 total tests passing (32 foundation + 37 mana + 15 tier-selection). Zero overlap between pools validated by both pipeline and tests. No code changes warranted.",
       "confidence": "high",
       "affects": [
         "public/data/card-details.json",
@@ -480,13 +480,13 @@
       ]
     },
     {
-      "decision": "autocomplete-index story already fully implemented during foundation phase \u2014 verified, no new code needed",
+      "decision": "autocomplete-index story already fully implemented during foundation phase — verified, no new code needed",
       "context": "Story building phase dispatched for autocomplete-index, but foundation already built public/data/autocomplete-index.json with 36,606 unique Oracle card names. All 3 ACs (AC-FA2-014 through AC-FA2-016) verified passing via 7 foundation tests covering array structure, uniqueness, sort order, and gzip size under 500KB.",
       "alternatives_considered": [
         "Rebuild autocomplete index from scratch (wasteful, identical output)",
         "Add separate test file (foundation.test.mjs already covers all ACs comprehensively)"
       ],
-      "rationale": "Search Before Building audit found all tasks are REUSE \u2014 existing implementation fully satisfies all acceptance criteria. 84 total tests passing (32 foundation + 37 mana + 15 tier-selection). No code changes warranted.",
+      "rationale": "Search Before Building audit found all tasks are REUSE — existing implementation fully satisfies all acceptance criteria. 84 total tests passing (32 foundation + 37 mana + 15 tier-selection). No code changes warranted.",
       "confidence": "high",
       "affects": [
         "public/data/autocomplete-index.json",
@@ -497,7 +497,7 @@
       "decision": "Search Before Building audit for clue-progression-engine story",
       "context": "Pre-implementation code reuse analysis",
       "alternatives_considered": [],
-      "rationale": "Found: 2 EXTEND (play route stubs \u2192 full game pages), 3 BUILD (game-engine.ts, CardFrame.tsx, GameBoard.tsx). Key reuse: getPuzzleNumber()/getCardIndex() from config.ts, ManaCost/ManaSymbol from foundation scaffold, Layout component, Card types, CSS custom properties.",
+      "rationale": "Found: 2 EXTEND (play route stubs → full game pages), 3 BUILD (game-engine.ts, CardFrame.tsx, GameBoard.tsx). Key reuse: getPuzzleNumber()/getCardIndex() from config.ts, ManaCost/ManaSymbol from foundation scaffold, Layout component, Card types, CSS custom properties.",
       "confidence": "high",
       "affects": [
         "src/lib/game-engine.ts",
@@ -535,7 +535,7 @@
       "decision": "Search Before Building audit for fuzzy-autocomplete story",
       "context": "Pre-implementation code reuse analysis",
       "alternatives_considered": [],
-      "rationale": "Found: 0 REUSE (autocomplete-index.json exists, Card.nicknames field), 3 BUILD (fuzzy-search.mjs, fuzzy-search.ts, GuessInput.tsx), 1 EXTEND (GameBoard.tsx \u2014 replace temp button). Key reuse: autocomplete-index.json data file, Card type with nicknames, GameBoard component structure, CSS custom properties.",
+      "rationale": "Found: 0 REUSE (autocomplete-index.json exists, Card.nicknames field), 3 BUILD (fuzzy-search.mjs, fuzzy-search.ts, GuessInput.tsx), 1 EXTEND (GameBoard.tsx — replace temp button). Key reuse: autocomplete-index.json data file, Card type with nicknames, GameBoard component structure, CSS custom properties.",
       "confidence": "high",
       "affects": [
         "src/lib/fuzzy-search.mjs",
@@ -547,9 +547,9 @@
       "decision": "Fuse.js for client-side fuzzy search (boring technology)",
       "context": "Need fuzzy typo-tolerant search over 36K card names. Spec suggests Fuse.js.",
       "alternatives_considered": [
-        "Roll own fuzzy matcher \u2014 more complex, error-prone, unproven",
-        "Flexsearch \u2014 faster for exact prefix, weaker fuzzy matching",
-        "Lunr.js \u2014 heavier, designed for full-text search not autocomplete"
+        "Roll own fuzzy matcher — more complex, error-prone, unproven",
+        "Flexsearch — faster for exact prefix, weaker fuzzy matching",
+        "Lunr.js — heavier, designed for full-text search not autocomplete"
       ],
       "rationale": "Fuse.js is the standard boring-technology choice for client-side fuzzy search. 25KB bundled. Well-tested. Exact use case match.",
       "confidence": "high",
@@ -562,9 +562,9 @@
       "decision": "Two-pass search architecture: fast substring first, Fuse.js fuzzy fallback",
       "context": "Fuse.js alone takes 100-170ms for multi-word queries on 36K items. AC-FA3-002 requires <100ms.",
       "alternatives_considered": [
-        "Fuse.js only \u2014 fails 100ms target on multi-word queries",
-        "Substring only \u2014 no typo tolerance (fails AC-FA3-003)",
-        "Pre-built Fuse index \u2014 large memory footprint"
+        "Fuse.js only — fails 100ms target on multi-word queries",
+        "Substring only — no typo tolerance (fails AC-FA3-003)",
+        "Pre-built Fuse index — large memory footprint"
       ],
       "rationale": "Fast O(n) multi-word substring scan handles exact/prefix matches in <5ms. Fuse.js only invoked for typo recovery when substring finds insufficient results. Best of both: speed + fuzzy tolerance.",
       "confidence": "high",
@@ -576,8 +576,8 @@
       "decision": "Fuzzy search module as .mjs (not .ts) for dual-environment compatibility",
       "context": "Node test runner cannot import TypeScript; React components need typed imports",
       "alternatives_considered": [
-        "TypeScript only \u2014 tests would need ts-node or compilation step",
-        "Duplicate logic \u2014 fragile, DRY violation"
+        "TypeScript only — tests would need ts-node or compilation step",
+        "Duplicate logic — fragile, DRY violation"
       ],
       "rationale": "Core logic in .mjs (importable by both Node tests and bundler). Thin .ts wrapper re-exports with types. Same pattern used by existing test files.",
       "confidence": "high",
@@ -590,8 +590,8 @@
       "decision": "Separate guess-validator.mjs module for guess validation logic",
       "context": "GameBoard handleGuess used inline string comparison. Nickname matching needs structured validation. TDD requires testable pure functions.",
       "alternatives_considered": [
-        "Inline validation in GameBoard \u2014 untestable with node:test, harder to extend",
-        "Add to game-engine.ts \u2014 mixes concerns (clue progression vs guess validation)"
+        "Inline validation in GameBoard — untestable with node:test, harder to extend",
+        "Add to game-engine.ts — mixes concerns (clue progression vs guess validation)"
       ],
       "rationale": "Separate module keeps concerns clean: fuzzy-search finds candidates, guess-validator checks correctness. Pure functions testable with node:test. Nickname support ready for when curated card nicknames are populated.",
       "confidence": "high",
@@ -604,8 +604,8 @@
       "decision": "Eager Fuse.js index build instead of lazy initialization",
       "context": "Long multi-word queries were slow (170ms) because lazy Fuse init added to search latency on first fuzzy fallback",
       "alternatives_considered": [
-        "Lazy init (original) \u2014 first fuzzy query is slow",
-        "Web Worker \u2014 adds complexity for marginal gain"
+        "Lazy init (original) — first fuzzy query is slow",
+        "Web Worker — adds complexity for marginal gain"
       ],
       "rationale": "Eager init moves the ~100ms Fuse index build to createSearchEngine() call time (page load). Subsequent searches hit a pre-built index. Multi-word queries now complete in <100ms consistently.",
       "confidence": "high",
@@ -617,8 +617,8 @@
       "decision": "2-word Fuse query truncation for performance",
       "context": "Fuse.js with long multi-word queries (e.g. 'nicol bolas dragon god') on 36K items takes >100ms",
       "alternatives_considered": [
-        "3-word truncation \u2014 still too slow for some queries",
-        "No truncation \u2014 fails performance target"
+        "3-word truncation — still too slow for some queries",
+        "No truncation — fails performance target"
       ],
       "rationale": "First 2 words are sufficient for Fuse disambiguation. The multi-word substring scan already handles exact multi-word matching. Fuse only needs enough to recover from typos.",
       "confidence": "high",
@@ -627,13 +627,13 @@
       ]
     },
     {
-      "decision": "tier-selection story already fully implemented in prior cycle \u2014 verified, no new code needed",
+      "decision": "tier-selection story already fully implemented in prior cycle — verified, no new code needed",
       "context": "Story building phase dispatched for tier-selection (attempt 1), but prior cycle already implemented TierSelection component, home page, stub play routes, and 15 passing tests covering AC-FA1-004 through AC-FA1-007. Full test suite (236 tests) passes.",
       "alternatives_considered": [
         "Rebuild from scratch (wasteful, identical output)",
         "Add additional tests (15 tests already cover all 4 ACs comprehensively)"
       ],
-      "rationale": "Search Before Building audit found all tasks are REUSE \u2014 existing implementation fully satisfies all acceptance criteria. 236 total tests passing. No code changes warranted.",
+      "rationale": "Search Before Building audit found all tasks are REUSE — existing implementation fully satisfies all acceptance criteria. 236 total tests passing. No code changes warranted.",
       "confidence": "high",
       "affects": [
         "src/app/page.tsx",
@@ -642,7 +642,7 @@
       ]
     },
     {
-      "decision": "tier-selection story re-verified in cycle 4 building phase \u2014 all ACs still passing",
+      "decision": "tier-selection story re-verified in cycle 4 building phase — all ACs still passing",
       "context": "Launcher dispatched tier-selection for building. Story was already fully implemented in prior cycle with 15 tests covering AC-FA1-004 through AC-FA1-007. Re-ran full test suite: 236/236 pass. All 6 implementation files present and unchanged.",
       "alternatives_considered": [
         "Rebuild from scratch (wasteful)"
@@ -656,10 +656,10 @@
       ]
     },
     {
-      "decision": "tier-selection story verified as fully implemented \u2014 REUSE, no code changes",
+      "decision": "tier-selection story verified as fully implemented — REUSE, no code changes",
       "context": "Building phase dispatched for tier-selection (attempt 1). Prior cycle already implemented TierSelection component, home page with puzzle number hydration, stub play routes (/play/simple, /play/cryptic, /play/practice), and 15 tests covering all 4 ACs (AC-FA1-004 through AC-FA1-007). Full test suite (236 tests) verified passing.",
       "alternatives_considered": [
-        "Rebuild from scratch (wasteful \u2014 identical output)",
+        "Rebuild from scratch (wasteful — identical output)",
         "Add additional tests (15 tests already cover all 4 ACs comprehensively)"
       ],
       "rationale": "Search Before Building audit confirmed all tasks are REUSE. Existing implementation fully satisfies all acceptance criteria. 236 total tests passing. No code changes warranted.",
@@ -674,7 +674,7 @@
       "decision": "Search Before Building audit for pass-mechanic story",
       "context": "Pre-implementation code reuse analysis",
       "alternatives_considered": [],
-      "rationale": "Found: 1 EXTEND (GameBoard.tsx round state \u2192 add pass + history tracking), 1 EXTEND (game-engine.ts \u2192 add pass logic functions), 1 BUILD (pass-mechanic.test.mjs). Key reuse: existing round state management, ClueStatus type already had passed, validateGuess from guess-validator.mjs.",
+      "rationale": "Found: 1 EXTEND (GameBoard.tsx round state → add pass + history tracking), 1 EXTEND (game-engine.ts → add pass logic functions), 1 BUILD (pass-mechanic.test.mjs). Key reuse: existing round state management, ClueStatus type already had passed, validateGuess from guess-validator.mjs.",
       "confidence": "high",
       "affects": [
         "src/components/GameBoard.tsx",
@@ -686,7 +686,7 @@
       "decision": "Pure logic functions for pass mechanic extracted to game-engine.ts, not inline in GameBoard",
       "context": "canPass/applyPass/applyGuess/getRoundActions/getRoundActionDisplay need unit testing without React",
       "alternatives_considered": [
-        "Inline all logic in GameBoard useState callbacks \u2014 untestable without DOM"
+        "Inline all logic in GameBoard useState callbacks — untestable without DOM"
       ],
       "rationale": "Follows existing pattern (getVisibleClues, filterCardsByPool already in game-engine.ts). Pure functions are testable with Node test runner. GameBoard consumes them.",
       "confidence": "high",
@@ -699,7 +699,7 @@
       "decision": "RoundAction discriminated union type over simple string enum for action tracking",
       "context": "Need to track per-round actions: passes vs guesses (with name and correctness)",
       "alternatives_considered": [
-        "Simple string array [\"pass\",\"wrong\",\"correct\"] \u2014 loses guess name for history display"
+        "Simple string array [\"pass\",\"wrong\",\"correct\"] — loses guess name for history display"
       ],
       "rationale": "Discriminated union preserves full guess data for post-solve-experience story. Type-safe pattern matching in getRoundActions().",
       "confidence": "high",
@@ -724,7 +724,7 @@
       "context": "AC-FA1-023/024 require score = round of correct guess, X/6 for loss",
       "alternatives_considered": [
         "Score as number of clues used (same value but different semantic)",
-        "Score as string \"X\" \u2014 type-unsafe, harder to use in stats"
+        "Score as string \"X\" — type-unsafe, harder to use in stats"
       ],
       "rationale": "calculateScore returns number|null. The round number equals the 1-indexed position of the correct guess in the actions array. null represents X/6 (no correct guess). getGameOutcome wraps this in a display-ready object.",
       "confidence": "high",
@@ -736,8 +736,8 @@
       "decision": "Post-solve transition via gameOver state with 1.2s delay for feedback flash visibility",
       "context": "AC-FA1-026 requires transition to post-solve on game end",
       "alternatives_considered": [
-        "Immediate transition \u2014 feedback flash invisible",
-        "onGameOver callback prop to parent \u2014 over-engineering for current scope"
+        "Immediate transition — feedback flash invisible",
+        "onGameOver callback prop to parent — over-engineering for current scope"
       ],
       "rationale": "Inline post-solve view in GameBoard with delayed state flip. Post-solve layout story will refactor this into a proper component. 1.2s matches existing feedback flash timeout.",
       "confidence": "high",
@@ -746,10 +746,10 @@
       ]
     },
     {
-      "decision": "win-lose-detection story already fully implemented \u2014 re-verified, fixed stale test",
+      "decision": "win-lose-detection story already fully implemented — re-verified, fixed stale test",
       "context": "Building phase dispatched for win-lose-detection but story was already completed in prior cycle with 28 tests covering AC-FA1-022 through AC-FA1-026. _current_story is null in cycle_context.",
       "alternatives_considered": [
-        "Rebuild from scratch (wasteful \u2014 identical output)"
+        "Rebuild from scratch (wasteful — identical output)"
       ],
       "rationale": "Search Before Building: all tasks are REUSE. 280/280 tests passing after fixing stale AC-FA1-001 test (foundation.test.mjs checked for output:export which was intentionally removed in c30bb76). Stale test updated to check for valid config object instead. Committed as 69a53c4.",
       "confidence": "high",
@@ -758,10 +758,10 @@
       ]
     },
     {
-      "decision": "win-lose-detection story re-verified in cycle 4 building phase (invocation 6) \u2014 already pass, no code changes",
+      "decision": "win-lose-detection story re-verified in cycle 4 building phase (invocation 6) — already pass, no code changes",
       "context": "Launcher dispatched win-lose-detection for building. Story was already fully implemented with story_result outcome:pass, 28 tests covering AC-FA1-022 through AC-FA1-026. Re-ran full test suite: 280/280 pass. All implementation files present and unchanged. cycle_context.json already has complete story_result.",
       "alternatives_considered": [
-        "Rebuild from scratch (wasteful \u2014 identical output)"
+        "Rebuild from scratch (wasteful — identical output)"
       ],
       "rationale": "Search Before Building: all tasks are REUSE. story_result already written with outcome pass. No code changes needed.",
       "confidence": "high",
@@ -775,7 +775,7 @@
       "decision": "Search Before Building audit for fix-gameboard-quality story",
       "context": "Pre-implementation code reuse analysis",
       "alternatives_considered": [],
-      "rationale": "Found: 1 REFACTOR (GameBoard.tsx \u2014 extract ACTION_COLORS, add useRef+cleanup). No new files needed except test file. Key reuse: existing ACTION_COLORS object literal values, existing setTimeout patterns.",
+      "rationale": "Found: 1 REFACTOR (GameBoard.tsx — extract ACTION_COLORS, add useRef+cleanup). No new files needed except test file. Key reuse: existing ACTION_COLORS object literal values, existing setTimeout patterns.",
       "confidence": "high",
       "affects": [
         "src/components/GameBoard.tsx"
@@ -785,7 +785,7 @@
   "factory_questions": [
     {
       "question": "Vercel CLI not installed and no VERCEL_TOKEN in environment. Cannot complete staging deployment.",
-      "found_in": "foundation phase Step 7 \u2014 Deploy to Staging",
+      "found_in": "foundation phase Step 7 — Deploy to Staging",
       "resolved_as": null,
       "needs_clarification_from": "human",
       "severity": "significant",
@@ -793,11 +793,11 @@
         "npm install -g vercel && vercel login (interactive)",
         "Set VERCEL_TOKEN + VERCEL_PROJECT_ID + VERCEL_ORG_ID env vars"
       ],
-      "impact": "deployment_url remains null. Does NOT block feature cycles \u2014 build succeeds and static export works."
+      "impact": "deployment_url remains null. Does NOT block feature cycles — build succeeds and static export works."
     },
     {
       "question": "Untracked tests/fuzzy-search.test.mjs causes npm test failure (import of non-existent src/lib/fuzzy-search.mjs). This file is TDD red for the fuzzy-autocomplete story, written by a prior invocation that did not complete. It is NOT committed. The fuzzy-autocomplete story should either commit this file as its TDD red or remove it if starting fresh.",
-      "found_in": "autocomplete-index story build phase \u2014 test suite verification",
+      "found_in": "autocomplete-index story build phase — test suite verification",
       "resolved_as": "Left untracked file in place. All 150 committed tests pass (32 foundation + 37 mana + 15 tier-selection + 65 game-engine + 1 failure from untracked file). The untracked file does not affect committed test health.",
       "needs_clarification_from": "spec",
       "severity": "minor"
@@ -806,7 +806,7 @@
   "evaluation_report": {
     "qa": {
       "verdict": "PASS",
-      "verdict_cycle": 4,
+      "verdict_cycle": 6,
       "milestone": "core-game-loop",
       "criteria_results": [
         {
@@ -827,7 +827,7 @@
         {
           "criterion": "AC-FA2-001",
           "verdict": "pass",
-          "evidence": "card-details.json (930 cards) and autocomplete-index.json (36,606 names) exist \u2014 prove build ran"
+          "evidence": "card-details.json (930 cards) and autocomplete-index.json (36,606 names) exist — prove build ran"
         },
         {
           "criterion": "AC-FA2-002",
@@ -852,22 +852,22 @@
         {
           "criterion": "AC-FA2-006",
           "verdict": "pass",
-          "evidence": "simple-daily: 365 cards \u2713"
+          "evidence": "simple-daily: 365 cards ✓"
         },
         {
           "criterion": "AC-FA2-007",
           "verdict": "pass",
-          "evidence": "cryptic-daily: 365 cards \u2713"
+          "evidence": "cryptic-daily: 365 cards ✓"
         },
         {
           "criterion": "AC-FA2-008",
           "verdict": "pass",
-          "evidence": "simple-practice: 100 cards, zero overlap with daily pools \u2713"
+          "evidence": "simple-practice: 100 cards, zero overlap with daily pools ✓"
         },
         {
           "criterion": "AC-FA2-009",
           "verdict": "pass",
-          "evidence": "cryptic-practice: 100 cards, zero overlap with daily pools \u2713"
+          "evidence": "cryptic-practice: 100 cards, zero overlap with daily pools ✓"
         },
         {
           "criterion": "AC-FA2-010",
@@ -907,12 +907,12 @@
         {
           "criterion": "AC-FIX-RARITY-001",
           "verdict": "pass",
-          "evidence": "test PASSES: src/types/card.ts line 18 rarity union is 'common' | 'uncommon' | 'rare' | 'mythic' | 'special'. Fix commit e31dd52. Test: [AC-FIX-RARITY-001] src/types/card.ts rarity union includes 'special' \u2714"
+          "evidence": "test PASSES: src/types/card.ts line 18 rarity union is 'common' | 'uncommon' | 'rare' | 'mythic' | 'special'. Fix commit e31dd52. Test: [AC-FIX-RARITY-001] src/types/card.ts rarity union includes 'special' ✔"
         },
         {
           "criterion": "AC-FIX-RARITY-002",
           "verdict": "pass",
-          "evidence": "test PASSES: All 930 card-details.json rarity values are in the Card.rarity type union (including 3 'special' cards e.g. Spitting Slug). Fix commit e31dd52. Test: [AC-FIX-RARITY-002] every card-details.json rarity value is in the Card.rarity type union \u2714"
+          "evidence": "test PASSES: All 930 card-details.json rarity values are in the Card.rarity type union (including 3 'special' cards e.g. Spitting Slug). Fix commit e31dd52. Test: [AC-FIX-RARITY-002] every card-details.json rarity value is in the Card.rarity type union ✔"
         },
         {
           "criterion": "AC-FIX-RARITY-003",
@@ -925,7 +925,7 @@
         "dead_elements": 0,
         "broken_links": 0,
         "pages_checked": 0,
-        "note": "No deployment URL \u2014 browser-based checks skipped. All checks are code/artifact-based."
+        "note": "No deployment URL — browser-based checks skipped. All checks are code/artifact-based."
       },
       "criteria_pass_rate": 1,
       "env_limited_count": 2,
@@ -1009,7 +1009,7 @@
         {
           "criterion": "AC-FA3-003",
           "verdict": "pass",
-          "evidence": "Fuse.js fuzzy fallback handles typos; 'lighning' \u2192 'Lightning Bolt' in test"
+          "evidence": "Fuse.js fuzzy fallback handles typos; 'lighning' → 'Lightning Bolt' in test"
         },
         {
           "criterion": "AC-FA3-004",
@@ -1039,7 +1039,7 @@
         {
           "criterion": "AC-FA1-019",
           "verdict": "pass",
-          "evidence": "canPass(6, false) == false \u2014 Pass button not shown on round 6"
+          "evidence": "canPass(6, false) == false — Pass button not shown on round 6"
         },
         {
           "criterion": "AC-FA1-020",
@@ -1075,19 +1075,49 @@
           "criterion": "AC-FA1-026",
           "verdict": "pass",
           "evidence": "isGameOver() returns true when solved or 6 actions taken; GameBoard delays setGameOver(true) 1.2s"
+        },
+        {
+          "criterion": "AC-FIX-GB-001",
+          "verdict": "pass",
+          "evidence": "tests/gameboard-quality.test.mjs: exactly 1 ACTION_COLORS declaration found before export default function GameBoard. grep confirms module-level placement."
+        },
+        {
+          "criterion": "AC-FIX-GB-002",
+          "verdict": "pass",
+          "evidence": "tests/gameboard-quality.test.mjs: 3+ ACTION_COLORS references found (1 decl + 2+ usages). Exactly 1 inline object literal (the declaration). No duplicate inline objects."
+        },
+        {
+          "criterion": "AC-FIX-GB-003",
+          "verdict": "pass",
+          "evidence": "tests/gameboard-quality.test.mjs: useRef imported; gameOverTimeoutRef and flashTimeoutRef declared. Both setTimeout calls assign to .current."
+        },
+        {
+          "criterion": "AC-FIX-GB-004",
+          "verdict": "pass",
+          "evidence": "tests/gameboard-quality.test.mjs: useEffect with return () => { clearTimeout } present in source. Cleanup guards with null checks."
+        },
+        {
+          "criterion": "AC-FIX-GB-005",
+          "verdict": "pass",
+          "evidence": "tests/gameboard-quality.test.mjs: every setTimeout line contains .current assignment. No untracked setTimeout calls."
+        },
+        {
+          "criterion": "AC-FIX-GB-006",
+          "verdict": "pass",
+          "evidence": "292/292 tests pass (npm test). GameBoard.tsx exports default function GameBoard. TypeScript: 0 errors."
         }
       ],
       "code_quality_baseline": {
         "eslint_errors": 0,
         "eslint_warnings": 0,
         "eslint_note": "No ESLint config (known global improvement). TypeScript strict: 0 errors.",
-        "duplication_pct": 2.5,
-        "duplication_note": "ACTION_COLORS object defined twice in GameBoard (lines 179 + 234). Minor.",
+        "duplication_pct": 1.5,
+        "duplication_note": "Improved from 2.5% — ACTION_COLORS duplicate removed. No remaining intra-file duplication in GameBoard.",
         "circular_deps": 0,
         "dead_code_items": 0,
         "files_over_300_lines": 1,
         "files_over_300_lines_detail": [
-          "src/components/GameBoard.tsx (312 lines) \u2014 marginally over"
+          "src/components/GameBoard.tsx (322 lines) — grew from 312 due to useRef + useEffect cleanup (10 lines added, expected)"
         ],
         "npm_audit": {
           "critical": 1,
@@ -1097,11 +1127,11 @@
           "note": "Next.js version advisory. All CVEs target server-side features. Static export is unaffected."
         },
         "degraded": false,
-        "degradation_vs_prev": "No degradation \u2014 GameBoard.tsx grew from ~260 to 312 lines due to win-lose + post-solve content (expected feature growth, not degradation)."
+        "degradation_vs_prev": "No degradation — metrics improved. Duplication 2.5% → 1.5% (ACTION_COLORS fix). No new large files. Production risk MEDIUM items resolved."
       },
       "performance_baseline": {
         "lighthouse_scores": null,
-        "note": "No deployment URL \u2014 Lighthouse not run. Build verified: 8 static routes. Home: 95.9KB first-load JS. Play pages: 100KB (includes Fuse.js ~25KB)."
+        "note": "No deployment URL — Lighthouse not run. Build verified: 8 static routes. Home: 95.9KB first-load JS. Play pages: 100KB (includes Fuse.js ~25KB)."
       },
       "code_quality_warning": false,
       "ai_code_audit": {
@@ -1121,40 +1151,40 @@
             ]
           },
           "robustness": {
-            "score": 80,
+            "score": 92,
             "findings": [
               "GameBoard handles loading, error, and empty pool states. GuessInput has cancellation token for async init. fuzzy-search trims/limits query.",
-              "MEDIUM: setTimeout(setGameOver, 1200) in GameBoard not cleaned up on unmount \u2014 potential state update on unmounted component warning."
+              "RESOLVED: Both setTimeout calls now cleaned up on unmount via useRef + useEffect. gameOverTimeoutRef and flashTimeoutRef null-guarded before clearTimeout."
             ]
           },
           "production_risks": {
-            "score": 76,
+            "score": 88,
             "findings": [
-              "MEDIUM: ACTION_COLORS defined twice in GameBoard.tsx (lines 179 and 234) \u2014 minor duplication, extract to module-level const.",
-              "MEDIUM: setTimeout for game-over transition not cleared on unmount (memory/warning risk on fast navigation).",
-              "LOW: fetch('/data/card-details.json') has no timeout \u2014 on slow connections, loading spinner shows indefinitely.",
-              "LOW: key={i} on action dots is fine since the array is stable, but key={r} (round number) would be more semantically correct."
+              "RESOLVED: ACTION_COLORS extracted to single module-level const.",
+              "RESOLVED: setTimeout cleanup implemented — no React unmount warnings.",
+              "LOW: fetch('/data/card-details.json') has no timeout — on slow connections, loading spinner shows indefinitely.",
+              "LOW: GameBoard.tsx at 322 lines (expected growth from cleanup code)."
             ]
           },
           "security": {
             "score": 95,
             "findings": [
-              "Static export \u2014 no server-side code. No user inputs written to DOM unsafely. Card names from validated JSON, not user input. No localStorage yet."
+              "Static export — no server-side code. No user inputs written to DOM unsafely. Card names from validated JSON, not user input. No localStorage yet."
             ]
           },
           "dead_hallucinated": {
-            "score": 88,
+            "score": 90,
             "findings": [
-              "src/lib/fuzzy-search.ts is an intentional thin re-export wrapper (documented). poolCards state used by GuessInput. All exports from game-engine.ts are consumed by GameBoard."
+              "useRef imported and used (gameOverTimeoutRef, flashTimeoutRef). src/lib/fuzzy-search.ts is an intentional thin re-export wrapper (documented). All exports consumed."
             ]
           },
           "tech_debt": {
-            "score": 74,
+            "score": 87,
             "findings": [
-              "Post-solve screen inline in GameBoard \u2014 intentional interim (documented: 'Post-solve layout story will refactor this into a proper component').",
-              "ACTION_COLORS object duplicated \u2014 extract to const.",
-              "setTimeout not cleaned up on unmount.",
-              "No React error boundary around GameBoard's async fetch."
+              "Post-solve screen inline in GameBoard — intentional interim (documented: 'Post-solve layout story will refactor this into a proper component').",
+              "RESOLVED: ACTION_COLORS extracted to module-level const.",
+              "RESOLVED: setTimeout cleanup implemented.",
+              "No React error boundary around GameBoard's async fetch (unchanged, LOW)."
             ]
           }
         },
@@ -1163,20 +1193,21 @@
       "security_review": {
         "ran": false,
         "verdict": "SKIPPED",
-        "reason": "Static export \u2014 backend: false. No server-side code deployed."
+        "reason": "Static export — backend: false. No server-side code deployed.",
+        "carried_forward_from_cycle": 4
       },
       "a11y_review": {
         "ran": false,
         "verdict": "ENV_LIMITED",
-        "reason": "No deployment URL \u2014 browser-based a11y checks not possible. Code inspection shows: GuessInput uses ARIA combobox role with aria-expanded, aria-controls, aria-activedescendant, aria-label. Dropdown uses role=listbox with role=option items. Pass button has aria-label. GameBoard uses semantic headings."
+        "reason": "No deployment URL — browser-based a11y checks not possible. Code inspection shows: GuessInput uses ARIA combobox role with aria-expanded, aria-controls, aria-activedescendant, aria-label. Dropdown uses role=listbox with role=option items. Pass button has aria-label. GameBoard uses semantic headings."
       },
       "design_review": {
         "ran": false,
         "verdict": "ENV_LIMITED",
-        "reason": "No deployment URL \u2014 visual design review deferred. Code inspection: CSS custom properties used throughout for theme consistency. 480px centered column. Responsive spacing via CSS variables."
+        "reason": "No deployment URL — visual design review deferred. Code inspection: CSS custom properties used throughout for theme consistency. 480px centered column. Responsive spacing via CSS variables."
       },
       "fix_tasks": [],
-      "health_score": 89,
+      "health_score": 92,
       "health_score_breakdown": {
         "base": 100,
         "deductions": [
@@ -1189,19 +1220,11 @@
             "amount": -2
           },
           {
-            "reason": "ENV_LIMITED: No deployment URL \u2014 Lighthouse, a11y, design review skipped",
+            "reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review skipped",
             "amount": -2
           },
           {
-            "reason": "MEDIUM: setTimeout not cleaned up on unmount",
-            "amount": -2
-          },
-          {
-            "reason": "LOW: ACTION_COLORS defined twice in GameBoard",
-            "amount": -1
-          },
-          {
-            "reason": "LOW: GameBoard.tsx marginally over 300 lines (312)",
+            "reason": "LOW: GameBoard.tsx marginally over 300 lines (322, expected cleanup growth)",
             "amount": -1
           },
           {
@@ -1213,14 +1236,14 @@
             "amount": -1
           }
         ],
-        "wtf_likelihood": "0.5/min \u2014 senior engineer would note the duplicate ACTION_COLORS and setTimeout leak but otherwise solid code",
+        "wtf_likelihood": "0.3/min — senior engineer finds clean, DRY code. No remaining duplicate consts or setTimeout leaks.",
         "wtf_adjustment": 0,
-        "final_score": 89,
-        "note": "Core-game-loop milestone full evaluation. All 26 AC criteria pass (code-verified). 280/280 tests pass. Build succeeds. No critical security or a11y issues detected in code review. Deductions are LOW/ENV_LIMITED, consistent with previous milestone health trajectory."
+        "final_score": 92,
+        "note": "Cycle 6 re-evaluation. All 32 AC criteria pass (26 core-game-loop + 6 fix-gameboard-quality, code-verified). 292/292 tests pass. Build succeeds. MEDIUM deductions eliminated: setTimeout cleanup and ACTION_COLORS duplication both resolved. Health 89 → 92."
       }
     },
     "design": {
-      "note": "Design review skipped \u2014 no deployment URL available for visual inspection. Foundation milestone is data/infrastructure only.",
+      "note": "Design review skipped — no deployment URL available for visual inspection. Foundation milestone is data/infrastructure only.",
       "design_review": null,
       "a11y_review": null
     },
@@ -1229,12 +1252,12 @@
         {
           "journey": "Daily game loop (Simple tier)",
           "steps": [
-            "Home screen \u2192 select Simple #N",
-            "Game loads daily card \u2192 Round 1 shows mana pips + color identity",
-            "Player types card name \u2192 fuzzy autocomplete shows matches",
-            "Player guesses \u2192 correct/wrong feedback flash \u2192 round advances",
-            "Player can pass (rounds 1-5) \u2192 'Pass' button visible",
-            "After round 6 or correct guess \u2192 post-solve screen with score and card reveal"
+            "Home screen → select Simple #N",
+            "Game loads daily card → Round 1 shows mana pips + color identity",
+            "Player types card name → fuzzy autocomplete shows matches",
+            "Player guesses → correct/wrong feedback flash → round advances",
+            "Player can pass (rounds 1-5) → 'Pass' button visible",
+            "After round 6 or correct guess → post-solve screen with score and card reveal"
           ],
           "quality": "pass",
           "notes": "Full loop implemented and tested. 280 tests verify every AC."
@@ -1281,7 +1304,7 @@
           {
             "heuristic": "Game Feel",
             "verdict": "pass",
-            "evidence": "Progressive reveal (mana \u2192 type \u2192 rarity \u2192 rules \u2192 flavor \u2192 art) creates escalating information. 1.2s feedback flash before post-solve transition. Pass mechanic gives strategic choice."
+            "evidence": "Progressive reveal (mana → type → rarity → rules → flavor → art) creates escalating information. 1.2s feedback flash before post-solve transition. Pass mechanic gives strategic choice."
           },
           {
             "heuristic": "Scope Discipline",
@@ -1297,8 +1320,8 @@
       },
       "verdict": "PRODUCTION_READY",
       "milestone": "core-game-loop",
-      "confidence": 0.87,
-      "confidence_adjusted": 0.87,
+      "confidence": 0.91,
+      "confidence_adjusted": 0.93,
       "env_limited_impact": {
         "excluded_criteria": [
           "AC-FA1-002",
@@ -1314,25 +1337,9 @@
       "recommended_action": "continue",
       "improvement_items": [
         {
-          "id": "imp-action-colors-duplication",
-          "description": "ACTION_COLORS object defined twice in GameBoard.tsx (lines 179 and 234). Should be extracted to a module-level const.",
-          "evidence": "GameBoard.tsx lines 179-180, 234-235 \u2014 identical object literal",
-          "scope": "this-milestone",
-          "severity": "low",
-          "grounding": "Code quality: DRY principle. Minor refactor."
-        },
-        {
-          "id": "imp-settimeout-cleanup",
-          "description": "Two setTimeout calls in GameBoard (game-over delay, feedback flash clear) are not cleaned up on unmount. React will warn about state updates on unmounted components.",
-          "evidence": "GameBoard.tsx lines 95, 98 \u2014 setTimeout(() => setGameOver/setGuessResult, 1200) without cleanup",
-          "scope": "this-milestone",
-          "severity": "medium",
-          "grounding": "Robustness: React unmount cleanup prevents memory leaks and warnings. Fix: useEffect + useRef pattern or clearTimeout in cleanup."
-        },
-        {
           "id": "imp-no-share-button",
           "description": "Post-solve screen has no share functionality. For a Wordle-style game, sharing your score is a core engagement loop.",
-          "evidence": "GameBoard.tsx post-solve section \u2014 no share button or clipboard copy",
+          "evidence": "GameBoard.tsx post-solve section — no share button or clipboard copy",
           "scope": "future",
           "milestone_target": "post-solve-experience",
           "severity": "medium",
@@ -1341,14 +1348,26 @@
         {
           "id": "imp-no-eslint",
           "description": "No ESLint configuration. Global improvement item (already in global_improvements.json).",
-          "evidence": "package.json \u2014 no eslint devDependency",
+          "evidence": "package.json — no eslint devDependency",
           "scope": "global",
           "severity": "low",
           "grounding": "Code quality baseline."
         }
+      ],
+      "resolved_items": [
+        {
+          "id": "imp-action-colors-duplication",
+          "resolved_in_cycle": 6,
+          "resolution": "Extracted ACTION_COLORS to module-level const at top of GameBoard.tsx. Both usages reference single declaration. AC-FIX-GB-001/002 verified by tests."
+        },
+        {
+          "id": "imp-settimeout-cleanup",
+          "resolved_in_cycle": 6,
+          "resolution": "Added gameOverTimeoutRef + flashTimeoutRef (useRef). useEffect cleanup calls clearTimeout on both refs on unmount. AC-FIX-GB-003/004/005 verified by tests."
+        }
       ]
     },
-    "health_score": 89,
+    "health_score": 92,
     "health_score_breakdown": {
       "base": 100,
       "deductions": [
@@ -1365,32 +1384,28 @@
           "amount": -2
         },
         {
-          "reason": "MEDIUM: setTimeout not cleaned up on unmount",
-          "amount": -2
-        },
-        {
-          "reason": "LOW: ACTION_COLORS duplicated in GameBoard",
-          "amount": -1
-        },
-        {
-          "reason": "LOW: GameBoard marginally over 300 lines (312)",
+          "reason": "LOW: GameBoard marginally over 300 lines (322, expected cleanup growth)",
           "amount": -1
         },
         {
           "reason": "LOW: No fetch timeout on card-details.json",
           "amount": -1
+        },
+        {
+          "reason": "LOW: No React error boundary around async fetch",
+          "amount": -1
         }
       ],
-      "wtf_likelihood": "0.5/min",
+      "wtf_likelihood": "0.3/min",
       "wtf_adjustment": 0,
-      "note": "core-game-loop milestone. 280/280 tests. 26 new ACs all pass. Health 89 (-3 from foundation 92) due to new MEDIUM (setTimeout leak) and LOW (duplication) items discovered in game loop code. ENV_LIMITED penalty unchanged."
+      "note": "Cycle 6 re-evaluation. 292/292 tests. 32 ACs pass (26 core-game-loop + 6 fix-gameboard-quality). Health 92 (+3 from cycle 5 89). MEDIUM deductions eliminated: setTimeout cleanup + ACTION_COLORS duplication both resolved. ENV_LIMITED penalty unchanged."
     },
     "re_walk_requests": []
   },
   "foundation_eval_report": {
     "verdict": "PASS",
     "_evaluated_at": "2026-04-04",
-    "_evaluator": "foundation-eval (sonnet) \u2014 independent re-verification",
+    "_evaluator": "foundation-eval (sonnet) — independent re-verification",
     "_tests_verified": 69,
     "_tests_passing": 69,
     "_silent_degradation_grep": "zero matches for TODO/FIXME/HACK/mock/stub/hardcoded in src/",
@@ -1398,22 +1413,22 @@
       "schema_completeness": {
         "status": "PASS",
         "findings": [
-          "No SQL schema needed \u2014 pure static app. TypeScript types in src/types/card.ts serve as the data contract.",
+          "No SQL schema needed — pure static app. TypeScript types in src/types/card.ts serve as the data contract.",
           "Card interface covers all clue fields needed by core-game-loop: mana_cost, color_identity, type_line, oracle_text, oracle_text_first_line, rarity, set, set_era, flavor_text, lore_blurb.",
           "GameState and GameResult cover the full game lifecycle for core-game-loop and post-solve-experience.",
           "TierStats and PlayerStats (localStorage) cover all stats-streaks-persistence needs.",
           "CardPool type ('simple-daily' | 'cryptic-daily' | 'simple-practice' | 'cryptic-practice') covers both daily and practice-mode feature areas.",
           "ClueStatus and GuessAttempt are defined for round progression.",
-          "MINOR: rarity type omits 'special' variant \u2014 divergence log says types were updated but card.ts line 18 only has 4 values. However, build succeeds and all 930 curated cards have valid rarities per tests. No structural impact.",
-          "No feature area would need type changes to function \u2014 all data shapes are defined."
+          "MINOR: rarity type omits 'special' variant — divergence log says types were updated but card.ts line 18 only has 4 values. However, build succeeds and all 930 curated cards have valid rarities per tests. No structural impact.",
+          "No feature area would need type changes to function — all data shapes are defined."
         ]
       },
       "integration_scaffolds": {
         "status": "PASS",
         "findings": [
-          "Scryfall pipeline (scripts/build-card-data.mjs) is the sole integration \u2014 public API, no credentials required.",
+          "Scryfall pipeline (scripts/build-card-data.mjs) is the sole integration — public API, no credentials required.",
           "fetchJSON and downloadFile helpers handle errors: HTTP status checks, JSON parse errors, missing bulk-data entries all throw with clear messages.",
-          "No hardcoded credentials (none needed \u2014 Scryfall is public).",
+          "No hardcoded credentials (none needed — Scryfall is public).",
           "User-Agent and Accept headers set per Scryfall API requirements.",
           "Rate limiting via sleep() calls between requests.",
           "Gzip content-encoding decompressed on the fly via zlib.createGunzip().",
@@ -1435,11 +1450,11 @@
           "App shell renders: layout.tsx + globals.css + page.tsx. Build produces static export with 87.1KB first-load JS.",
           "Theme tokens: full CSS custom property set for both light and dark mode via prefers-color-scheme. Game-specific tokens defined: --color-correct (Wordle green), --color-wrong (Wordle yellow), --color-pass (gray), --color-accent (MTG purple).",
           "ManaSymbol and ManaCost SVG components implemented and tested (37 tests passing). Cover all mana categories: mono-colour, generic, hybrid, phyrexian, colorless, X.",
-          "colorIdentityEmoji() co-located in mana.ts \u2014 ready for post-solve share grid.",
+          "colorIdentityEmoji() co-located in mana.ts — ready for post-solve share grid.",
           "Layout component: 480px centered column, mobile-first, min-height 100dvh.",
-          "Navigation: MTGordle is a single-page game app \u2014 tier selection IS the navigation. No traditional nav bar appropriate for this product type. Stub page shows 'Coming soon' correctly.",
+          "Navigation: MTGordle is a single-page game app — tier selection IS the navigation. No traditional nav bar appropriate for this product type. Stub page shows 'Coming soon' correctly.",
           "MINOR: No React error boundaries in layout.tsx. Not in foundation_spec scope for a static game.",
-          "MINOR: No loading state components in scaffold. Not yet needed \u2014 feature cycles will add them per feature."
+          "MINOR: No loading state components in scaffold. Not yet needed — feature cycles will add them per feature."
         ]
       },
       "deployment_pipeline": {
@@ -1448,19 +1463,19 @@
           "Explicitly skipped due to missing Vercel credentials. Documented in skipped[] array with unblock instructions.",
           "Build itself PASSES: next build + static export to out/ succeeds. Routes: /, /terms, /_not-found.",
           "vercel.json configured for static export deployment.",
-          "Does not block feature cycles \u2014 build output is verified and static export is functional."
+          "Does not block feature cycles — build output is verified and static export is functional."
         ]
       },
       "test_fixtures": {
         "status": "PASS",
         "findings": [
           "930 curated cards covering all 4 pools: 365 simple-daily, 365 cryptic-daily, 100 simple-practice, 100 cryptic-practice.",
-          "36,606 unique Oracle card names in autocomplete-index.json (745KB uncompressed, 241KB gzipped \u2014 under 500KB AC met).",
+          "36,606 unique Oracle card names in autocomplete-index.json (745KB uncompressed, 241KB gzipped — under 500KB AC met).",
           "Realistic data: real MTG cards ranked by EDHREC popularity. No 'test123' or placeholder values.",
           "lore_blurb uses actual Scryfall flavor_text or meaningful fallback: '{name} is a {type_line} from the world of Magic: The Gathering.'",
           "Reproducible: build-card-data.mjs with 7-day cache produces deterministic output.",
           "Importable by feature tests: foundation.test.mjs loads, validates structure, pool counts, uniqueness, and sort order. All 32 foundation tests pass.",
-          "nicknames: [] acknowledged as intentionally empty at foundation \u2014 to be populated by community-data phase.",
+          "nicknames: [] acknowledged as intentionally empty at foundation — to be populated by community-data phase.",
           "Zero pool overlap validated by both pipeline (throws on duplicate) and tests."
         ]
       }
@@ -1478,23 +1493,23 @@
       ]
     },
     "structural_gaps": [
-      "rarity TypeScript type missing 'special' variant (cosmetic \u2014 no cards with that rarity in the curated pool per test validation)",
+      "rarity TypeScript type missing 'special' variant (cosmetic — no cards with that rarity in the curated pool per test validation)",
       "No React error boundaries (not in foundation scope; feature cycles should add where appropriate)",
       "Vercel staging deploy pending auth setup (documented; does not block feature cycles)"
     ],
     "integration_gaps": [
-      "No pipeline unit tests \u2014 only output validation tests. Acceptable for committed build artifacts but pipeline changes would benefit from test coverage."
+      "No pipeline unit tests — only output validation tests. Acceptable for committed build artifacts but pipeline changes would benefit from test coverage."
     ],
     "recommendations": [
       "Add 'special' to rarity union in src/types/card.ts to match actual Scryfall data and the pipeline's raw.rarity passthrough.",
       "Set VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_ORG_ID to unblock staging deploy. Run 'npx vercel --prod' from projects/mtgordle/.",
-      "Feature cycles may add error boundaries as UI complexity grows \u2014 not required now."
+      "Feature cycles may add error boundaries as UI complexity grows — not required now."
     ]
   },
   "deployment_url": "https://mtgordle.vercel.app",
   "foundation_completion": {
     "schema_ready": false,
-    "schema_ready_note": "No SQL schema needed \u2014 this is a pure static app. localStorage persistence (PlayerStats) is the data layer; types defined in src/types/card.ts",
+    "schema_ready_note": "No SQL schema needed — this is a pure static app. localStorage persistence (PlayerStats) is the data layer; types defined in src/types/card.ts",
     "auth_ready": false,
     "auth_ready_note": "No auth required per vision.json (needs_auth: false)",
     "integrations_ready": {
@@ -1568,6 +1583,13 @@
         "url": "https://mtgordle.vercel.app",
         "timestamp": "2026-04-04T22:42:21.734Z",
         "cycle": 1
+      },
+      {
+        "version": null,
+        "previous": null,
+        "url": "https://mtgordle.vercel.app",
+        "timestamp": "2026-04-04T23:04:07.205Z",
+        "cycle": 1
       }
     ]
   },
@@ -1601,20 +1623,20 @@
         "files_changed": [
           "src/types/card.ts"
         ],
-        "test_added": "tests/foundation.test.mjs \u2014 [AC-FIX-RARITY-001] src/types/card.ts rarity union includes 'special'",
-        "regression_test_added": "tests/foundation.test.mjs \u2014 [AC-FIX-RARITY-003] Card.rarity still includes all original rarity values after fix",
+        "test_added": "tests/foundation.test.mjs — [AC-FIX-RARITY-001] src/types/card.ts rarity union includes 'special'",
+        "regression_test_added": "tests/foundation.test.mjs — [AC-FIX-RARITY-003] Card.rarity still includes all original rarity values after fix",
         "commit_sha": "e31dd52"
       },
       {
         "criterion_id": "AC-FIX-RARITY-002",
         "root_cause": "code_bug",
-        "hypothesis": "Same root cause as AC-FIX-RARITY-001 \u2014 same one-line fix resolves both criteria simultaneously",
-        "fix_description": "Same fix as AC-FIX-RARITY-001 \u2014 type widening makes all 3 'special' rarity cards (e.g. Spitting Slug) valid against the type union",
+        "hypothesis": "Same root cause as AC-FIX-RARITY-001 — same one-line fix resolves both criteria simultaneously",
+        "fix_description": "Same fix as AC-FIX-RARITY-001 — type widening makes all 3 'special' rarity cards (e.g. Spitting Slug) valid against the type union",
         "files_changed": [
           "src/types/card.ts"
         ],
-        "test_added": "tests/foundation.test.mjs \u2014 [AC-FIX-RARITY-002] every card-details.json rarity value is in the Card.rarity type union",
-        "regression_test_added": "tests/foundation.test.mjs \u2014 [AC-FIX-RARITY-003] Card.rarity still includes all original rarity values after fix",
+        "test_added": "tests/foundation.test.mjs — [AC-FIX-RARITY-002] every card-details.json rarity value is in the Card.rarity type union",
+        "regression_test_added": "tests/foundation.test.mjs — [AC-FIX-RARITY-003] Card.rarity still includes all original rarity values after fix",
         "commit_sha": "e31dd52"
       }
     ],
@@ -1658,32 +1680,36 @@
   "_current_story": "fix-1775343428434-0",
   "_foundation_phase_complete": true,
   "diff_scope": {
-    "frontend": false,
+    "frontend": true,
     "backend": false,
-    "tests": false,
+    "tests": true,
     "config": false,
     "docs": false,
     "prompts": false,
-    "note": "Cycle 5: Only cycle_context.json changed from main. Building phase ran in REUSE-only mode (win-lose-detection already implemented, no code changes). Zero code, test, or config file modifications."
+    "changed_files": [
+      "src/components/GameBoard.tsx",
+      "tests/gameboard-quality.test.mjs"
+    ],
+    "note": "Cycle 6: Building phase applied fix-gameboard-quality change spec (extracted ACTION_COLORS to module-level const, added useRef+setTimeout cleanup). 2 files changed: 1 frontend component + 1 test file."
   },
   "evaluation_tier": "full",
-  "cycle_type": "feature-build",
-  "tier_rationale": "Building phase ran in REUSE-only mode \u2014 all stories already implemented, no new code. By cycle type rules: previous phase was building (not milestone-fix, not analyzing), implemented[] contains feat tasks \u2192 feature-build. Full tier applies. However, diff_scope shows zero code changes: this is a re-verification of the identical codebase evaluated in cycle 4 (PASS). Sub-phases will run efficiently with same-code evidence.",
+  "cycle_type": "re-evaluation",
+  "tier_rationale": "Previous phase was building applying change specs generated by cycle 5 analyzing phase (deepen:improvements decision). Per cycle type rules: previous phase was analyzing → building with change specs → re-evaluation. Full tier applies: all three sub-phases run. Changed files are 2 (GameBoard.tsx + gameboard-quality.test.mjs), both expected from the fix spec.",
   "test_integrity_report": {
     "spec_coverage_pct": 100,
     "po_check_coverage_pct": 100,
-    "total_criteria": 51,
+    "total_criteria": 57,
     "total_po_checks": 0,
-    "total_tests": 280,
+    "total_tests": 292,
     "orphaned_count": 0,
     "orphaned_removed": [],
     "orphaned_renamed": [],
     "stale_regenerated_count": 0,
-    "newly_generated_count": 0,
+    "newly_generated_count": 6,
     "test_suite_pass": true,
     "verdict": "PASS",
     "coverage_complete": true,
-    "_cycle5_recheck": "280/280 pass. No code changes since cycle 4 evaluation. Re-verification confirms test suite integrity unchanged.",
+    "_cycle6_recheck": "292/292 pass (live run). fix-gameboard-quality story added 12 tests in tests/gameboard-quality.test.mjs covering AC-FIX-GB-001 through AC-FIX-GB-006. All prior criteria still covered by unchanged test files.",
     "feature_not_implemented": [],
     "criteria_covered": {
       "tier-selection": [
@@ -1730,6 +1756,14 @@
         "AC-FA8-006",
         "AC-FA8-007"
       ],
+      "fix-gameboard-quality": [
+        "AC-FIX-GB-001",
+        "AC-FIX-GB-002",
+        "AC-FIX-GB-003",
+        "AC-FIX-GB-004",
+        "AC-FIX-GB-005",
+        "AC-FIX-GB-006"
+      ],
       "foundation-carried": [
         "AC-FA1-001",
         "AC-FA1-003",
@@ -1742,26 +1776,30 @@
     "env_limited": [
       {
         "criterion": "AC-FA1-002",
-        "reason": "Vercel deployment requires VERCEL_TOKEN \u2014 no CLI auth or token available in this environment",
+        "reason": "Vercel deployment requires VERCEL_TOKEN — no CLI auth or token available in this environment",
         "code_evidence": "vercel.json exists, next.config.mjs has output:'export'"
       },
       {
         "criterion": "AC-FA2-005",
-        "reason": "Build time < 60s cannot be verified by unit tests \u2014 requires running 'npm run build:data'",
+        "reason": "Build time < 60s cannot be verified by unit tests — requires running 'npm run build:data'",
         "code_evidence": "scripts/build-card-data.mjs exists; artifact card-details.json (930 cards) proves pipeline ran"
       }
     ],
-    "notes": "core-game-loop milestone full evaluation. 280/280 tests pass. 26 new core-game-loop criteria (AC-FA1-004 through AC-FA1-026, AC-FA3-001 through AC-FA3-006, AC-FA8-005/006/007) fully covered across 6 test files. No orphaned tests. No stale tests. Build succeeds: 8 static routes, 100KB first-load JS on play pages."
+    "notes": "Cycle 6 re-evaluation. 292/292 tests pass. 6 new fix-gameboard-quality criteria (AC-FIX-GB-001 through AC-FIX-GB-006) added and covered by tests/gameboard-quality.test.mjs. All 51 prior criteria still covered. No orphaned tests. No stale tests. Build succeeds."
   },
   "code_review_report": {
     "code_quality_baseline": {
       "eslint_errors": 0,
       "eslint_warnings": 0,
-      "eslint_note": "No ESLint config \u2014 linting not configured. TypeScript strict mode: 0 errors.",
-      "duplication_pct": 2.1,
+      "eslint_note": "No ESLint config — linting not configured. TypeScript strict mode: 0 errors. (global improvement item, unchanged)",
+      "duplication_pct": 1.5,
+      "duplication_note": "Improved from 2.1% — ACTION_COLORS duplicate object literal removed. Remaining: minor test/source overlap from tier-selection test.",
       "circular_deps": 0,
       "dead_code_items": 0,
-      "files_over_300_lines": 0,
+      "files_over_300_lines": 1,
+      "files_over_300_lines_detail": [
+        "src/components/GameBoard.tsx (322 lines) — grew from 312 due to useRef declarations + useEffect cleanup (10 lines, expected for this fix)"
+      ],
       "npm_audit": {
         "critical": 1,
         "high": 0,
@@ -1769,54 +1807,61 @@
         "low": 0,
         "note": "Next.js version advisory. All critical CVEs target Next.js server-side features (Server Actions, Middleware, Image Optimizer, SSR). Static export with images.unoptimized:true does not deploy any server-side code. Risk is INFORMATIONAL for this deployment model."
       },
-      "degraded": false
+      "degraded": false,
+      "degradation_vs_prev": "No degradation — metrics improved: duplication 2.1% → 1.5% (ACTION_COLORS fix), production risks improved (setTimeout leak resolved). GameBoard line count grew 312 → 322 due to cleanup code (expected, not a regression)."
     },
     "ai_code_audit": {
-      "score": 85,
+      "score": 90,
       "dimensions": {
         "architecture": {
-          "score": 88,
+          "score": 90,
           "findings": [
-            "Clean separation: lib/ (pure logic), components/ (React), types/ (types), config.ts (constants). No business logic in UI components."
+            "Clean separation maintained: lib/ (pure logic), components/ (React), types/ (types), config.ts (constants). No business logic in UI components.",
+            "ACTION_COLORS extracted to module-level const is a clean DRY improvement — co-located with imports, before the component function."
           ]
         },
         "consistency": {
-          "score": 82,
+          "score": 85,
           "findings": [
-            "Consistent camelCase/PascalCase naming. Intentional .mjs/.ts dual-export pattern for Node test runner compatibility is documented in factory_decisions."
+            "Consistent camelCase/PascalCase naming. MODULE_LEVEL_CONST follows standard convention. useRef pattern consistent with React best practices."
           ]
         },
         "robustness": {
-          "score": 85,
+          "score": 92,
           "findings": [
-            "GameBoard handles loading, error, and empty pool states. fuzzy-search trims/limits input. guess-validator handles empty guesses and null nicknames."
+            "setTimeout cleanup correctly implemented: both timeout refs (gameOverTimeoutRef, flashTimeoutRef) initialized to null, useEffect cleanup guards with null checks before clearTimeout.",
+            "Empty dependency array on cleanup effect is correct — runs only on unmount. No accidental re-registration.",
+            "GameBoard handles loading, error, and empty pool states unchanged."
           ]
         },
         "production_risks": {
-          "score": 78,
+          "score": 88,
           "findings": [
-            "MEDIUM: Card.rarity TypeScript type excludes 'special' but data includes special-rarity cards. Type narrowing at runtime will surface as type error if strict checks applied.",
-            "MEDIUM (out-of-scope): disabled={round >= 6} in GameBoard prevents the round-6 guess \u2014 players only get 5 effective rounds. In-scope for pass-mechanic story."
+            "RESOLVED: ACTION_COLORS duplicate removed — single module-level const.",
+            "RESOLVED: setTimeout calls now store IDs in useRef, cleaned up on unmount. React unmount warnings eliminated.",
+            "LOW: GameBoard.tsx at 322 lines (marginally over 300 — expected growth from cleanup code).",
+            "LOW: fetch('/data/card-details.json') has no timeout — on slow connections, loading spinner shows indefinitely. (unchanged, LOW risk)"
           ]
         },
         "security": {
-          "score": 93,
+          "score": 95,
           "findings": [
-            "Static export \u2014 no server-side code deployed. No user inputs written unsafely to DOM. No localStorage yet. npm audit CRITICAL is inapplicable for static deployment."
+            "Static export — no server-side code. No user inputs written to DOM unsafely. No localStorage yet. npm audit CRITICAL is inapplicable for static deployment."
           ]
         },
         "dead_hallucinated": {
-          "score": 84,
+          "score": 90,
           "findings": [
-            "src/lib/fuzzy-search.ts is an intentional thin TypeScript re-export wrapper (documented in factory_decisions). No dead imports detected."
+            "useRef imported and used (gameOverTimeoutRef, flashTimeoutRef). No dead imports. src/lib/fuzzy-search.ts remains an intentional thin re-export wrapper (documented)."
           ]
         },
         "tech_debt": {
-          "score": 80,
+          "score": 87,
           "findings": [
-            "Card.rarity type should include 'special' to match actual data",
-            "No ESLint config \u2014 missing automated code quality baseline",
-            "getTierSelection logic duplicated across TierSelection.tsx and tier-selection.test.mjs"
+            "ACTION_COLORS duplication resolved.",
+            "setTimeout cleanup resolved.",
+            "No ESLint config — global improvement item (unchanged).",
+            "No React error boundary around GameBoard async fetch (unchanged, LOW)."
           ]
         }
       },
@@ -1825,38 +1870,14 @@
     "security_review": {
       "ran": false,
       "verdict": "SKIPPED",
-      "reason": "diff_scope.backend == false \u2014 static Next.js export with no server-side routes"
+      "reason": "diff_scope.backend == false — static Next.js export with no server-side routes",
+      "carried_forward_from_cycle": 4
     },
     "changed_files": [
-      "package.json",
-      "package-lock.json",
-      "src/app/globals.css",
-      "src/app/layout.tsx",
-      "src/app/page.tsx",
-      "src/app/play/simple/page.tsx",
-      "src/app/play/cryptic/page.tsx",
-      "src/app/play/practice/page.tsx",
-      "src/app/terms/page.tsx",
-      "src/components/CardFrame.tsx",
       "src/components/GameBoard.tsx",
-      "src/components/GuessInput.tsx",
-      "src/components/Layout.tsx",
-      "src/components/ManaSymbol.tsx",
-      "src/components/TierSelection.tsx",
-      "src/config.ts",
-      "src/lib/fuzzy-search.mjs",
-      "src/lib/fuzzy-search.ts",
-      "src/lib/game-engine.ts",
-      "src/lib/guess-validator.mjs",
-      "src/types/card.ts",
-      "tests/foundation.test.mjs",
-      "tests/fuzzy-search.test.mjs",
-      "tests/game-engine.test.mjs",
-      "tests/guess-input.test.mjs",
-      "tests/mana.test.mjs",
-      "tests/tier-selection.test.mjs"
+      "tests/gameboard-quality.test.mjs"
     ],
-    "evaluator_observations": "Good foundational code quality. Architecture is clean and well-separated. Main risks are: (1) Card.rarity type/data mismatch, (2) no ESLint config, (3) GameBoard round-6 input disabled bug (out of scope \u2014 belongs to pass-mechanic story). No critical security findings applicable to static deployment."
+    "evaluator_observations": "Cycle 6 re-evaluation. Both improvement items from cycle 5 analyzing phase (imp-action-colors-duplication, imp-settimeout-cleanup) resolved. Architecture 90, Robustness 92, Production Risks 88, Tech Debt 87. No critical findings. Code quality improved: duplication 2.1% → 1.5%, production risks resolved. Score 90/100 (up from 85 in cycle 5)."
   },
   "evaluator_observations": [
     {
@@ -1864,10 +1885,10 @@
       "cycle": "2",
       "timestamp": "2026-04-04T22:00:00.000Z",
       "decision": "Evaluation complete. Verdict: FAIL. QA gate blocked by 2 failing spec criteria.",
-      "reasoning": "Cycle 2 re-evaluation triggered by generating-change-spec adding fix-rarity-type-mismatch. Test integrity generated 3 new tests (AC-FIX-RARITY-001/002/003). AC-FIX-RARITY-001 and AC-FIX-RARITY-002 fail because the 1-line fix in src/types/card.ts has not been implemented. AC-FIX-RARITY-003 passes. QA gate detects 2/22 criteria fail \u2192 verdict FAIL. PO review not run (QA failed). Routing to milestone-fix for the 1-line type widening.",
+      "reasoning": "Cycle 2 re-evaluation triggered by generating-change-spec adding fix-rarity-type-mismatch. Test integrity generated 3 new tests (AC-FIX-RARITY-001/002/003). AC-FIX-RARITY-001 and AC-FIX-RARITY-002 fail because the 1-line fix in src/types/card.ts has not been implemented. AC-FIX-RARITY-003 passes. QA gate detects 2/22 criteria fail → verdict FAIL. PO review not run (QA failed). Routing to milestone-fix for the 1-line type widening.",
       "alternatives_considered": [
-        "Pass QA at 90.9% threshold \u2014 rejected because 2 spec criteria with explicit tests explicitly fail; ignoring known failures would undermine spec integrity",
-        "Promote milestone as-is \u2014 rejected because fix-rarity-type-mismatch was added specifically to catch this before promotion"
+        "Pass QA at 90.9% threshold — rejected because 2 spec criteria with explicit tests explicitly fail; ignoring known failures would undermine spec integrity",
+        "Promote milestone as-is — rejected because fix-rarity-type-mismatch was added specifically to catch this before promotion"
       ],
       "confidence": 0.97
     },
@@ -1875,7 +1896,7 @@
       "phase": "evaluation-orchestrator",
       "cycle": "2",
       "timestamp": "2026-04-04T22:00:00.000Z",
-      "decision": "Skipped PO Review \u2014 QA gate failed. Previous PRODUCTION_READY verdict from cycle 1 is preserved for reference but not authoritative for this cycle.",
+      "decision": "Skipped PO Review — QA gate failed. Previous PRODUCTION_READY verdict from cycle 1 is preserved for reference but not authoritative for this cycle.",
       "reasoning": "Anti-pattern: never run PO Review after QA failure. The product is functionally correct (all original ACs pass), but the spec now requires the rarity type fix before the milestone is considered complete.",
       "alternatives_considered": [],
       "confidence": 1
@@ -1885,10 +1906,10 @@
       "cycle": "3",
       "timestamp": "2026-04-04T23:00:00.000Z",
       "decision": "Evaluation complete. Verdict: PASS. All gates pass. Routing to analyzing.",
-      "reasoning": "Cycle 3 qa-fix. Tier: gate. Previous phase: milestone-fix (commit e31dd52 \u2014 1-line type widening in src/types/card.ts). Sub-Phase 0 (Test Integrity): PASS \u2014 236/236 tests pass, 22/22 criteria covered, test_suite_pass true. Sub-Phase 1 (QA Gate): PASS \u2014 criteria_pass_rate 100% (22/22 pass or env_limited), 0 failures. AC-FIX-RARITY-001/002/003 all green. Sub-Phase 2 (PO Review): SKIPPED \u2014 gate tier. Carrying forward PRODUCTION_READY verdict (confidence 0.90 adjusted) from cycle 1. All gates pass. Milestone foundation-data-pipeline is ready for promotion decision by analyzing phase.",
+      "reasoning": "Cycle 3 qa-fix. Tier: gate. Previous phase: milestone-fix (commit e31dd52 — 1-line type widening in src/types/card.ts). Sub-Phase 0 (Test Integrity): PASS — 236/236 tests pass, 22/22 criteria covered, test_suite_pass true. Sub-Phase 1 (QA Gate): PASS — criteria_pass_rate 100% (22/22 pass or env_limited), 0 failures. AC-FIX-RARITY-001/002/003 all green. Sub-Phase 2 (PO Review): SKIPPED — gate tier. Carrying forward PRODUCTION_READY verdict (confidence 0.90 adjusted) from cycle 1. All gates pass. Milestone foundation-data-pipeline is ready for promotion decision by analyzing phase.",
       "alternatives_considered": [
-        "Upgrade to full tier \u2014 rejected: diff is 2 files, both listed in fix_tasks, no unexpected scope. Override conditions not met.",
-        "Run PO Review \u2014 rejected: gate tier strictly forbids PO Review; previous verdict is PRODUCTION_READY with 0.90 confidence, no new information would change the verdict."
+        "Upgrade to full tier — rejected: diff is 2 files, both listed in fix_tasks, no unexpected scope. Override conditions not met.",
+        "Run PO Review — rejected: gate tier strictly forbids PO Review; previous verdict is PRODUCTION_READY with 0.90 confidence, no new information would change the verdict."
       ],
       "confidence": 0.99
     },
@@ -1896,8 +1917,8 @@
       "phase": "evaluation-orchestrator",
       "cycle": "3",
       "timestamp": "2026-04-04T23:00:00.000Z",
-      "decision": "Skipped PO Review \u2014 gate-tier cycle (qa-fix). Carrying forward previous PO verdict: PRODUCTION_READY (confidence 0.90 adjusted, cycle 1).",
-      "reasoning": "Phase contract: evaluation_tier == gate \u2192 PO Review is skipped. Preserve previous PO Review gate status (not reset in Step 2 for gate-tier cycles). Previous verdict remains authoritative.",
+      "decision": "Skipped PO Review — gate-tier cycle (qa-fix). Carrying forward previous PO verdict: PRODUCTION_READY (confidence 0.90 adjusted, cycle 1).",
+      "reasoning": "Phase contract: evaluation_tier == gate → PO Review is skipped. Preserve previous PO Review gate status (not reset in Step 2 for gate-tier cycles). Previous verdict remains authoritative.",
       "alternatives_considered": [],
       "confidence": 1
     },
@@ -1907,10 +1928,10 @@
       "timestamp": "2026-04-04T00:00:00.000Z",
       "milestone": "core-game-loop",
       "decision": "Evaluation complete. Verdict: QA PASS + PO PRODUCTION_READY. All gates pass. Routing to analyzing.",
-      "reasoning": "Cycle 4 feature-build. Full evaluation tier (first evaluation of core-game-loop milestone, all tasks feat). Sub-Phase 0 (Test Integrity): PASS \u2014 280/280 tests pass. 26 core-game-loop ACs covered across 6 test files plus 3 mana scaffold ACs. No orphans, no stale tests. Sub-Phase 1 (QA Gate): PASS \u2014 26/26 core-game-loop ACs pass (code-verified). AI code audit: 82/100, 0 critical findings. Health score: 89. No critical issues. Security SKIPPED (static). a11y/design ENV_LIMITED (no deployment URL). Sub-Phase 2 (PO Review): PRODUCTION_READY \u2014 confidence 0.87. Game loop fully implemented: tier selection \u2192 6-round clue progression \u2192 fuzzy autocomplete \u2192 pass mechanic \u2192 win/lose detection \u2192 post-solve screen. Quality improvements noted: setTimeout cleanup, share button (future/post-solve-experience), ACTION_COLORS duplication. Routing to analyzing for milestone promotion decision.",
+      "reasoning": "Cycle 4 feature-build. Full evaluation tier (first evaluation of core-game-loop milestone, all tasks feat). Sub-Phase 0 (Test Integrity): PASS — 280/280 tests pass. 26 core-game-loop ACs covered across 6 test files plus 3 mana scaffold ACs. No orphans, no stale tests. Sub-Phase 1 (QA Gate): PASS — 26/26 core-game-loop ACs pass (code-verified). AI code audit: 82/100, 0 critical findings. Health score: 89. No critical issues. Security SKIPPED (static). a11y/design ENV_LIMITED (no deployment URL). Sub-Phase 2 (PO Review): PRODUCTION_READY — confidence 0.87. Game loop fully implemented: tier selection → 6-round clue progression → fuzzy autocomplete → pass mechanic → win/lose detection → post-solve screen. Quality improvements noted: setTimeout cleanup, share button (future/post-solve-experience), ACTION_COLORS duplication. Routing to analyzing for milestone promotion decision.",
       "alternatives_considered": [
-        "Route to milestone-fix for setTimeout cleanup \u2014 rejected: no CRITICAL findings, no test failures, no broken ACs. setTimeout cleanup is a code quality improvement, not a blocking bug.",
-        "Lower PO confidence due to no visual verification \u2014 rejected: game mechanics are the primary quality dimension for a core-game-loop milestone; visual polish is post-solve-experience + visual-polish-theming scope."
+        "Route to milestone-fix for setTimeout cleanup — rejected: no CRITICAL findings, no test failures, no broken ACs. setTimeout cleanup is a code quality improvement, not a blocking bug.",
+        "Lower PO confidence due to no visual verification — rejected: game mechanics are the primary quality dimension for a core-game-loop milestone; visual polish is post-solve-experience + visual-polish-theming scope."
       ],
       "confidence": 0.96
     },
@@ -1919,7 +1940,7 @@
       "cycle": "4",
       "timestamp": "2026-04-04T00:00:00.000Z",
       "decision": "Dual-voice PO Review enabled for core-game-loop.",
-      "reasoning": "This is the first full evaluation for core-game-loop feature area \u2014 no prior evaluation_report.po exists for this milestone. Dual-voice eligibility condition met.",
+      "reasoning": "This is the first full evaluation for core-game-loop feature area — no prior evaluation_report.po exists for this milestone. Dual-voice eligibility condition met.",
       "alternatives_considered": [],
       "confidence": 1
     },
@@ -1929,10 +1950,10 @@
       "timestamp": "2026-04-04T00:00:00.000Z",
       "milestone": "core-game-loop",
       "decision": "Evaluation complete. Verdict: PASS. All gates pass. Routing to analyzing.",
-      "reasoning": "Cycle 5 feature-build (re-verification). Building phase ran REUSE-only for win-lose-detection \u2014 zero code changes since cycle 4. Diff scope: all false (only cycle_context.json modified from main). Sub-Phase 0 (Test Integrity): PASS \u2014 280/280 tests pass, re-verified live. Sub-Phase 1 (QA Gate): PASS \u2014 identical code to cycle 4 evaluation; all 26 core-game-loop ACs still pass, health score 89 unchanged. Sub-Phase 2 (PO Review): dual_voice_po_review=false (prior PO exists for core-game-loop, confidence 0.87 \u2265 0.8, active_spec unchanged). Verdict: PRODUCTION_READY (0.87) \u2014 same code, same assessment. Routing to analyzing for milestone promotion decision.",
+      "reasoning": "Cycle 5 feature-build (re-verification). Building phase ran REUSE-only for win-lose-detection — zero code changes since cycle 4. Diff scope: all false (only cycle_context.json modified from main). Sub-Phase 0 (Test Integrity): PASS — 280/280 tests pass, re-verified live. Sub-Phase 1 (QA Gate): PASS — identical code to cycle 4 evaluation; all 26 core-game-loop ACs still pass, health score 89 unchanged. Sub-Phase 2 (PO Review): dual_voice_po_review=false (prior PO exists for core-game-loop, confidence 0.87 ≥ 0.8, active_spec unchanged). Verdict: PRODUCTION_READY (0.87) — same code, same assessment. Routing to analyzing for milestone promotion decision.",
       "alternatives_considered": [
-        "Classify as qa-fix (gate tier) \u2014 considered: the REUSE-only build is functionally equivalent, but rules require qa-fix to follow milestone-fix. Not applicable here.",
-        "Skip full PO Review re-run \u2014 adopted: dual_voice eligibility not triggered. Previous PRODUCTION_READY verdict stands for unchanged codebase."
+        "Classify as qa-fix (gate tier) — considered: the REUSE-only build is functionally equivalent, but rules require qa-fix to follow milestone-fix. Not applicable here.",
+        "Skip full PO Review re-run — adopted: dual_voice eligibility not triggered. Previous PRODUCTION_READY verdict stands for unchanged codebase."
       ],
       "confidence": 0.99
     },
@@ -1941,52 +1962,75 @@
       "cycle": "5",
       "timestamp": "2026-04-04T00:00:00.000Z",
       "decision": "Dual-voice PO Review NOT enabled for cycle 5.",
-      "reasoning": "Prior evaluation_report.po exists for core-game-loop (cycle 4). Previous confidence 0.87 \u2265 0.8. active_spec not updated by analyzing phase. None of the three dual-voice eligibility conditions are met. Carrying forward PRODUCTION_READY verdict (0.87).",
+      "reasoning": "Prior evaluation_report.po exists for core-game-loop (cycle 4). Previous confidence 0.87 ≥ 0.8. active_spec not updated by analyzing phase. None of the three dual-voice eligibility conditions are met. Carrying forward PRODUCTION_READY verdict (0.87).",
+      "alternatives_considered": [],
+      "confidence": 1
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "6",
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "milestone": "core-game-loop",
+      "decision": "Evaluation complete. Verdict: QA PASS + PO PRODUCTION_READY. All gates pass. Routing to analyzing.",
+      "reasoning": "Cycle 6 re-evaluation. Previous phase: building implementing fix-gameboard-quality change spec (analyzing phase cycle 5 deepen:improvements decision). Diff scope: frontend=true (GameBoard.tsx), tests=true (gameboard-quality.test.mjs). Sub-Phase 0 (Test Integrity): PASS — 292/292 tests pass (live run). 6 new AC-FIX-GB criteria covered by tests/gameboard-quality.test.mjs. No orphans, no stale tests. Sub-Phase 1 (QA Gate): PASS — 32 ACs pass (26 core-game-loop + 6 fix-gameboard-quality, code-verified). Health 92 (up from 89). AI code audit 90 (up from 82). MEDIUM items resolved: ACTION_COLORS duplication and setTimeout cleanup. Sub-Phase 2 (PO Review): PRODUCTION_READY — confidence 0.91 (adjusted 0.93). Both this-milestone improvement items (imp-action-colors-duplication, imp-settimeout-cleanup) resolved. confidence_adjusted 0.93 ≥ 0.9 PROMOTE threshold. No remaining this-milestone gaps. Routing to analyzing for milestone promotion decision.",
+      "alternatives_considered": [
+        "Classify as qa-fix (gate tier) — rejected: previous phase was building applying change specs from analyzing phase, not milestone-fix. Correct classification is re-evaluation (full tier).",
+        "Skip PO Review (carry forward) — rejected: full tier requires all three sub-phases to run. Previous confidence was 0.87; re-running confirms improvement to 0.91/0.93.",
+        "Enable dual-voice — rejected: prior PO verdict exists (cycle 4), confidence 0.87 ≥ 0.8, active_spec unchanged. None of the three eligibility conditions met."
+      ],
+      "confidence": 0.99
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "6",
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "decision": "Dual-voice PO Review NOT enabled for cycle 6.",
+      "reasoning": "Prior evaluation_report.po exists for core-game-loop (cycle 4). Previous confidence 0.87 ≥ 0.8. active_spec not updated by analyzing phase. None of the three dual-voice eligibility conditions are met.",
       "alternatives_considered": [],
       "confidence": 1
     }
   ],
   "next_phase": "analyzing",
-  "next_phase_rationale": "Cycle 5 feature-build re-verification (core-game-loop milestone): all gates pass. Diff scope shows zero code changes since cycle 4 \u2014 building phase ran REUSE-only. Test Integrity PASS (280/280 re-verified live). QA Gate PASS (same code, health 89, 0 failures). PO Review PRODUCTION_READY (0.87, carried \u2014 dual_voice not triggered, no code changes). Routing to analyzing for milestone promotion decision.",
+  "next_phase_rationale": "Cycle 6 re-evaluation (core-game-loop milestone): all gates pass. fix-gameboard-quality change spec implemented. Test Integrity PASS (292/292 live run, 6 new AC-FIX-GB criteria covered). QA Gate PASS (32 ACs pass, health 92, 0 failures). PO Review PRODUCTION_READY (confidence_adjusted 0.93 ≥ 0.9 PROMOTE threshold — both this-milestone improvement items resolved). Routing to analyzing for milestone promotion decision.",
   "review_readiness_dashboard": {
     "test_integrity": {
       "passed": true,
-      "timestamp": "2026-04-04T00:00:00.000Z",
+      "timestamp": "2026-04-05T00:00:00.000Z",
       "milestone": "core-game-loop",
-      "note": "Cycle 5 re-verification: 280/280 tests pass (live run). Zero code changes since cycle 4. 26 core-game-loop ACs + 3 mana scaffold ACs + foundation ACs covered. No orphans. No stale tests."
+      "note": "Cycle 6 re-evaluation: 292/292 tests pass (live run). 6 new AC-FIX-GB criteria added and covered by tests/gameboard-quality.test.mjs. No orphans. No stale tests."
     },
     "qa_gate": {
       "passed": true,
-      "timestamp": "2026-04-04T00:00:00.000Z",
+      "timestamp": "2026-04-05T00:00:00.000Z",
       "milestone": "core-game-loop",
-      "note": "Cycle 5 re-verification: 26/26 core-game-loop ACs pass (code-verified). Zero code changes since cycle 4 full evaluation. Health 89. 0 failures."
+      "note": "Cycle 6 re-evaluation: 32 ACs pass (26 core-game-loop + 6 fix-gameboard-quality, code-verified). Health 92. 0 failures. Both prior MEDIUM issues resolved."
     },
     "ai_code_audit": {
       "passed": true,
-      "timestamp": "2026-04-04T00:00:00.000Z",
-      "score": 82,
-      "note": "Cycle 4 full run (unchanged \u2014 zero code changes since): 82/100. Architecture 87, Security 95, Robustness 80, Production risks 76, Consistency 83, Dead/hallucinated 88, Tech debt 74. 0 critical findings."
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "score": 90,
+      "note": "Cycle 6 full run: 90/100. Architecture 90, Robustness 92, Production risks 88, Security 95, Consistency 85, Dead/hallucinated 90, Tech debt 87. 0 critical findings. Improved from 82 (cycle 4) by resolving MEDIUM items."
     },
     "security_review": {
       "passed": true,
-      "timestamp": "2026-04-04T00:00:00.000Z",
-      "note": "SKIPPED \u2014 static export, diff_scope.backend == false. No server-side code."
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "note": "SKIPPED — static export, diff_scope.backend == false. No server-side code. Carried from cycle 4."
     },
     "a11y_review": {
       "passed": true,
-      "timestamp": "2026-04-04T00:00:00.000Z",
-      "note": "ENV_LIMITED \u2014 no deployment URL. Code inspection: ARIA combobox on GuessInput, aria-label on Pass button, semantic headings in GameBoard. No WCAG A violations found in code review."
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "note": "ENV_LIMITED — no deployment URL. Code inspection: ARIA combobox on GuessInput, aria-label on Pass button, semantic headings in GameBoard. No WCAG A violations found in code review."
     },
     "design_review": {
       "passed": true,
-      "timestamp": "2026-04-04T00:00:00.000Z",
-      "note": "ENV_LIMITED \u2014 no deployment URL. Code inspection: CSS custom properties used consistently, 480px centered layout, responsive spacing."
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "note": "ENV_LIMITED — no deployment URL. Code inspection: CSS custom properties used consistently, 480px centered layout, responsive spacing."
     },
     "po_review": {
       "passed": true,
-      "timestamp": "2026-04-04T00:00:00.000Z",
+      "timestamp": "2026-04-05T00:00:00.000Z",
       "milestone": "core-game-loop",
-      "note": "PRODUCTION_READY \u2014 confidence 0.87. Cycle 5: dual_voice not triggered (prior verdict exists, confidence \u2265 0.8, active_spec unchanged, zero code diff). Carrying forward cycle 4 verdict. Game loop fully verified."
+      "note": "PRODUCTION_READY — confidence 0.91 (adjusted 0.93). Cycle 6: both this-milestone improvement items resolved (imp-action-colors-duplication, imp-settimeout-cleanup). No remaining this-milestone gaps. confidence_adjusted 0.93 ≥ 0.9 PROMOTE threshold."
     }
   },
   "dual_voice_po_review": false,
@@ -2007,16 +2051,16 @@
       "flags": [
         "none"
       ],
-      "note": "Previous confidence (0.90) was for foundation-data-pipeline milestone. Current (0.87) is the first evaluation of core-game-loop \u2014 different milestones, so delta is cross-milestone, not a true regression signal. First cycle for this milestone."
+      "note": "Previous confidence (0.90) was for foundation-data-pipeline milestone. Current (0.87) is the first evaluation of core-game-loop — different milestones, so delta is cross-milestone, not a true regression signal. First cycle for this milestone."
     },
     "recommendation": "deepen:improvements",
-    "recommendation_reasoning": "PROMOTE conditions NOT fully met. (1) PO verdict: PRODUCTION_READY \u2014 satisfied. (2) confidence_adjusted: 0.87 \u2014 BELOW 0.9 threshold. (3) Zero critical quality gaps \u2014 satisfied. (4) Confidence trend: first evaluation of core-game-loop milestone, no regression within milestone. (5) Two validated this-milestone improvement items remain: imp-action-colors-duplication (low, DRY violation) and imp-settimeout-cleanup (medium, React unmount leak). Both are in GameBoard.tsx and are straightforward implementation_bug fixes. (6) Global item (imp-no-eslint) already in global_improvements.json. (7) Future item (imp-no-share-button) correctly scoped to post-solve-experience milestone \u2014 dropped. (8) Decomposition health: no structural issues. (9) No escalations. Recommendation: deepen:improvements to fix the two code quality items in GameBoard.tsx. Expected to converge in one cycle \u2014 both are mechanical fixes with clear before/after states.",
+    "recommendation_reasoning": "PROMOTE conditions NOT fully met. (1) PO verdict: PRODUCTION_READY — satisfied. (2) confidence_adjusted: 0.87 — BELOW 0.9 threshold. (3) Zero critical quality gaps — satisfied. (4) Confidence trend: first evaluation of core-game-loop milestone, no regression within milestone. (5) Two validated this-milestone improvement items remain: imp-action-colors-duplication (low, DRY violation) and imp-settimeout-cleanup (medium, React unmount leak). Both are in GameBoard.tsx and are straightforward implementation_bug fixes. (6) Global item (imp-no-eslint) already in global_improvements.json. (7) Future item (imp-no-share-button) correctly scoped to post-solve-experience milestone — dropped. (8) Decomposition health: no structural issues. (9) No escalations. Recommendation: deepen:improvements to fix the two code quality items in GameBoard.tsx. Expected to converge in one cycle — both are mechanical fixes with clear before/after states.",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
       "schema_debt": [],
       "silent_degradation": [],
-      "restructure_scope": "0% \u2014 no restructuring needed",
+      "restructure_scope": "0% — no restructuring needed",
       "structural_issues_found": false
     },
     "root_cause_analysis": [
@@ -2025,7 +2069,7 @@
         "gap_description": "ACTION_COLORS object defined twice in GameBoard.tsx (lines 179 and 234). Should be extracted to a module-level const.",
         "root_cause": "implementation_bug",
         "classification_confidence": 0.95,
-        "evidence": "DRY violation \u2014 identical object literal duplicated within the same file. No spec ambiguity or missing context; this is a simple oversight during incremental development (pass-mechanic and win-lose-detection stories both added action rendering, each defining its own copy).",
+        "evidence": "DRY violation — identical object literal duplicated within the same file. No spec ambiguity or missing context; this is a simple oversight during incremental development (pass-mechanic and win-lose-detection stories both added action rendering, each defining its own copy).",
         "related_factory_decision": null,
         "related_factory_question": null,
         "qa_coverage_gap": true
@@ -2035,7 +2079,7 @@
         "gap_description": "Two setTimeout calls in GameBoard (game-over delay, feedback flash clear) are not cleaned up on unmount. React will warn about state updates on unmounted components.",
         "root_cause": "implementation_bug",
         "classification_confidence": 0.95,
-        "evidence": "Standard React pattern (useEffect cleanup or useRef for timeout IDs) was not applied. Factory decision explicitly chose 1.2s delay for feedback flash visibility but did not implement cleanup. No spec ambiguity \u2014 this is a well-known React best practice that should have been followed.",
+        "evidence": "Standard React pattern (useEffect cleanup or useRef for timeout IDs) was not applied. Factory decision explicitly chose 1.2s delay for feedback flash visibility but did not implement cleanup. No spec ambiguity — this is a well-known React best practice that should have been followed.",
         "related_factory_decision": "Post-solve transition via gameOver state with 1.2s delay for feedback flash visibility",
         "related_factory_question": null,
         "qa_coverage_gap": true
@@ -2097,11 +2141,11 @@
       "phase": "analyzing",
       "cycle": 1,
       "timestamp": "2026-04-04T20:30:00.000Z",
-      "decision": "Override promote \u2192 deepen:improvements due to validated this-milestone improvement item",
+      "decision": "Override promote → deepen:improvements due to validated this-milestone improvement item",
       "reasoning": "imp-rarity-type-mismatch is grounded in AC-FA2-002 (rarity extraction). The TypeScript type and actual data are out of sync. While not a runtime crash today, it will cause type errors when strict checks are applied in feature cycles that filter or display by rarity. Single-line fix with fast expected convergence.",
       "alternatives_considered": [
-        "Promote directly \u2014 rejected: phase contract requires deepen:improvements when validated this-milestone items exist and convergence guardrail has not triggered",
-        "Classify as global scope \u2014 rejected: rarity type is foundation-data-pipeline infrastructure, not a cross-cutting concern"
+        "Promote directly — rejected: phase contract requires deepen:improvements when validated this-milestone items exist and convergence guardrail has not triggered",
+        "Classify as global scope — rejected: rarity type is foundation-data-pipeline infrastructure, not a cross-cutting concern"
       ]
     },
     {
@@ -2116,38 +2160,38 @@
       "cycle": 1,
       "timestamp": "2026-04-04T20:30:00.000Z",
       "decision": "No decomposition health issues detected",
-      "reasoning": "Builder exceeded milestone scope (built tier-selection, clue-progression-engine, fuzzy-autocomplete beyond foundation). All shared infrastructure for pending core-game-loop stories is in place. No schema debt \u2014 pure static app with well-defined TypeScript types. Only skip (Vercel deploy) is an infrastructure auth issue, not a capability gap."
+      "reasoning": "Builder exceeded milestone scope (built tier-selection, clue-progression-engine, fuzzy-autocomplete beyond foundation). All shared infrastructure for pending core-game-loop stories is in place. No schema debt — pure static app with well-defined TypeScript types. Only skip (Vercel deploy) is an infrastructure auth issue, not a capability gap."
     },
     {
       "phase": "analyzing",
       "cycle": 1,
       "timestamp": "2026-04-04T20:30:00.000Z",
       "decision": "Noted: builder implemented 3 core-game-loop stories during foundation milestone",
-      "reasoning": "tier-selection, clue-progression-engine, and fuzzy-autocomplete are in implemented[] but belong to core-game-loop milestone. This is positive \u2014 foundation was strong enough that the builder could advance. These stories should be recognized when core-game-loop milestone is evaluated."
+      "reasoning": "tier-selection, clue-progression-engine, and fuzzy-autocomplete are in implemented[] but belong to core-game-loop milestone. This is positive — foundation was strong enough that the builder could advance. These stories should be recognized when core-game-loop milestone is evaluated."
     },
     {
       "phase": "analyzing",
       "cycle": 3,
       "timestamp": "2026-04-04T23:30:00.000Z",
       "decision": "Promote foundation-data-pipeline milestone",
-      "reasoning": "Cycle 3 qa-fix resolved the sole blocking improvement item (imp-rarity-type-mismatch, commit e31dd52). All PROMOTE conditions now met: PO PRODUCTION_READY, confidence_adjusted 0.90, zero quality gaps, stable trend, no remaining this-milestone improvements. The deepen:improvements cycle (cycle 1\u21922\u21923) converged successfully in one iteration as predicted.",
+      "reasoning": "Cycle 3 qa-fix resolved the sole blocking improvement item (imp-rarity-type-mismatch, commit e31dd52). All PROMOTE conditions now met: PO PRODUCTION_READY, confidence_adjusted 0.90, zero quality gaps, stable trend, no remaining this-milestone improvements. The deepen:improvements cycle (cycle 1→2→3) converged successfully in one iteration as predicted.",
       "alternatives_considered": [
-        "Deepen further \u2014 rejected: no remaining improvement items, all criteria pass, confidence at threshold",
-        "Notify human about Vercel deploy skip \u2014 rejected: deployment is env_limited (missing credentials), does not block feature cycles, and is excluded from confidence_adjusted calculation"
+        "Deepen further — rejected: no remaining improvement items, all criteria pass, confidence at threshold",
+        "Notify human about Vercel deploy skip — rejected: deployment is env_limited (missing credentials), does not block feature cycles, and is excluded from confidence_adjusted calculation"
       ]
     },
     {
       "phase": "analyzing",
       "cycle": 3,
       "timestamp": "2026-04-04T23:30:00.000Z",
-      "decision": "No circuit breaker detected \u2014 normal post-milestone analysis",
+      "decision": "No circuit breaker detected — normal post-milestone analysis",
       "reasoning": "No _circuit_breaker flag in cycle_context.json. Proceeding with standard PROMOTE evaluation."
     },
     {
       "phase": "analyzing",
       "cycle": 5,
       "timestamp": "2026-04-04T00:00:00.000Z",
-      "decision": "No circuit breaker detected \u2014 normal post-milestone analysis for core-game-loop",
+      "decision": "No circuit breaker detected — normal post-milestone analysis for core-game-loop",
       "reasoning": "No _circuit_breaker flag in cycle_context.json. Proceeding with standard analysis."
     },
     {
@@ -2155,11 +2199,11 @@
       "cycle": 5,
       "timestamp": "2026-04-04T00:00:00.000Z",
       "decision": "Recommend deepen:improvements for core-game-loop milestone (not promote)",
-      "reasoning": "confidence_adjusted is 0.87, below the 0.9 PROMOTE threshold. PO verdict is PRODUCTION_READY but two validated this-milestone improvement items remain: imp-action-colors-duplication (low) and imp-settimeout-cleanup (medium). Both are implementation_bug in GameBoard.tsx \u2014 mechanical fixes expected to converge in one cycle. Even if confidence_adjusted were >= 0.9, the phase contract requires deepen:improvements when validated this-milestone items exist.",
+      "reasoning": "confidence_adjusted is 0.87, below the 0.9 PROMOTE threshold. PO verdict is PRODUCTION_READY but two validated this-milestone improvement items remain: imp-action-colors-duplication (low) and imp-settimeout-cleanup (medium). Both are implementation_bug in GameBoard.tsx — mechanical fixes expected to converge in one cycle. Even if confidence_adjusted were >= 0.9, the phase contract requires deepen:improvements when validated this-milestone items exist.",
       "alternatives_considered": [
-        "Promote with edge case override (PRODUCTION_READY but confidence < 0.9) \u2014 rejected: the drag is not from reference comparison or env_limited factors. The improvement items are real code quality issues (setTimeout leak is a production risk). No override warranted.",
-        "Deepen:code-quality \u2014 rejected: the improvement items are from PO improvement_items, making deepen:improvements the correct action per Step 2.7.",
-        "Notify-human \u2014 rejected: confidence 0.87 is above 0.7, no critical gaps, no spec ambiguity. This is solidly in DEEPEN territory."
+        "Promote with edge case override (PRODUCTION_READY but confidence < 0.9) — rejected: the drag is not from reference comparison or env_limited factors. The improvement items are real code quality issues (setTimeout leak is a production risk). No override warranted.",
+        "Deepen:code-quality — rejected: the improvement items are from PO improvement_items, making deepen:improvements the correct action per Step 2.7.",
+        "Notify-human — rejected: confidence 0.87 is above 0.7, no critical gaps, no spec ambiguity. This is solidly in DEEPEN territory."
       ]
     },
     {
@@ -2173,7 +2217,7 @@
       "phase": "analyzing",
       "cycle": 5,
       "timestamp": "2026-04-04T00:00:00.000Z",
-      "decision": "imp-no-eslint already persisted as global-001 \u2014 no duplicate write needed",
+      "decision": "imp-no-eslint already persisted as global-001 — no duplicate write needed",
       "reasoning": "global_improvements.json already contains global-001 with identical description from cycle 1 analysis. No duplicate entry created."
     },
     {
@@ -2181,7 +2225,7 @@
       "cycle": 5,
       "timestamp": "2026-04-04T00:00:00.000Z",
       "decision": "Both improvement items classified as implementation_bug with QA coverage gap noted",
-      "reasoning": "ACTION_COLORS duplication and setTimeout cleanup are standard code quality patterns (DRY, React cleanup) that should have been caught during QA. The AI code audit DID flag both (robustness 80, production_risks 76) but they were not promoted to fix_tasks. This suggests the QA-to-fix pipeline threshold for code quality items may need calibration \u2014 but that's a systemic observation, not blocking for this cycle."
+      "reasoning": "ACTION_COLORS duplication and setTimeout cleanup are standard code quality patterns (DRY, React cleanup) that should have been caught during QA. The AI code audit DID flag both (robustness 80, production_risks 76) but they were not promoted to fix_tasks. This suggests the QA-to-fix pipeline threshold for code quality items may need calibration — but that's a systemic observation, not blocking for this cycle."
     }
   ],
   "change_specs_pending": [
@@ -2211,7 +2255,7 @@
             "category": "content_change",
             "severity": "low",
             "root_cause": "implementation_bug",
-            "root_cause_evidence": "DRY violation \u2014 identical ACTION_COLORS object literal ({ gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' }) defined at two separate locations in GameBoard.tsx: line 179 (post-solve round history dots) and line 234 (in-game round indicator dots). Both were added independently by the pass-mechanic and win-lose-detection stories.",
+            "root_cause_evidence": "DRY violation — identical ACTION_COLORS object literal ({ gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' }) defined at two separate locations in GameBoard.tsx: line 179 (post-solve round history dots) and line 234 (in-game round indicator dots). Both were added independently by the pass-mechanic and win-lose-detection stories.",
             "current_state": "GameBoard.tsx lines 179 and 234 each define const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } inside IIFE render blocks.",
             "po_review_assessment": "ACTION_COLORS object defined twice in GameBoard.tsx (lines 179 and 234). Should be extracted to a module-level const.",
             "heuristics_failed": [],
@@ -2223,7 +2267,7 @@
             "severity": "medium",
             "root_cause": "implementation_bug",
             "root_cause_evidence": "Standard React cleanup pattern (useRef for timeout IDs + clearTimeout in useEffect cleanup) was not applied. Two setTimeout calls at lines 95 and 98 of GameBoard.tsx set state (setGameOver, setGuessResult) after a 1200ms delay without storing timeout IDs or cleaning up on unmount. If the component unmounts during the delay (e.g., user navigates away mid-game), React will warn about state updates on unmounted components.",
-            "current_state": "GameBoard.tsx line 95: setTimeout(() => setGameOver(true), 1200) \u2014 game-over delay. Line 98: setTimeout(() => setGuessResult(null), 1200) \u2014 feedback flash clear. Neither stores the timeout ID. No useEffect cleanup calls clearTimeout.",
+            "current_state": "GameBoard.tsx line 95: setTimeout(() => setGameOver(true), 1200) — game-over delay. Line 98: setTimeout(() => setGuessResult(null), 1200) — feedback flash clear. Neither stores the timeout ID. No useEffect cleanup calls clearTimeout.",
             "po_review_assessment": "Two setTimeout calls in GameBoard (game-over delay, feedback flash clear) are not cleaned up on unmount. React will warn about state updates on unmounted components.",
             "heuristics_failed": [],
             "previous_attempts": "First attempt."
@@ -2231,13 +2275,13 @@
         ]
       },
       "target_state": {
-        "from_library_heuristics": "No Library heuristics violated \u2014 these are code quality patterns (DRY, React cleanup) not covered by product heuristics.",
-        "from_reference_products": "N/A \u2014 code quality fix, no reference product comparison applicable.",
+        "from_library_heuristics": "No Library heuristics violated — these are code quality patterns (DRY, React cleanup) not covered by product heuristics.",
+        "from_reference_products": "N/A — code quality fix, no reference product comparison applicable.",
         "concrete_description": "After the fix: (1) ACTION_COLORS is a single module-level const defined once near the top of GameBoard.tsx, outside any component function. Both the post-solve round history dots (current line 179 area) and the in-game round indicator dots (current line 234 area) reference this single const. (2) Both setTimeout calls (game-over delay and feedback flash clear) store their returned timeout IDs in useRef variables. A useEffect cleanup function calls clearTimeout on both refs when the component unmounts. No React warnings occur when navigating away from the game board during an active timeout."
       },
       "design_requirements": {
         "requires_design_mode": false,
-        "design_mode_scope": "N/A \u2014 no visual or UX changes. Pure code refactor.",
+        "design_mode_scope": "N/A — no visual or UX changes. Pure code refactor.",
         "design_direction": "N/A",
         "design_constraints": "No visual output changes. The round indicator dots and post-solve history dots must render identically before and after the fix."
       },
@@ -2299,24 +2343,24 @@
       ],
       "scope": {
         "in_scope": [
-          "src/components/GameBoard.tsx \u2014 extract ACTION_COLORS to module level, add useRef + useEffect cleanup for setTimeout calls"
+          "src/components/GameBoard.tsx — extract ACTION_COLORS to module level, add useRef + useEffect cleanup for setTimeout calls"
         ],
         "out_of_scope": [
           "CardFrame.tsx (no changes needed)",
           "GuessInput.tsx (no changes needed)",
-          "game-engine.ts (no changes needed \u2014 getRoundActions returns data, colors are a UI concern)",
+          "game-engine.ts (no changes needed — getRoundActions returns data, colors are a UI concern)",
           "Post-solve screen restructure (deferred to post-solve-experience milestone)",
-          "Any visual output changes \u2014 render must be pixel-identical before and after"
+          "Any visual output changes — render must be pixel-identical before and after"
         ],
         "regression_risk": [
-          "Round indicator dot colors could regress if ACTION_COLORS const is moved but a reference is missed \u2014 verify both render sites use the shared const",
+          "Round indicator dot colors could regress if ACTION_COLORS const is moved but a reference is missed — verify both render sites use the shared const",
           "Existing 280+ tests covering AC-FA1-017 through AC-FA1-026 should be re-run to verify no game mechanic regression"
         ]
       },
       "root_cause_context": {
         "classification": "implementation_bug",
         "what_went_wrong": "Two stories (pass-mechanic and win-lose-detection) independently added action rendering to GameBoard.tsx. Each defined its own ACTION_COLORS object because they were implemented in separate sessions without cross-referencing each other's additions. Similarly, the 1200ms setTimeout calls for game-over transition and feedback flash were added during win-lose-detection without applying the standard React cleanup pattern (useRef + clearTimeout in useEffect). The QA code audit flagged both (robustness 80, production_risks 76) but they were not promoted to fix tasks in that cycle.",
-        "why_previous_approach_failed": "N/A \u2014 first attempt for both gaps.",
+        "why_previous_approach_failed": "N/A — first attempt for both gaps.",
         "whats_different_this_time": "Both are mechanical refactors with clear before/after states. ACTION_COLORS extraction is a move + delete. setTimeout cleanup is a well-documented React pattern. Single-file scope, no design or architectural decisions needed."
       }
     }
