@@ -599,8 +599,8 @@
   ],
   "evaluation_report": {
     "qa": {
-      "verdict": "FAIL",
-      "verdict_cycle": 2,
+      "verdict": "PASS",
+      "verdict_cycle": 3,
       "criteria_results": [
         {
           "criterion": "AC-FA1-001",
@@ -699,13 +699,13 @@
         },
         {
           "criterion": "AC-FIX-RARITY-001",
-          "verdict": "fail",
-          "evidence": "test FAILS: src/types/card.ts rarity union is 'common' | 'uncommon' | 'rare' | 'mythic' — missing 'special'. Test: tests/foundation.test.mjs:480"
+          "verdict": "pass",
+          "evidence": "test PASSES: src/types/card.ts line 18 rarity union is 'common' | 'uncommon' | 'rare' | 'mythic' | 'special'. Fix commit e31dd52. Test: [AC-FIX-RARITY-001] src/types/card.ts rarity union includes 'special' ✔"
         },
         {
           "criterion": "AC-FIX-RARITY-002",
-          "verdict": "fail",
-          "evidence": "test FAILS: Card 'Spitting Slug' has rarity 'special' not in Card.rarity type union. 3 cards total with 'special' rarity. Test: tests/foundation.test.mjs:496"
+          "verdict": "pass",
+          "evidence": "test PASSES: All 930 card-details.json rarity values are in the Card.rarity type union (including 3 'special' cards e.g. Spitting Slug). Fix commit e31dd52. Test: [AC-FIX-RARITY-002] every card-details.json rarity value is in the Card.rarity type union ✔"
         },
         {
           "criterion": "AC-FIX-RARITY-003",
@@ -720,9 +720,9 @@
         "pages_checked": 0,
         "note": "No deployment URL — browser-based checks skipped. All checks are code/artifact-based."
       },
-      "criteria_pass_rate": 0.909,
+      "criteria_pass_rate": 1.0,
       "env_limited_count": 2,
-      "fail_count": 2,
+      "fail_count": 0,
       "code_quality_baseline": {
         "eslint_errors": 0,
         "eslint_warnings": 0,
@@ -752,16 +752,7 @@
         "verdict": "SKIPPED",
         "reason": "Static export — backend: false"
       },
-      "fix_tasks": [
-        {
-          "id": "fix-qa-rarity-type-mismatch",
-          "source": "qa",
-          "description": "Add 'special' to Card.rarity union in src/types/card.ts. One-line type widening: rarity: 'common' | 'uncommon' | 'rare' | 'mythic' | 'special'",
-          "evidence": "AC-FIX-RARITY-001 and AC-FIX-RARITY-002 fail. 3 cards in card-details.json have rarity 'special' (e.g. Spitting Slug). TypeScript type is more restrictive than data.",
-          "severity": "MEDIUM",
-          "suggested_fix": "In src/types/card.ts line 18, change: rarity: 'common' | 'uncommon' | 'rare' | 'mythic'; to: rarity: 'common' | 'uncommon' | 'rare' | 'mythic' | 'special';"
-        }
-      ]
+      "fix_tasks": []
     },
     "design": {
       "note": "Design review skipped — no deployment URL available for visual inspection. Foundation milestone is data/infrastructure only.",
@@ -833,21 +824,25 @@
         }
       ]
     },
-    "health_score": 88,
+    "health_score": 92,
     "health_score_breakdown": {
       "base": 100,
       "deductions": [
         {
-          "reason": "MEDIUM: AC-FIX-RARITY-001 — rarity type excludes 'special'",
+          "reason": "LOW: no ESLint configuration (global improvement, not blocking)",
+          "amount": -4
+        },
+        {
+          "reason": "LOW: npm audit CRITICAL (Next.js version advisory — informational only for static export)",
           "amount": -2
         },
         {
-          "reason": "MEDIUM: AC-FIX-RARITY-002 — 3 data records fail type check",
+          "reason": "ENV_LIMITED: Vercel staging deploy not verified (auth credentials unavailable)",
           "amount": -2
         }
       ],
-      "wtf_likelihood": "0/min — no user-facing impact",
-      "note": "Cycle 2 re-evaluation. Previous health_score was 90. -2 for each failing spec criterion (MEDIUM severity). Type mismatch has no runtime or UX impact."
+      "wtf_likelihood": "0/min — no user-facing bugs",
+      "note": "Cycle 3 qa-fix. All spec criteria now pass (22/22 pass or env_limited). +4 from cycle 2 (88→92): AC-FIX-RARITY-001/002 resolved. Remaining deductions are low/informational."
     },
     "re_walk_requests": []
   },
@@ -1053,7 +1048,9 @@
         "root_cause": "code_bug",
         "hypothesis": "Card.rarity TypeScript union was written before the 'special' rarity divergence was discovered during the Scryfall data pipeline implementation. The type was never updated to reflect the actual data.",
         "fix_description": "Widened rarity union in src/types/card.ts from 'common' | 'uncommon' | 'rare' | 'mythic' to include 'special'",
-        "files_changed": ["src/types/card.ts"],
+        "files_changed": [
+          "src/types/card.ts"
+        ],
         "test_added": "tests/foundation.test.mjs — [AC-FIX-RARITY-001] src/types/card.ts rarity union includes 'special'",
         "regression_test_added": "tests/foundation.test.mjs — [AC-FIX-RARITY-003] Card.rarity still includes all original rarity values after fix",
         "commit_sha": "e31dd52"
@@ -1063,7 +1060,9 @@
         "root_cause": "code_bug",
         "hypothesis": "Same root cause as AC-FIX-RARITY-001 — same one-line fix resolves both criteria simultaneously",
         "fix_description": "Same fix as AC-FIX-RARITY-001 — type widening makes all 3 'special' rarity cards (e.g. Spitting Slug) valid against the type union",
-        "files_changed": ["src/types/card.ts"],
+        "files_changed": [
+          "src/types/card.ts"
+        ],
         "test_added": "tests/foundation.test.mjs — [AC-FIX-RARITY-002] every card-details.json rarity value is in the Card.rarity type union",
         "regression_test_added": "tests/foundation.test.mjs — [AC-FIX-RARITY-003] Card.rarity still includes all original rarity values after fix",
         "commit_sha": "e31dd52"
@@ -1111,14 +1110,14 @@
   "diff_scope": {
     "frontend": false,
     "backend": false,
-    "tests": false,
-    "config": true,
+    "tests": true,
+    "config": false,
     "docs": false,
-    "note": "Cycle 2 re-evaluation: only cycle_context.json and task_ledger.json changed since last evaluation (JSON formatting + fix spec added). No source code changes."
+    "note": "Cycle 3 qa-fix: src/types/card.ts (1-line type widening) + tests/foundation.test.mjs committed in milestone-fix. 2 files changed, under 10-file threshold. Both files were listed in fix_tasks — no tier upgrade required."
   },
-  "evaluation_tier": "full",
-  "cycle_type": "re-evaluation",
-  "tier_rationale": "Previous phase was generating-change-spec — spec change added fix-rarity-type-mismatch story with 3 new ACs. Re-evaluation required to verify fix criteria coverage and route to milestone-fix.",
+  "evaluation_tier": "gate",
+  "cycle_type": "qa-fix",
+  "tier_rationale": "Previous phase was milestone-fix (e31dd52). All implemented tasks were fix classifications (AC-FIX-RARITY-001/002). Diff: 2 files changed — src/types/card.ts and tests/foundation.test.mjs. Under 10-file threshold. Both files mentioned in fix_tasks list. Gate tier applies: Test Integrity + QA Gate only, PO Review carried forward.",
   "test_integrity_report": {
     "spec_coverage_pct": 100,
     "po_check_coverage_pct": 100,
@@ -1129,14 +1128,11 @@
     "orphaned_removed": [],
     "orphaned_renamed": [],
     "stale_regenerated_count": 0,
-    "newly_generated_count": 3,
-    "test_suite_pass": false,
+    "newly_generated_count": 0,
+    "test_suite_pass": true,
     "verdict": "PASS",
     "coverage_complete": true,
-    "feature_not_implemented": [
-      "AC-FIX-RARITY-001: test generated and runs — fails because fix not yet applied to src/types/card.ts",
-      "AC-FIX-RARITY-002: test generated and runs — fails because Card.rarity type excludes 'special' but data has it"
-    ],
+    "feature_not_implemented": [],
     "env_limited": [
       {
         "criterion": "AC-FA1-002",
@@ -1149,7 +1145,7 @@
         "code_evidence": "scripts/build-card-data.mjs exists; artifact card-details.json (930 cards) proves pipeline ran"
       }
     ],
-    "notes": "Cycle 2 re-evaluation: added 3 new tests in foundation.test.mjs for fix-rarity-type-mismatch spec (AC-FIX-RARITY-001, AC-FIX-RARITY-002, AC-FIX-RARITY-003). Coverage is 100% for all 22 criteria. 2 tests fail because the 1-line fix in src/types/card.ts has not yet been applied. QA Gate catches the failures and routes to milestone-fix. Committed in edd8702."
+    "notes": "Cycle 3 qa-fix: 236/236 tests pass. All 3 fix criteria now pass: AC-FIX-RARITY-001 (rarity union includes 'special' — confirmed at types/card.ts:18), AC-FIX-RARITY-002 (all 930 card data rarity values match type), AC-FIX-RARITY-003 (original 4 rarity values preserved). Test integrity gate PASS."
   },
   "code_review_report": {
     "code_quality_baseline": {
@@ -1277,45 +1273,67 @@
       "reasoning": "Anti-pattern: never run PO Review after QA failure. The product is functionally correct (all original ACs pass), but the spec now requires the rarity type fix before the milestone is considered complete.",
       "alternatives_considered": [],
       "confidence": 1
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "3",
+      "timestamp": "2026-04-04T23:00:00.000Z",
+      "decision": "Evaluation complete. Verdict: PASS. All gates pass. Routing to analyzing.",
+      "reasoning": "Cycle 3 qa-fix. Tier: gate. Previous phase: milestone-fix (commit e31dd52 — 1-line type widening in src/types/card.ts). Sub-Phase 0 (Test Integrity): PASS — 236/236 tests pass, 22/22 criteria covered, test_suite_pass true. Sub-Phase 1 (QA Gate): PASS — criteria_pass_rate 100% (22/22 pass or env_limited), 0 failures. AC-FIX-RARITY-001/002/003 all green. Sub-Phase 2 (PO Review): SKIPPED — gate tier. Carrying forward PRODUCTION_READY verdict (confidence 0.90 adjusted) from cycle 1. All gates pass. Milestone foundation-data-pipeline is ready for promotion decision by analyzing phase.",
+      "alternatives_considered": [
+        "Upgrade to full tier — rejected: diff is 2 files, both listed in fix_tasks, no unexpected scope. Override conditions not met.",
+        "Run PO Review — rejected: gate tier strictly forbids PO Review; previous verdict is PRODUCTION_READY with 0.90 confidence, no new information would change the verdict."
+      ],
+      "confidence": 0.99
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "3",
+      "timestamp": "2026-04-04T23:00:00.000Z",
+      "decision": "Skipped PO Review — gate-tier cycle (qa-fix). Carrying forward previous PO verdict: PRODUCTION_READY (confidence 0.90 adjusted, cycle 1).",
+      "reasoning": "Phase contract: evaluation_tier == gate → PO Review is skipped. Preserve previous PO Review gate status (not reset in Step 2 for gate-tier cycles). Previous verdict remains authoritative.",
+      "alternatives_considered": [],
+      "confidence": 1.0
     }
   ],
-  "next_phase": "milestone-fix",
-  "next_phase_rationale": "All gates PASS. Foundation-data-pipeline milestone evaluation complete. Analyzing phase will determine whether to promote this milestone and advance to core-game-loop, or handle additional stories that were built beyond milestone scope.",
+  "next_phase": "analyzing",
+  "next_phase_rationale": "Cycle 3 qa-fix: all gates pass. Test Integrity PASS (236/236, 22/22). QA Gate PASS (0 failures). PO Review carried forward PRODUCTION_READY (0.90 confidence). Routing to analyzing for milestone promotion decision — analyzing phase determines whether to promote foundation-data-pipeline and advance to core-game-loop, or surface any remaining work.",
   "review_readiness_dashboard": {
     "test_integrity": {
       "passed": true,
-      "timestamp": "2026-04-04T22:00:00.000Z",
-      "note": "Coverage 100% (22/22 criteria). 2 tests fail because feature not yet implemented — QA handles."
+      "timestamp": "2026-04-04T23:00:00.000Z",
+      "note": "Cycle 3 qa-fix: 236/236 tests pass. Coverage 100% (22/22 criteria). All 3 fix criteria now green."
     },
     "qa_gate": {
-      "passed": false,
-      "timestamp": "2026-04-04T22:00:00.000Z",
-      "reason": "AC-FIX-RARITY-001 and AC-FIX-RARITY-002 fail — rarity type mismatch fix not implemented"
+      "passed": true,
+      "timestamp": "2026-04-04T23:00:00.000Z",
+      "note": "Cycle 3 qa-fix: 22/22 criteria pass or env_limited. AC-FIX-RARITY-001/002/003 all green. 0 failures."
     },
     "ai_code_audit": {
       "passed": true,
-      "timestamp": "2026-04-04T22:00:00.000Z",
-      "score": 85
+      "timestamp": "2026-04-04T23:00:00.000Z",
+      "score": 85,
+      "note": "Carried forward from cycle 2 code review — gate tier does not re-run AI audit"
     },
     "security_review": {
       "passed": true,
-      "timestamp": "2026-04-04T22:00:00.000Z",
+      "timestamp": "2026-04-04T23:00:00.000Z",
       "note": "SKIPPED — static export, no backend"
     },
     "a11y_review": {
       "passed": true,
-      "timestamp": "2026-04-04T22:00:00.000Z",
+      "timestamp": "2026-04-04T23:00:00.000Z",
       "note": "SKIPPED — no deployment URL"
     },
     "design_review": {
       "passed": true,
-      "timestamp": "2026-04-04T22:00:00.000Z",
+      "timestamp": "2026-04-04T23:00:00.000Z",
       "note": "SKIPPED — no deployment URL, data/infra milestone"
     },
     "po_review": {
-      "passed": false,
-      "timestamp": null,
-      "note": "SKIPPED — QA gate failed; carrying forward previous PRODUCTION_READY verdict (cycle 1) for reference only"
+      "passed": true,
+      "timestamp": "2026-04-04T20:30:00.000Z",
+      "note": "CARRIED FORWARD (gate tier qa-fix) — PRODUCTION_READY, confidence 0.90 adjusted. Cycle 1 PO review verdict. No re-run on gate tier."
     }
   },
   "analysis_recommendation": {
