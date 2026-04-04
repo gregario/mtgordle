@@ -308,6 +308,11 @@
   "evaluation_report": null,
   "foundation_eval_report": {
     "verdict": "PASS",
+    "_evaluated_at": "2026-04-04",
+    "_evaluator": "foundation-eval (sonnet) — independent re-verification",
+    "_tests_verified": 69,
+    "_tests_passing": 69,
+    "_silent_degradation_grep": "zero matches for TODO/FIXME/HACK/mock/stub/hardcoded in src/",
     "dimensions": {
       "schema_completeness": {
         "status": "PASS",
@@ -466,16 +471,24 @@
     "staging_url": null,
     "production_url": null,
     "supabase_ref": null,
-    "sentry_dsn": null
+    "sentry_dsn": null,
+    "supabase_url": "https://joxusnbbsoqkoocwztmz.supabase.co",
+    "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpveHVzbmJic29xa29vY3d6dG16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjY0OTksImV4cCI6MjA5MDkwMjQ5OX0.fr3OhVDCrJ4MzfBMlFF40zEwVYwP0hAZz6AH42fe0Co",
+    "readiness": {
+      "posthog": true,
+      "sentry": false,
+      "supabase": true,
+      "cloudflare": false
+    }
   },
   "retry_counts": {},
   "previous_cycles": [],
   "supabase": {
-    "project_ref": null,
-    "slot_acquired": false,
-    "connection_string": null
+    "project_ref": "joxusnbbsoqkoocwztmz",
+    "slot_acquired": true,
+    "connection_string": "https://joxusnbbsoqkoocwztmz.supabase.co"
   },
-  "_current_milestone": null,
-  "_current_story": null,
+  "_current_milestone": "foundation-data-pipeline",
+  "_current_story": "project-scaffold",
   "_foundation_phase_complete": true
 }
