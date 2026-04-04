@@ -1965,25 +1965,26 @@
   },
   "dual_voice_po_review": false,
   "analysis_recommendation": {
-    "action": "promote",
-    "rationale": "All PROMOTE conditions satisfied. PO verdict PRODUCTION_READY, confidence_adjusted 0.90 (>= 0.9 threshold). Zero critical quality gaps. No regression trend. The previously-blocking this-milestone improvement item (imp-rarity-type-mismatch) was fixed in cycle 2 milestone-fix (commit e31dd52) and verified in cycle 3 QA gate — AC-FIX-RARITY-001/002/003 all pass. No remaining this-milestone improvement items. Global item (imp-no-eslint) already persisted to global_improvements.json. Foundation-data-pipeline milestone is ready for promotion."
+    "action": "deepen:improvements",
+    "rationale": "PO verdict is PRODUCTION_READY but confidence_adjusted 0.87 is below 0.9 PROMOTE threshold. Two validated this-milestone improvement items remain (imp-action-colors-duplication, imp-settimeout-cleanup), both concentrated in GameBoard.tsx. These are minor code quality fixes that should converge in one cycle. No structural issues, no regressions. Deepen to address improvements before promotion."
   },
   "analysis_result": {
     "phase": "analyzing",
-    "cycle": "3",
-    "timestamp": "2026-04-04T23:30:00.000Z",
+    "cycle": "5",
+    "timestamp": "2026-04-04T00:00:00.000Z",
     "confidence_trend": {
-      "current": 0.9,
+      "current": 0.87,
       "previous": 0.9,
-      "delta": 0,
-      "direction": "stable",
+      "delta": -0.03,
+      "direction": "regressing",
       "consecutive_same_direction": 1,
       "flags": [
         "none"
-      ]
+      ],
+      "note": "Previous confidence (0.90) was for foundation-data-pipeline milestone. Current (0.87) is the first evaluation of core-game-loop — different milestones, so delta is cross-milestone, not a true regression signal. First cycle for this milestone."
     },
-    "recommendation": "promote",
-    "recommendation_reasoning": "All PROMOTE conditions are satisfied. (1) PO verdict: PRODUCTION_READY (carried forward from cycle 1, validated by gate-tier evaluation in cycle 3). (2) confidence_adjusted: 0.90 (meets >= 0.9 threshold). (3) Zero critical quality gaps — no quality_gaps in PO report. (4) Confidence trend: stable (0.90 → 0.90), not regressing. (5) No remaining this-milestone improvement items — the sole item (imp-rarity-type-mismatch) was fixed in cycle 2 milestone-fix (commit e31dd52, AC-FIX-RARITY-001/002/003 all verified passing in cycle 3). (6) Global improvement item (imp-no-eslint) already persisted to global_improvements.json as global-001. (7) Decomposition health: no structural issues — builder already implemented 3 core-game-loop stories beyond foundation scope, confirming foundation is solid. (8) No escalations from QA-fixing. Foundation-data-pipeline milestone is complete and ready for promotion. Next milestone: core-game-loop.",
+    "recommendation": "deepen:improvements",
+    "recommendation_reasoning": "PROMOTE conditions NOT fully met. (1) PO verdict: PRODUCTION_READY — satisfied. (2) confidence_adjusted: 0.87 — BELOW 0.9 threshold. (3) Zero critical quality gaps — satisfied. (4) Confidence trend: first evaluation of core-game-loop milestone, no regression within milestone. (5) Two validated this-milestone improvement items remain: imp-action-colors-duplication (low, DRY violation) and imp-settimeout-cleanup (medium, React unmount leak). Both are in GameBoard.tsx and are straightforward implementation_bug fixes. (6) Global item (imp-no-eslint) already in global_improvements.json. (7) Future item (imp-no-share-button) correctly scoped to post-solve-experience milestone — dropped. (8) Decomposition health: no structural issues. (9) No escalations. Recommendation: deepen:improvements to fix the two code quality items in GameBoard.tsx. Expected to converge in one cycle — both are mechanical fixes with clear before/after states.",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
@@ -1992,7 +1993,28 @@
       "restructure_scope": "0% — no restructuring needed",
       "structural_issues_found": false
     },
-    "root_cause_analysis": [],
+    "root_cause_analysis": [
+      {
+        "gap_id": "imp-action-colors-duplication",
+        "gap_description": "ACTION_COLORS object defined twice in GameBoard.tsx (lines 179 and 234). Should be extracted to a module-level const.",
+        "root_cause": "implementation_bug",
+        "classification_confidence": 0.95,
+        "evidence": "DRY violation — identical object literal duplicated within the same file. No spec ambiguity or missing context; this is a simple oversight during incremental development (pass-mechanic and win-lose-detection stories both added action rendering, each defining its own copy).",
+        "related_factory_decision": null,
+        "related_factory_question": null,
+        "qa_coverage_gap": true
+      },
+      {
+        "gap_id": "imp-settimeout-cleanup",
+        "gap_description": "Two setTimeout calls in GameBoard (game-over delay, feedback flash clear) are not cleaned up on unmount. React will warn about state updates on unmounted components.",
+        "root_cause": "implementation_bug",
+        "classification_confidence": 0.95,
+        "evidence": "Standard React pattern (useEffect cleanup or useRef for timeout IDs) was not applied. Factory decision explicitly chose 1.2s delay for feedback flash visibility but did not implement cleanup. No spec ambiguity — this is a well-known React best practice that should have been followed.",
+        "related_factory_decision": "Post-solve transition via gameOver state with 1.2s delay for feedback flash visibility",
+        "related_factory_question": null,
+        "qa_coverage_gap": true
+      }
+    ],
     "cross_cycle_patterns": [
       {
         "pattern": "Builder implements ahead of milestone scope when foundation is strong",
@@ -2001,14 +2023,47 @@
         "recommended_action": "Recognize pre-built stories when evaluating core-game-loop milestone to avoid redundant work. The implemented[] array already tracks these."
       }
     ],
-    "change_spec_briefs": [],
+    "change_spec_briefs": [
+      {
+        "gap_id": "imp-action-colors-duplication",
+        "root_cause": "implementation_bug",
+        "priority": "low",
+        "affected_screens": [
+          "Game Board"
+        ],
+        "affected_journeys": [
+          "Daily game loop (Simple tier)",
+          "Daily game loop (Cryptic tier)"
+        ],
+        "what_good_looks_like": "ACTION_COLORS defined once as a module-level const at the top of GameBoard.tsx (or extracted to a shared constants file). Both usages reference the single const.",
+        "requires_design_mode": false,
+        "approach_hint": "Extract ACTION_COLORS to a const at module scope in GameBoard.tsx. Remove the duplicate definition. Both getRoundActions rendering and post-solve history dots should reference the same const.",
+        "do_not_repeat": []
+      },
+      {
+        "gap_id": "imp-settimeout-cleanup",
+        "root_cause": "implementation_bug",
+        "priority": "medium",
+        "affected_screens": [
+          "Game Board"
+        ],
+        "affected_journeys": [
+          "Daily game loop (Simple tier)",
+          "Daily game loop (Cryptic tier)"
+        ],
+        "what_good_looks_like": "All setTimeout calls in GameBoard have corresponding cleanup via useRef to store timeout IDs and clearTimeout in useEffect cleanup functions. No React warnings about state updates on unmounted components when navigating away mid-game.",
+        "requires_design_mode": false,
+        "approach_hint": "Use useRef to store timeout IDs from setTimeout. Add useEffect cleanup that calls clearTimeout on both the game-over delay and feedback flash timeout refs. Test: verify no React warnings when component unmounts during active timeouts.",
+        "do_not_repeat": []
+      }
+    ],
     "escalations": [],
     "improvement_routing": {
-      "this_milestone_count": 0,
-      "global_persisted_count": 1,
-      "future_dropped_count": 0,
+      "this_milestone_count": 2,
+      "global_persisted_count": 0,
+      "future_dropped_count": 1,
       "convergence_guardrail_triggered": false,
-      "deepen_improvements_cycle_count": 1
+      "deepen_improvements_cycle_count": 0
     }
   },
   "phase_decisions": [
@@ -2061,110 +2116,185 @@
       "timestamp": "2026-04-04T23:30:00.000Z",
       "decision": "No circuit breaker detected — normal post-milestone analysis",
       "reasoning": "No _circuit_breaker flag in cycle_context.json. Proceeding with standard PROMOTE evaluation."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 5,
+      "timestamp": "2026-04-04T00:00:00.000Z",
+      "decision": "No circuit breaker detected — normal post-milestone analysis for core-game-loop",
+      "reasoning": "No _circuit_breaker flag in cycle_context.json. Proceeding with standard analysis."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 5,
+      "timestamp": "2026-04-04T00:00:00.000Z",
+      "decision": "Recommend deepen:improvements for core-game-loop milestone (not promote)",
+      "reasoning": "confidence_adjusted is 0.87, below the 0.9 PROMOTE threshold. PO verdict is PRODUCTION_READY but two validated this-milestone improvement items remain: imp-action-colors-duplication (low) and imp-settimeout-cleanup (medium). Both are implementation_bug in GameBoard.tsx — mechanical fixes expected to converge in one cycle. Even if confidence_adjusted were >= 0.9, the phase contract requires deepen:improvements when validated this-milestone items exist.",
+      "alternatives_considered": [
+        "Promote with edge case override (PRODUCTION_READY but confidence < 0.9) — rejected: the drag is not from reference comparison or env_limited factors. The improvement items are real code quality issues (setTimeout leak is a production risk). No override warranted.",
+        "Deepen:code-quality — rejected: the improvement items are from PO improvement_items, making deepen:improvements the correct action per Step 2.7.",
+        "Notify-human — rejected: confidence 0.87 is above 0.7, no critical gaps, no spec ambiguity. This is solidly in DEEPEN territory."
+      ]
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 5,
+      "timestamp": "2026-04-04T00:00:00.000Z",
+      "decision": "imp-no-share-button dropped as future-milestone scope",
+      "reasoning": "Share functionality belongs to post-solve-experience milestone. Will be discovered and built when that milestone runs."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 5,
+      "timestamp": "2026-04-04T00:00:00.000Z",
+      "decision": "imp-no-eslint already persisted as global-001 — no duplicate write needed",
+      "reasoning": "global_improvements.json already contains global-001 with identical description from cycle 1 analysis. No duplicate entry created."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 5,
+      "timestamp": "2026-04-04T00:00:00.000Z",
+      "decision": "Both improvement items classified as implementation_bug with QA coverage gap noted",
+      "reasoning": "ACTION_COLORS duplication and setTimeout cleanup are standard code quality patterns (DRY, React cleanup) that should have been caught during QA. The AI code audit DID flag both (robustness 80, production_risks 76) but they were not promoted to fix_tasks. This suggests the QA-to-fix pipeline threshold for code quality items may need calibration — but that's a systemic observation, not blocking for this cycle."
     }
   ],
   "change_specs_pending": [
     {
-      "spec_id": "fix-rarity-type-mismatch",
-      "gap_ids": [
-        "imp-rarity-type-mismatch"
-      ],
+      "spec_id": "fix-gameboard-quality",
+      "gap_ids": ["imp-action-colors-duplication", "imp-settimeout-cleanup"],
       "priority": "medium",
       "requires_design_mode": false,
       "design_passes_needed": [],
-      "criteria_count": 3,
+      "criteria_count": 6,
       "root_cause": "implementation_bug",
-      "affected_screens": [],
-      "affected_journeys": [],
-      "approach_summary": "Add 'special' to Card.rarity type union in src/types/card.ts to match actual Scryfall data",
+      "affected_screens": ["Game Board"],
+      "affected_journeys": ["Daily game loop (Simple tier)", "Daily game loop (Cryptic tier)"],
+      "approach_summary": "Extract ACTION_COLORS to module-level const; add useRef + useEffect cleanup for all setTimeout calls in GameBoard.tsx",
       "gap_evidence": {
-        "gap_id": "imp-rarity-type-mismatch",
-        "category": "content_change",
-        "severity": "medium",
-        "root_cause": "implementation_bug",
-        "root_cause_evidence": "Card.rarity TypeScript type was defined with 4 values (common, uncommon, rare, mythic) but the Scryfall pipeline passes through raw.rarity which includes 'special' for promo/bonus-sheet cards. The factory_decisions log documents that special-rarity cards were intentionally kept in pools. The type was not updated to match.",
-        "current_state": "src/types/card.ts line 18 defines rarity as 'common' | 'uncommon' | 'rare' | 'mythic'. card-details.json contains cards with rarity 'special'. Tests accept 'special' via validRarities Set. The TypeScript type and actual data are out of sync.",
-        "po_review_assessment": "Card.rarity TypeScript type excludes 'special' but 3 cards with rarity:'special' exist in the data. Type and data are out of sync.",
-        "heuristics_failed": [],
-        "previous_attempts": "First attempt."
+        "gaps": [
+          {
+            "gap_id": "imp-action-colors-duplication",
+            "category": "content_change",
+            "severity": "low",
+            "root_cause": "implementation_bug",
+            "root_cause_evidence": "DRY violation — identical ACTION_COLORS object literal ({ gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' }) defined at two separate locations in GameBoard.tsx: line 179 (post-solve round history dots) and line 234 (in-game round indicator dots). Both were added independently by the pass-mechanic and win-lose-detection stories.",
+            "current_state": "GameBoard.tsx lines 179 and 234 each define const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } inside IIFE render blocks.",
+            "po_review_assessment": "ACTION_COLORS object defined twice in GameBoard.tsx (lines 179 and 234). Should be extracted to a module-level const.",
+            "heuristics_failed": [],
+            "previous_attempts": "First attempt."
+          },
+          {
+            "gap_id": "imp-settimeout-cleanup",
+            "category": "performance_improvement",
+            "severity": "medium",
+            "root_cause": "implementation_bug",
+            "root_cause_evidence": "Standard React cleanup pattern (useRef for timeout IDs + clearTimeout in useEffect cleanup) was not applied. Two setTimeout calls at lines 95 and 98 of GameBoard.tsx set state (setGameOver, setGuessResult) after a 1200ms delay without storing timeout IDs or cleaning up on unmount. If the component unmounts during the delay (e.g., user navigates away mid-game), React will warn about state updates on unmounted components.",
+            "current_state": "GameBoard.tsx line 95: setTimeout(() => setGameOver(true), 1200) — game-over delay. Line 98: setTimeout(() => setGuessResult(null), 1200) — feedback flash clear. Neither stores the timeout ID. No useEffect cleanup calls clearTimeout.",
+            "po_review_assessment": "Two setTimeout calls in GameBoard (game-over delay, feedback flash clear) are not cleaned up on unmount. React will warn about state updates on unmounted components.",
+            "heuristics_failed": [],
+            "previous_attempts": "First attempt."
+          }
+        ]
       },
       "target_state": {
-        "concrete_description": "Card.rarity type union includes 'special' alongside 'common', 'uncommon', 'rare', 'mythic'. All rarity values present in card-details.json are representable in the TypeScript type system. No runtime type narrowing errors when processing cards with rarity 'special'. Existing tests continue to pass. Build succeeds with zero TypeScript errors."
+        "from_library_heuristics": "No Library heuristics violated — these are code quality patterns (DRY, React cleanup) not covered by product heuristics.",
+        "from_reference_products": "N/A — code quality fix, no reference product comparison applicable.",
+        "concrete_description": "After the fix: (1) ACTION_COLORS is a single module-level const defined once near the top of GameBoard.tsx, outside any component function. Both the post-solve round history dots (current line 179 area) and the in-game round indicator dots (current line 234 area) reference this single const. (2) Both setTimeout calls (game-over delay and feedback flash clear) store their returned timeout IDs in useRef variables. A useEffect cleanup function calls clearTimeout on both refs when the component unmounts. No React warnings occur when navigating away from the game board during an active timeout."
+      },
+      "design_requirements": {
+        "requires_design_mode": false,
+        "design_mode_scope": "N/A — no visual or UX changes. Pure code refactor.",
+        "design_direction": "N/A",
+        "design_constraints": "No visual output changes. The round indicator dots and post-solve history dots must render identically before and after the fix."
       },
       "acceptance_criteria": [
         {
-          "id": "AC-FIX-RARITY-001",
-          "name": "Rarity type includes special",
-          "given": "The Card interface in src/types/card.ts",
-          "when": "A developer inspects the rarity field type",
-          "then": "The type union includes 'special' as a valid value: 'common' | 'uncommon' | 'rare' | 'mythic' | 'special'",
-          "measurement": "grep src/types/card.ts for rarity type definition containing 'special'",
-          "closes_gap": "imp-rarity-type-mismatch"
+          "id": "AC-FIX-GB-001",
+          "name": "ACTION_COLORS defined once at module level",
+          "given": "GameBoard.tsx source code",
+          "when": "A developer searches for 'ACTION_COLORS' in GameBoard.tsx",
+          "then": "Exactly one definition exists, at module scope (outside the GameBoard function), as a const",
+          "measurement": "grep -c 'ACTION_COLORS' src/components/GameBoard.tsx returns exactly 3 (1 definition + 2 references). grep 'const ACTION_COLORS' returns exactly 1 match, located before 'export default function GameBoard'.",
+          "closes_gap": "imp-action-colors-duplication"
         },
         {
-          "id": "AC-FIX-RARITY-002",
-          "name": "All card data rarity values match type",
-          "given": "card-details.json with 930 curated cards",
-          "when": "Every card's rarity field is checked against the Card.rarity type",
-          "then": "All rarity values in the data file are valid members of the TypeScript union type",
-          "measurement": "Parse card-details.json, collect unique rarity values, verify each is in {'common','uncommon','rare','mythic','special'}",
-          "closes_gap": "imp-rarity-type-mismatch"
+          "id": "AC-FIX-GB-002",
+          "name": "Both render sites reference shared const",
+          "given": "GameBoard.tsx with the extracted ACTION_COLORS const",
+          "when": "The post-solve history dots and in-game round indicator dots are rendered",
+          "then": "Both use ACTION_COLORS[action.color] referencing the module-level const. No inline object literals defining gray/red/green color mappings exist anywhere in the component.",
+          "measurement": "grep for '{ gray:' in GameBoard.tsx returns 1 match (the const definition). No matches inside JSX or render functions.",
+          "closes_gap": "imp-action-colors-duplication"
         },
         {
-          "id": "AC-FIX-RARITY-003",
+          "id": "AC-FIX-GB-003",
+          "name": "setTimeout IDs stored in useRef",
+          "given": "GameBoard.tsx source code",
+          "when": "A developer inspects setTimeout usage",
+          "then": "Each setTimeout call assigns its return value to a .current property of a useRef<ReturnType<typeof setTimeout> | null>. At least two useRef declarations exist for timeout tracking.",
+          "measurement": "grep for 'useRef' in GameBoard.tsx finds timeout ref declarations. grep for 'setTimeout' finds assignments to ref.current.",
+          "closes_gap": "imp-settimeout-cleanup"
+        },
+        {
+          "id": "AC-FIX-GB-004",
+          "name": "useEffect cleanup calls clearTimeout",
+          "given": "GameBoard.tsx with timeout refs",
+          "when": "The component unmounts (useEffect cleanup runs)",
+          "then": "clearTimeout is called on all timeout ref .current values. The cleanup function is in a useEffect with an empty or appropriate dependency array.",
+          "measurement": "grep for 'clearTimeout' in GameBoard.tsx finds at least 2 calls inside a useEffect return function.",
+          "closes_gap": "imp-settimeout-cleanup"
+        },
+        {
+          "id": "AC-FIX-GB-005",
+          "name": "No unmount warnings",
+          "given": "A game in progress with an active setTimeout (e.g., after a wrong guess with the 1200ms feedback flash pending)",
+          "when": "The component unmounts before the timeout fires (simulated by test or navigation)",
+          "then": "No React warning about 'Can't perform a React state update on an unmounted component' appears in console",
+          "measurement": "Unit test: mount GameBoard, trigger a guess, unmount before 1200ms, assert no console.error/warn calls matching the unmounted component pattern.",
+          "closes_gap": "imp-settimeout-cleanup"
+        },
+        {
+          "id": "AC-FIX-GB-006",
           "name": "Build and tests pass",
-          "given": "The updated type definition",
+          "given": "All GameBoard.tsx changes applied",
           "when": "npm run build and npm test are executed",
-          "then": "Zero TypeScript errors, zero test failures, build produces static export",
-          "measurement": "npm run build exits 0; npm test exits 0",
-          "closes_gap": "imp-rarity-type-mismatch"
+          "then": "Zero TypeScript errors, zero test failures, build produces static export with all routes",
+          "measurement": "npm run build exits 0; npm test exits 0; all existing 280+ tests continue to pass",
+          "closes_gap": "imp-action-colors-duplication,imp-settimeout-cleanup"
         }
       ],
       "scope": {
         "in_scope": [
-          "src/types/card.ts — rarity type union"
+          "src/components/GameBoard.tsx — extract ACTION_COLORS to module level, add useRef + useEffect cleanup for setTimeout calls"
         ],
         "out_of_scope": [
-          "card-details.json data (no changes needed)",
-          "build-card-data.mjs pipeline (already passes through 'special')",
-          "test files (already accept 'special' via validRarities Set)",
-          "any other type definitions"
+          "CardFrame.tsx (no changes needed)",
+          "GuessInput.tsx (no changes needed)",
+          "game-engine.ts (no changes needed — getRoundActions returns data, colors are a UI concern)",
+          "Post-solve screen restructure (deferred to post-solve-experience milestone)",
+          "Any visual output changes — render must be pixel-identical before and after"
         ],
         "regression_risk": [
-          "None — this is a type-widening change. All existing values remain valid. No runtime behavior changes."
+          "Round indicator dot colors could regress if ACTION_COLORS const is moved but a reference is missed — verify both render sites use the shared const",
+          "Existing 280+ tests covering AC-FA1-017 through AC-FA1-026 should be re-run to verify no game mechanic regression"
         ]
       },
       "root_cause_context": {
         "classification": "implementation_bug",
-        "what_went_wrong": "When the Scryfall data pipeline was built, the factory discovered that some cards have rarity 'special' (promo/bonus-sheet reprints) and made the correct decision to keep them in pools. The pipeline passes through raw.rarity without filtering. The tests were updated to accept 'special' via a validRarities Set. However, the TypeScript type definition in src/types/card.ts was not updated to match — it still only lists the 4 standard MTG rarities.",
-        "whats_different_this_time": "First attempt. Direct one-line type fix."
+        "what_went_wrong": "Two stories (pass-mechanic and win-lose-detection) independently added action rendering to GameBoard.tsx. Each defined its own ACTION_COLORS object because they were implemented in separate sessions without cross-referencing each other's additions. Similarly, the 1200ms setTimeout calls for game-over transition and feedback flash were added during win-lose-detection without applying the standard React cleanup pattern (useRef + clearTimeout in useEffect). The QA code audit flagged both (robustness 80, production_risks 76) but they were not promoted to fix tasks in that cycle.",
+        "why_previous_approach_failed": "N/A — first attempt for both gaps.",
+        "whats_different_this_time": "Both are mechanical refactors with clear before/after states. ACTION_COLORS extraction is a move + delete. setTimeout cleanup is a well-documented React pattern. Single-file scope, no design or architectural decisions needed."
       }
     }
   ],
   "change_spec_generation_summary": {
     "phase": "change-spec-generation",
-    "cycle": "1",
-    "timestamp": "2026-04-04T21:00:00.000Z",
+    "cycle": "5",
+    "timestamp": "2026-04-04T00:00:00.000Z",
     "total_specs_generated": 1,
-    "total_criteria_across_specs": 3,
-    "gaps_addressed": 1,
+    "total_criteria_across_specs": 6,
+    "gaps_addressed": 2,
     "gaps_deferred": [],
     "gaps_escalated": []
-  },
-  "next_phase_context": {
-    "reason": "QA gate failed: AC-FIX-RARITY-001 and AC-FIX-RARITY-002 have failing tests",
-    "fix_tasks": [
-      {
-        "id": "fix-qa-rarity-type-mismatch",
-        "story_id": "fix-rarity-type-mismatch",
-        "description": "Add 'special' to Card.rarity union in src/types/card.ts",
-        "file": "src/types/card.ts",
-        "line": 18,
-        "change": "rarity: 'common' | 'uncommon' | 'rare' | 'mythic'; → rarity: 'common' | 'uncommon' | 'rare' | 'mythic' | 'special';",
-        "severity": "MEDIUM",
-        "estimated_effort": "1 line"
-      }
-    ],
-    "unblocks": "After fix, all 236 tests should pass and evaluation re-run will yield QA PASS → PO PRODUCTION_READY → analyzing"
   }
 }

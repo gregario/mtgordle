@@ -114,6 +114,48 @@
             "clue-progression-engine"
           ],
           "acceptance_criteria": []
+        },
+        {
+          "id": "fix-gameboard-quality",
+          "name": "Fix GameBoard ACTION_COLORS duplication + setTimeout cleanup",
+          "status": "pending",
+          "depends_on": [
+            "win-lose-detection"
+          ],
+          "acceptance_criteria": [
+            {
+              "id": "AC-FIX-GB-001",
+              "description": "ACTION_COLORS is defined exactly once as a module-level const in GameBoard.tsx (not inside any function or render block)"
+            },
+            {
+              "id": "AC-FIX-GB-002",
+              "description": "Both usages of ACTION_COLORS (round indicator dots and post-solve history dots) reference the single module-level const"
+            },
+            {
+              "id": "AC-FIX-GB-003",
+              "description": "All setTimeout calls in GameBoard.tsx store their timeout IDs via useRef"
+            },
+            {
+              "id": "AC-FIX-GB-004",
+              "description": "A useEffect cleanup function calls clearTimeout on all stored timeout refs when the component unmounts"
+            },
+            {
+              "id": "AC-FIX-GB-005",
+              "description": "No React warnings about state updates on unmounted components when navigating away during an active setTimeout"
+            },
+            {
+              "id": "AC-FIX-GB-006",
+              "description": "npm run build and npm test pass with zero errors after all changes"
+            }
+          ],
+          "fix_metadata": {
+            "source_gap_ids": ["imp-action-colors-duplication", "imp-settimeout-cleanup"],
+            "root_cause": "implementation_bug",
+            "priority": "medium",
+            "scope_files": ["src/components/GameBoard.tsx"],
+            "do_not_repeat": [],
+            "approach": "Extract ACTION_COLORS to module-level const. Use useRef for setTimeout IDs + useEffect cleanup for clearTimeout on unmount."
+          }
         }
       ]
     },
