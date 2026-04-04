@@ -148,6 +148,7 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         tierLabel={tierLabel}
         modeLabel={modeLabel}
         mode={mode}
+        puzzleNumber={puzzleNumber ?? 0}
       />
     );
   }

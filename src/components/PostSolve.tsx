@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import type { Card, RoundAction } from '@/types/card';
 import type { GameOutcome } from '@/lib/game-engine';
 import { getRoundActions } from '@/lib/game-engine';
+import { generateShareText } from '@/lib/share-grid';
 
 const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } as const;
 
@@ -13,10 +15,26 @@ interface PostSolveProps {
   tierLabel: string;
   modeLabel: string;
   mode: 'daily' | 'practice';
+  puzzleNumber: number;
 }
 
-export default function PostSolve({ card, outcome, roundActions, tierLabel, modeLabel, mode }: PostSolveProps) {
+export default function PostSolve({ card, outcome, roundActions, tierLabel, modeLabel, mode, puzzleNumber }: PostSolveProps) {
   const indicators = getRoundActions(roundActions);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const shareText = generateShareText({
+      puzzleNumber,
+      tier: tierLabel,
+      scoreDisplay: outcome.scoreDisplay,
+      colorIdentity: card.color_identity,
+      actions: roundActions,
+    });
+    navigator.clipboard.writeText(shareText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div
@@ -77,6 +95,7 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
       {/* AC-FA4-002: Share button immediately below score, above fold */}
       <button
         data-testid="share-button"
+        onClick={handleShare}
         style={{
           padding: '12px 32px',
           fontSize: 'var(--font-size-base)',
@@ -91,7 +110,7 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
           maxWidth: '300px',
         }}
       >
-        Share
+        {copied ? 'Copied!' : 'Share'}
       </button>
 
       {/* AC-FA4-003: Card art displayed large below share button */}
