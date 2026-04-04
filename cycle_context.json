@@ -727,6 +727,18 @@
       "affects": [
         "src/components/GameBoard.tsx"
       ]
+    },
+    {
+      "decision": "win-lose-detection story already fully implemented — re-verified, fixed stale test",
+      "context": "Building phase dispatched for win-lose-detection but story was already completed in prior cycle with 28 tests covering AC-FA1-022 through AC-FA1-026. _current_story is null in cycle_context.",
+      "alternatives_considered": [
+        "Rebuild from scratch (wasteful — identical output)"
+      ],
+      "rationale": "Search Before Building: all tasks are REUSE. 280/280 tests passing after fixing stale AC-FA1-001 test (foundation.test.mjs checked for output:export which was intentionally removed in c30bb76). Stale test updated to check for valid config object instead. Committed as 69a53c4.",
+      "confidence": "high",
+      "affects": [
+        "tests/foundation.test.mjs"
+      ]
     }
   ],
   "factory_questions": [
@@ -878,35 +890,151 @@
       "env_limited_count": 2,
       "fail_count": 0,
       "core_game_loop_criteria": [
-        {"criterion": "AC-FA1-004", "verdict": "pass", "evidence": "TierSelection component renders 'Simple #N' with EPOCH_DATE puzzle number"},
-        {"criterion": "AC-FA1-005", "verdict": "pass", "evidence": "TierSelection renders 'Practice' option linking to /play/practice"},
-        {"criterion": "AC-FA1-006", "verdict": "pass", "evidence": "TierSelection renders 'Cryptic #N' option linking to /play/cryptic"},
-        {"criterion": "AC-FA1-007", "verdict": "pass", "evidence": "Footer link to /terms present in TierSelection"},
-        {"criterion": "AC-FA1-008", "verdict": "pass", "evidence": "GameBoard fetches card-details.json, filterCardsByPool + getCardIndex selects correct daily card"},
-        {"criterion": "AC-FA1-009", "verdict": "pass", "evidence": "getVisibleClues(1).manaCost == true, colorIdentity == true; CardFrame renders mana pips via ManaCost/ManaSymbol"},
-        {"criterion": "AC-FA1-010", "verdict": "pass", "evidence": "getVisibleClues(2).typeLine == true; CardFrame reveals type line on round 2"},
-        {"criterion": "AC-FA1-011", "verdict": "pass", "evidence": "getVisibleClues(3).raritySetEra == true; CardFrame reveals rarity + set era on round 3"},
-        {"criterion": "AC-FA1-012", "verdict": "pass", "evidence": "getVisibleClues(4).rulesText == true; CardFrame reveals oracle_text_first_line on round 4"},
-        {"criterion": "AC-FA1-013", "verdict": "pass", "evidence": "getRound5Content() returns flavor_text or 'Art by {artist}'; getVisibleClues(5).flavorArtist == true"},
-        {"criterion": "AC-FA1-014", "verdict": "pass", "evidence": "getVisibleClues(6).cardArt == true; CardFrame renders image_uri on round 6"},
-        {"criterion": "AC-FA1-015", "verdict": "pass", "evidence": "CardFrame uses aspect-ratio: 63/88 (63:88 standard MTG card ratio)"},
-        {"criterion": "AC-FA1-016", "verdict": "pass", "evidence": "getCardFrameGradient() applies color-identity tint to empty clue regions; getCardBorderColor() drives frame color"},
-        {"criterion": "AC-FA3-001", "verdict": "pass", "evidence": "GuessInput loads autocomplete-index.json (36,606 names); createSearchEngine covers full oracle pool"},
-        {"criterion": "AC-FA3-002", "verdict": "pass", "evidence": "Two-pass architecture: substring O(n) scan < 5ms; Fuse.js fallback < 200ms (divergence documented)"},
-        {"criterion": "AC-FA3-003", "verdict": "pass", "evidence": "Fuse.js fuzzy fallback handles typos; 'lighning' → 'Lightning Bolt' in test"},
-        {"criterion": "AC-FA3-004", "verdict": "pass", "evidence": "Substring scan handles partial matching; 'Lightning' returns 5+ Lightning cards"},
-        {"criterion": "AC-FA3-005", "verdict": "pass", "evidence": "36,606-name index includes all oracle cards; all 930 curated cards present in index"},
-        {"criterion": "AC-FA3-006", "verdict": "pass", "evidence": "validateGuess() checks guess against card pool; returns isCorrect, matchType (exact/nickname/case-insensitive)"},
-        {"criterion": "AC-FA1-017", "verdict": "pass", "evidence": "canPass(round, solved) renders Pass button when round in [1,5] and !solved"},
-        {"criterion": "AC-FA1-018", "verdict": "pass", "evidence": "applyPass() increments round, adds {type:'pass'} to actions"},
-        {"criterion": "AC-FA1-019", "verdict": "pass", "evidence": "canPass(6, false) == false — Pass button not shown on round 6"},
-        {"criterion": "AC-FA1-020", "verdict": "pass", "evidence": "GameBoard renders 'Round {round} of 6'; getRoundActionDisplay() produces same string"},
-        {"criterion": "AC-FA1-021", "verdict": "pass", "evidence": "getRoundActions() maps actions to colored indicators; GameBoard renders 6 dots with pass/wrong/correct colors"},
-        {"criterion": "AC-FA1-022", "verdict": "pass", "evidence": "validateGuess() with card argument detects correct guess; isCorrect propagated to applyGuess"},
-        {"criterion": "AC-FA1-023", "verdict": "pass", "evidence": "calculateScore(actions) returns 1-indexed round of correct guess"},
-        {"criterion": "AC-FA1-024", "verdict": "pass", "evidence": "calculateScore returns null when no correct guess; getGameOutcome wraps as scoreDisplay 'X/6'"},
-        {"criterion": "AC-FA1-025", "verdict": "pass", "evidence": "applyGuess(round, actions, name, false) advances round by 1 (stays at 6 if already there)"},
-        {"criterion": "AC-FA1-026", "verdict": "pass", "evidence": "isGameOver() returns true when solved or 6 actions taken; GameBoard delays setGameOver(true) 1.2s"}
+        {
+          "criterion": "AC-FA1-004",
+          "verdict": "pass",
+          "evidence": "TierSelection component renders 'Simple #N' with EPOCH_DATE puzzle number"
+        },
+        {
+          "criterion": "AC-FA1-005",
+          "verdict": "pass",
+          "evidence": "TierSelection renders 'Practice' option linking to /play/practice"
+        },
+        {
+          "criterion": "AC-FA1-006",
+          "verdict": "pass",
+          "evidence": "TierSelection renders 'Cryptic #N' option linking to /play/cryptic"
+        },
+        {
+          "criterion": "AC-FA1-007",
+          "verdict": "pass",
+          "evidence": "Footer link to /terms present in TierSelection"
+        },
+        {
+          "criterion": "AC-FA1-008",
+          "verdict": "pass",
+          "evidence": "GameBoard fetches card-details.json, filterCardsByPool + getCardIndex selects correct daily card"
+        },
+        {
+          "criterion": "AC-FA1-009",
+          "verdict": "pass",
+          "evidence": "getVisibleClues(1).manaCost == true, colorIdentity == true; CardFrame renders mana pips via ManaCost/ManaSymbol"
+        },
+        {
+          "criterion": "AC-FA1-010",
+          "verdict": "pass",
+          "evidence": "getVisibleClues(2).typeLine == true; CardFrame reveals type line on round 2"
+        },
+        {
+          "criterion": "AC-FA1-011",
+          "verdict": "pass",
+          "evidence": "getVisibleClues(3).raritySetEra == true; CardFrame reveals rarity + set era on round 3"
+        },
+        {
+          "criterion": "AC-FA1-012",
+          "verdict": "pass",
+          "evidence": "getVisibleClues(4).rulesText == true; CardFrame reveals oracle_text_first_line on round 4"
+        },
+        {
+          "criterion": "AC-FA1-013",
+          "verdict": "pass",
+          "evidence": "getRound5Content() returns flavor_text or 'Art by {artist}'; getVisibleClues(5).flavorArtist == true"
+        },
+        {
+          "criterion": "AC-FA1-014",
+          "verdict": "pass",
+          "evidence": "getVisibleClues(6).cardArt == true; CardFrame renders image_uri on round 6"
+        },
+        {
+          "criterion": "AC-FA1-015",
+          "verdict": "pass",
+          "evidence": "CardFrame uses aspect-ratio: 63/88 (63:88 standard MTG card ratio)"
+        },
+        {
+          "criterion": "AC-FA1-016",
+          "verdict": "pass",
+          "evidence": "getCardFrameGradient() applies color-identity tint to empty clue regions; getCardBorderColor() drives frame color"
+        },
+        {
+          "criterion": "AC-FA3-001",
+          "verdict": "pass",
+          "evidence": "GuessInput loads autocomplete-index.json (36,606 names); createSearchEngine covers full oracle pool"
+        },
+        {
+          "criterion": "AC-FA3-002",
+          "verdict": "pass",
+          "evidence": "Two-pass architecture: substring O(n) scan < 5ms; Fuse.js fallback < 200ms (divergence documented)"
+        },
+        {
+          "criterion": "AC-FA3-003",
+          "verdict": "pass",
+          "evidence": "Fuse.js fuzzy fallback handles typos; 'lighning' → 'Lightning Bolt' in test"
+        },
+        {
+          "criterion": "AC-FA3-004",
+          "verdict": "pass",
+          "evidence": "Substring scan handles partial matching; 'Lightning' returns 5+ Lightning cards"
+        },
+        {
+          "criterion": "AC-FA3-005",
+          "verdict": "pass",
+          "evidence": "36,606-name index includes all oracle cards; all 930 curated cards present in index"
+        },
+        {
+          "criterion": "AC-FA3-006",
+          "verdict": "pass",
+          "evidence": "validateGuess() checks guess against card pool; returns isCorrect, matchType (exact/nickname/case-insensitive)"
+        },
+        {
+          "criterion": "AC-FA1-017",
+          "verdict": "pass",
+          "evidence": "canPass(round, solved) renders Pass button when round in [1,5] and !solved"
+        },
+        {
+          "criterion": "AC-FA1-018",
+          "verdict": "pass",
+          "evidence": "applyPass() increments round, adds {type:'pass'} to actions"
+        },
+        {
+          "criterion": "AC-FA1-019",
+          "verdict": "pass",
+          "evidence": "canPass(6, false) == false — Pass button not shown on round 6"
+        },
+        {
+          "criterion": "AC-FA1-020",
+          "verdict": "pass",
+          "evidence": "GameBoard renders 'Round {round} of 6'; getRoundActionDisplay() produces same string"
+        },
+        {
+          "criterion": "AC-FA1-021",
+          "verdict": "pass",
+          "evidence": "getRoundActions() maps actions to colored indicators; GameBoard renders 6 dots with pass/wrong/correct colors"
+        },
+        {
+          "criterion": "AC-FA1-022",
+          "verdict": "pass",
+          "evidence": "validateGuess() with card argument detects correct guess; isCorrect propagated to applyGuess"
+        },
+        {
+          "criterion": "AC-FA1-023",
+          "verdict": "pass",
+          "evidence": "calculateScore(actions) returns 1-indexed round of correct guess"
+        },
+        {
+          "criterion": "AC-FA1-024",
+          "verdict": "pass",
+          "evidence": "calculateScore returns null when no correct guess; getGameOutcome wraps as scoreDisplay 'X/6'"
+        },
+        {
+          "criterion": "AC-FA1-025",
+          "verdict": "pass",
+          "evidence": "applyGuess(round, actions, name, false) advances round by 1 (stays at 6 if already there)"
+        },
+        {
+          "criterion": "AC-FA1-026",
+          "verdict": "pass",
+          "evidence": "isGameOver() returns true when solved or 6 actions taken; GameBoard delays setGameOver(true) 1.2s"
+        }
       ],
       "code_quality_baseline": {
         "eslint_errors": 0,
@@ -917,7 +1045,9 @@
         "circular_deps": 0,
         "dead_code_items": 0,
         "files_over_300_lines": 1,
-        "files_over_300_lines_detail": ["src/components/GameBoard.tsx (312 lines) — marginally over"],
+        "files_over_300_lines_detail": [
+          "src/components/GameBoard.tsx (312 lines) — marginally over"
+        ],
         "npm_audit": {
           "critical": 1,
           "high": 0,
@@ -1009,14 +1139,38 @@
       "health_score_breakdown": {
         "base": 100,
         "deductions": [
-          {"reason": "LOW: No ESLint config (global improvement, carried forward)", "amount": -1},
-          {"reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable for static export)", "amount": -2},
-          {"reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review skipped", "amount": -2},
-          {"reason": "MEDIUM: setTimeout not cleaned up on unmount", "amount": -2},
-          {"reason": "LOW: ACTION_COLORS defined twice in GameBoard", "amount": -1},
-          {"reason": "LOW: GameBoard.tsx marginally over 300 lines (312)", "amount": -1},
-          {"reason": "LOW: No fetch timeout on card-details.json load", "amount": -1},
-          {"reason": "LOW: No React error boundary around async fetch", "amount": -1}
+          {
+            "reason": "LOW: No ESLint config (global improvement, carried forward)",
+            "amount": -1
+          },
+          {
+            "reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable for static export)",
+            "amount": -2
+          },
+          {
+            "reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review skipped",
+            "amount": -2
+          },
+          {
+            "reason": "MEDIUM: setTimeout not cleaned up on unmount",
+            "amount": -2
+          },
+          {
+            "reason": "LOW: ACTION_COLORS defined twice in GameBoard",
+            "amount": -1
+          },
+          {
+            "reason": "LOW: GameBoard.tsx marginally over 300 lines (312)",
+            "amount": -1
+          },
+          {
+            "reason": "LOW: No fetch timeout on card-details.json load",
+            "amount": -1
+          },
+          {
+            "reason": "LOW: No React error boundary around async fetch",
+            "amount": -1
+          }
         ],
         "wtf_likelihood": "0.5/min — senior engineer would note the duplicate ACTION_COLORS and setTimeout leak but otherwise solid code",
         "wtf_adjustment": 0,
@@ -1030,42 +1184,6 @@
       "a11y_review": null
     },
     "po": {
-      "journey_quality": [],
-      "screen_quality": [
-        {
-          "screen": "foundation-data-pipeline (artifacts)",
-          "assessment": "All data artifacts correct and complete. 930 curated cards with proper pool structure. 36,606-name autocomplete index sorted and within size limits. Build pipeline deterministic.",
-          "information_hierarchy": "n/a",
-          "visual_balance": "n/a",
-          "density": "n/a"
-        }
-      ],
-      "heuristic_results": {
-        "total": 3,
-        "passed": 3,
-        "pass_rate_pct": 100,
-        "results": [
-          {
-            "heuristic": "Completeness",
-            "verdict": "pass",
-            "evidence": "All 19 foundation-data-pipeline ACs met (17 pass, 2 env_limited)"
-          },
-          {
-            "heuristic": "Correctness",
-            "verdict": "pass",
-            "evidence": "233 tests pass; artifact structure verified"
-          },
-          {
-            "heuristic": "Reversibility",
-            "verdict": "pass",
-            "evidence": "Deployment target choice (Vercel over Cloudflare) documented as reversible in factory_decisions"
-          }
-        ]
-      },
-      "verdict": "PRODUCTION_READY",
-      "milestone": "core-game-loop",
-      "confidence": 0.87,
-      "confidence_adjusted": 0.87,
       "journey_quality": [
         {
           "journey": "Daily game loop (Simple tier)",
@@ -1136,9 +1254,20 @@
           }
         ]
       },
+      "verdict": "PRODUCTION_READY",
+      "milestone": "core-game-loop",
+      "confidence": 0.87,
+      "confidence_adjusted": 0.87,
       "env_limited_impact": {
-        "excluded_criteria": ["AC-FA1-002", "AC-FA2-005"],
-        "excluded_checks": ["Lighthouse performance", "a11y automated scan", "visual design review"],
+        "excluded_criteria": [
+          "AC-FA1-002",
+          "AC-FA2-005"
+        ],
+        "excluded_checks": [
+          "Lighthouse performance",
+          "a11y automated scan",
+          "visual design review"
+        ],
         "rationale": "No deployment URL. Browser-based checks deferred. Code-verified a11y shows ARIA combobox on GuessInput, aria-label on Pass button."
       },
       "recommended_action": "continue",
@@ -1182,13 +1311,34 @@
     "health_score_breakdown": {
       "base": 100,
       "deductions": [
-        {"reason": "LOW: No ESLint config", "amount": -1},
-        {"reason": "LOW: npm audit CRITICAL advisory (inapplicable for static export)", "amount": -2},
-        {"reason": "ENV_LIMITED: No deployment URL", "amount": -2},
-        {"reason": "MEDIUM: setTimeout not cleaned up on unmount", "amount": -2},
-        {"reason": "LOW: ACTION_COLORS duplicated in GameBoard", "amount": -1},
-        {"reason": "LOW: GameBoard marginally over 300 lines (312)", "amount": -1},
-        {"reason": "LOW: No fetch timeout on card-details.json", "amount": -1}
+        {
+          "reason": "LOW: No ESLint config",
+          "amount": -1
+        },
+        {
+          "reason": "LOW: npm audit CRITICAL advisory (inapplicable for static export)",
+          "amount": -2
+        },
+        {
+          "reason": "ENV_LIMITED: No deployment URL",
+          "amount": -2
+        },
+        {
+          "reason": "MEDIUM: setTimeout not cleaned up on unmount",
+          "amount": -2
+        },
+        {
+          "reason": "LOW: ACTION_COLORS duplicated in GameBoard",
+          "amount": -1
+        },
+        {
+          "reason": "LOW: GameBoard marginally over 300 lines (312)",
+          "amount": -1
+        },
+        {
+          "reason": "LOW: No fetch timeout on card-details.json",
+          "amount": -1
+        }
       ],
       "wtf_likelihood": "0.5/min",
       "wtf_adjustment": 0,
@@ -1300,7 +1450,7 @@
       "Feature cycles may add error boundaries as UI complexity grows — not required now."
     ]
   },
-  "deployment_url": null,
+  "deployment_url": "https://mtgordle.vercel.app",
   "foundation_completion": {
     "schema_ready": false,
     "schema_ready_note": "No SQL schema needed — this is a pure static app. localStorage persistence (PlayerStats) is the data layer; types defined in src/types/card.ts",
@@ -1358,7 +1508,7 @@
     }
   },
   "infrastructure": {
-    "staging_url": null,
+    "staging_url": "https://mtgordle.vercel.app",
     "production_url": null,
     "supabase_ref": null,
     "sentry_dsn": null,
@@ -1485,13 +1635,58 @@
     "coverage_complete": true,
     "feature_not_implemented": [],
     "criteria_covered": {
-      "tier-selection": ["AC-FA1-004", "AC-FA1-005", "AC-FA1-006", "AC-FA1-007"],
-      "clue-progression-engine": ["AC-FA1-008", "AC-FA1-009", "AC-FA1-010", "AC-FA1-011", "AC-FA1-012", "AC-FA1-013", "AC-FA1-014", "AC-FA1-015", "AC-FA1-016"],
-      "fuzzy-autocomplete": ["AC-FA3-001", "AC-FA3-002", "AC-FA3-003", "AC-FA3-004", "AC-FA3-005", "AC-FA3-006"],
-      "pass-mechanic": ["AC-FA1-017", "AC-FA1-018", "AC-FA1-019", "AC-FA1-020", "AC-FA1-021"],
-      "win-lose-detection": ["AC-FA1-022", "AC-FA1-023", "AC-FA1-024", "AC-FA1-025", "AC-FA1-026"],
-      "mana-symbol-scaffold": ["AC-FA8-005", "AC-FA8-006", "AC-FA8-007"],
-      "foundation-carried": ["AC-FA1-001", "AC-FA1-003", "AC-FA2-001 through AC-FA2-016", "AC-FIX-RARITY-001", "AC-FIX-RARITY-002", "AC-FIX-RARITY-003"]
+      "tier-selection": [
+        "AC-FA1-004",
+        "AC-FA1-005",
+        "AC-FA1-006",
+        "AC-FA1-007"
+      ],
+      "clue-progression-engine": [
+        "AC-FA1-008",
+        "AC-FA1-009",
+        "AC-FA1-010",
+        "AC-FA1-011",
+        "AC-FA1-012",
+        "AC-FA1-013",
+        "AC-FA1-014",
+        "AC-FA1-015",
+        "AC-FA1-016"
+      ],
+      "fuzzy-autocomplete": [
+        "AC-FA3-001",
+        "AC-FA3-002",
+        "AC-FA3-003",
+        "AC-FA3-004",
+        "AC-FA3-005",
+        "AC-FA3-006"
+      ],
+      "pass-mechanic": [
+        "AC-FA1-017",
+        "AC-FA1-018",
+        "AC-FA1-019",
+        "AC-FA1-020",
+        "AC-FA1-021"
+      ],
+      "win-lose-detection": [
+        "AC-FA1-022",
+        "AC-FA1-023",
+        "AC-FA1-024",
+        "AC-FA1-025",
+        "AC-FA1-026"
+      ],
+      "mana-symbol-scaffold": [
+        "AC-FA8-005",
+        "AC-FA8-006",
+        "AC-FA8-007"
+      ],
+      "foundation-carried": [
+        "AC-FA1-001",
+        "AC-FA1-003",
+        "AC-FA2-001 through AC-FA2-016",
+        "AC-FIX-RARITY-001",
+        "AC-FIX-RARITY-002",
+        "AC-FIX-RARITY-003"
+      ]
     },
     "env_limited": [
       {
