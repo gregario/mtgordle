@@ -4,18 +4,17 @@
  * GameBoard — main game screen component for MTGordle.
  *
  * Loads the correct daily card, manages round state, renders the
- * CardFrame with progressive clue reveals, and shows the round indicator.
- *
- * This story implements the clue-progression-engine only (no guess input,
- * no pass mechanic, no win/lose detection — those are separate stories).
- * For now, a "Next Clue" button advances rounds for testing.
+ * CardFrame with progressive clue reveals, guess input with fuzzy
+ * autocomplete, and the round indicator.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Card, GameTier } from '@/types/card';
 import { getPuzzleNumber, getCardIndex } from '@/config';
 import { filterCardsByPool } from '@/lib/game-engine';
 import CardFrame from '@/components/CardFrame';
+import GuessInput from '@/components/GuessInput';
+import { validateGuess } from '@/lib/guess-validator.mjs';
 
 interface GameBoardProps {
   tier: GameTier;
@@ -24,10 +23,12 @@ interface GameBoardProps {
 
 export default function GameBoard({ tier, mode }: GameBoardProps) {
   const [card, setCard] = useState<Card | null>(null);
+  const [poolCards, setPoolCards] = useState<Card[]>([]);
   const [round, setRound] = useState(1);
   const [puzzleNumber, setPuzzleNumber] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [guessResult, setGuessResult] = useState<'correct' | 'wrong' | null>(null);
 
   useEffect(() => {
     async function loadCard() {
@@ -35,22 +36,24 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         const res = await fetch('/data/card-details.json');
         if (!res.ok) throw new Error(`Failed to load card data: ${res.status}`);
         const allCards: Card[] = await res.json();
-        const poolCards = filterCardsByPool(allCards, tier, mode);
+        const filtered = filterCardsByPool(allCards, tier, mode);
 
-        if (poolCards.length === 0) {
+        if (filtered.length === 0) {
           throw new Error(`No cards found for pool: ${tier}-${mode}`);
         }
+
+        setPoolCards(filtered);
 
         let selectedCard: Card;
         if (mode === 'daily') {
           const pNum = getPuzzleNumber();
           const cIdx = getCardIndex(pNum);
           setPuzzleNumber(pNum);
-          selectedCard = poolCards[cIdx % poolCards.length];
+          selectedCard = filtered[cIdx % filtered.length];
         } else {
           // Practice: random card
-          const randomIdx = Math.floor(Math.random() * poolCards.length);
-          selectedCard = poolCards[randomIdx];
+          const randomIdx = Math.floor(Math.random() * filtered.length);
+          selectedCard = filtered[randomIdx];
           setPuzzleNumber(-1);
         }
 
@@ -63,6 +66,24 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
     }
     loadCard();
   }, [tier, mode]);
+
+  const handleGuess = useCallback((guessName: string) => {
+    if (!card || round > 6) return;
+
+    const result = validateGuess(guessName, card);
+    setGuessResult(result.isCorrect ? 'correct' : 'wrong');
+
+    if (result.isCorrect) {
+      // Win — reveal all clues
+      setRound(6);
+    } else {
+      // Wrong guess — advance to next round (reveal next clue)
+      setRound(r => Math.min(r + 1, 6));
+    }
+
+    // Clear the result flash after a short delay
+    setTimeout(() => setGuessResult(null), 1200);
+  }, [card, round]);
 
   if (loading) {
     return (
@@ -131,24 +152,31 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         ))}
       </div>
 
-      {/* ── Temporary: advance round button (will be replaced by guess/pass) ─ */}
-      {round < 6 && (
-        <button
-          onClick={() => setRound(r => Math.min(r + 1, 6))}
+      {/* ── Guess result feedback ─────────────────────────────────── */}
+      {guessResult && (
+        <div
           style={{
-            padding: '10px 24px',
-            backgroundColor: 'var(--color-accent)',
-            color: '#fff',
-            border: 'none',
+            padding: '8px 16px',
             borderRadius: 'var(--radius-md)',
-            fontSize: 'var(--font-size-base)',
+            fontSize: 'var(--font-size-sm)',
             fontWeight: 600,
-            cursor: 'pointer',
+            textAlign: 'center',
+            color: '#fff',
+            backgroundColor: guessResult === 'correct' ? 'var(--color-correct)' : 'var(--color-wrong)',
+            transition: 'opacity 0.3s ease',
           }}
         >
-          Next Clue →
-        </button>
+          {guessResult === 'correct' ? 'Correct!' : 'Wrong — next clue revealed'}
+        </div>
       )}
+
+      {/* ── Guess input ───────────────────────────────────────────── */}
+      <GuessInput
+        poolCards={poolCards}
+        onGuess={handleGuess}
+        disabled={round >= 6}
+        placeholder={round >= 6 ? 'Game over' : 'Type a card name...'}
+      />
     </div>
   );
 }
