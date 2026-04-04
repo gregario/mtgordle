@@ -33,5 +33,23 @@ next-env.d.ts
 # scryfall cache (raw ~100MB download — do not commit)
 .scryfall-cache/
 
+# snapshots
+.snapshots/
+
+# Rouge operational files (seeding artifacts — do not commit)
+checkpoints.jsonl
+state.json
+seeding-state.json
+cycle_context.json
+story_context.json
+task_ledger.json
+fix_story_context.json
+feedback.json
+tools.jsonl
+global_improvements.json
+milestone_context.json
+product_standard.json
+vision.json
+
 # public/data IS committed (generated static card data)
 # !public/data/
