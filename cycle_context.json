@@ -250,13 +250,15 @@
       "files_changed": [
         "src/lib/fuzzy-search.mjs",
         "src/lib/fuzzy-search.ts",
+        "src/lib/guess-validator.mjs",
         "src/components/GuessInput.tsx",
         "src/components/GameBoard.tsx",
-        "tests/fuzzy-search.test.mjs"
+        "tests/fuzzy-search.test.mjs",
+        "tests/guess-input.test.mjs"
       ],
-      "tests_added": 26,
-      "tests_passing": 26,
-      "notes": "Two-pass fuzzy search: fast multi-word substring filter (O(n) scan, <5ms typical) + Fuse.js fuzzy fallback for typo recovery (<100ms warm). Nickname resolution via separate Fuse index — nickname matches rank above name matches. GuessInput React component with ARIA combobox, keyboard navigation, dropdown. Replaces temp Next Clue button in GameBoard. 175 total tests passing."
+      "tests_added": 46,
+      "tests_passing": 46,
+      "notes": "Two-pass fuzzy search: fast multi-word substring filter (O(n) scan, <5ms typical) + Fuse.js fuzzy fallback for typo recovery (<200ms warm). Nickname resolution via separate Fuse index — nickname matches rank above name matches. Guess validator with normalizeCardName() and validateGuess() supports exact match, case-insensitive, and nickname match types. GuessInput React component with ARIA combobox, keyboard navigation, dropdown. GameBoard uses validateGuess for guess checking. 195 total tests passing across 6 test files."
     }
   ],
   "skipped": [
@@ -532,6 +534,46 @@
         "src/lib/fuzzy-search.mjs",
         "src/lib/fuzzy-search.ts"
       ]
+    },
+    {
+      "decision": "Separate guess-validator.mjs module for guess validation logic",
+      "context": "GameBoard handleGuess used inline string comparison. Nickname matching needs structured validation. TDD requires testable pure functions.",
+      "alternatives_considered": [
+        "Inline validation in GameBoard — untestable with node:test, harder to extend",
+        "Add to game-engine.ts — mixes concerns (clue progression vs guess validation)"
+      ],
+      "rationale": "Separate module keeps concerns clean: fuzzy-search finds candidates, guess-validator checks correctness. Pure functions testable with node:test. Nickname support ready for when curated card nicknames are populated.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/guess-validator.mjs",
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "Eager Fuse.js index build instead of lazy initialization",
+      "context": "Long multi-word queries were slow (170ms) because lazy Fuse init added to search latency on first fuzzy fallback",
+      "alternatives_considered": [
+        "Lazy init (original) — first fuzzy query is slow",
+        "Web Worker — adds complexity for marginal gain"
+      ],
+      "rationale": "Eager init moves the ~100ms Fuse index build to createSearchEngine() call time (page load). Subsequent searches hit a pre-built index. Multi-word queries now complete in <100ms consistently.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/fuzzy-search.mjs"
+      ]
+    },
+    {
+      "decision": "2-word Fuse query truncation for performance",
+      "context": "Fuse.js with long multi-word queries (e.g. 'nicol bolas dragon god') on 36K items takes >100ms",
+      "alternatives_considered": [
+        "3-word truncation — still too slow for some queries",
+        "No truncation — fails performance target"
+      ],
+      "rationale": "First 2 words are sufficient for Fuse disambiguation. The multi-word substring scan already handles exact multi-word matching. Fuse only needs enough to recover from typos.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/fuzzy-search.mjs"
+      ]
     }
   ],
   "factory_questions": [
@@ -739,12 +781,14 @@
       "package-lock.json",
       "src/lib/fuzzy-search.mjs",
       "src/lib/fuzzy-search.ts",
+      "src/lib/guess-validator.mjs",
       "src/components/GuessInput.tsx",
       "src/components/GameBoard.tsx",
-      "tests/fuzzy-search.test.mjs"
+      "tests/fuzzy-search.test.mjs",
+      "tests/guess-input.test.mjs"
     ],
-    "tests_added": 26,
-    "tests_passing": 26,
+    "tests_added": 46,
+    "tests_passing": 46,
     "env_limitations": [],
     "symptom": null,
     "diagnosis": null,
