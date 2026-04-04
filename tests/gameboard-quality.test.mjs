@@ -45,13 +45,13 @@ describe('AC-FIX-GB-001: ACTION_COLORS module-level const', () => {
 // ---------------------------------------------------------------------------
 
 describe('AC-FIX-GB-002: Both usages reference single const', () => {
-  test('ACTION_COLORS is referenced at least twice (round indicators + post-solve history)', () => {
-    // Count all references to ACTION_COLORS (excluding the declaration itself)
+  test('ACTION_COLORS is referenced at least twice (declaration + round indicator usage)', () => {
+    // Count all references to ACTION_COLORS (declaration + at least 1 usage)
+    // Post-solve history dots moved to PostSolve.tsx — GameBoard retains round indicator usage
     const allRefs = source.match(/\bACTION_COLORS\b/g);
     assert.ok(allRefs, 'No ACTION_COLORS references found');
-    // At least 1 declaration + 2 usages = 3+ occurrences
-    assert.ok(allRefs.length >= 3,
-      `Expected at least 3 occurrences (1 decl + 2 usages), found ${allRefs.length}`);
+    assert.ok(allRefs.length >= 2,
+      `Expected at least 2 occurrences (1 decl + 1 usage), found ${allRefs.length}`);
   });
 
   test('no inline ACTION_COLORS object literals remain', () => {

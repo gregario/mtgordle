@@ -15,6 +15,7 @@ import { filterCardsByPool, canPass, applyPass, applyGuess, getRoundActions, isG
 import type { GameOutcome } from '@/lib/game-engine';
 import CardFrame from '@/components/CardFrame';
 import GuessInput from '@/components/GuessInput';
+import PostSolve from '@/components/PostSolve';
 import { validateGuess } from '@/lib/guess-validator.mjs';
 
 const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } as const;
@@ -138,71 +139,16 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
   const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
   const modeLabel = mode === 'practice' ? 'Practice' : `#${puzzleNumber}`;
 
-  // ── Post-solve screen (AC-FA1-026) ────────────────────────────
   if (gameOver && outcome) {
     return (
-      <div
-        data-testid="post-solve"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--spacing-md)',
-          alignItems: 'center',
-          textAlign: 'center',
-        }}
-      >
-        <h2
-          style={{
-            fontSize: 'var(--font-size-xl, 2rem)',
-            fontWeight: 700,
-          }}
-        >
-          {tierLabel} {modeLabel}
-        </h2>
-        <div
-          data-testid="score-display"
-          style={{
-            fontSize: '3rem',
-            fontWeight: 800,
-            color: outcome.won ? 'var(--color-correct)' : 'var(--color-wrong)',
-          }}
-        >
-          {outcome.scoreDisplay}
-        </div>
-        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600 }}>
-          {outcome.won ? 'You got it!' : 'Better luck next time'}
-        </p>
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-muted)' }}>
-          The answer was <strong>{card.name}</strong>
-        </p>
-        {/* Card art reveal */}
-        <div style={{ maxWidth: '300px', width: '100%' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={card.image_uri}
-            alt={card.name}
-            style={{ width: '100%', borderRadius: 'var(--radius-lg, 12px)' }}
-          />
-        </div>
-        {/* Round history */}
-        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-          {(() => {
-            const indicators = getRoundActions(roundActions);
-            return indicators.map((action, i) => (
-              <div
-                key={i}
-                title={action.type}
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  backgroundColor: ACTION_COLORS[action.color],
-                }}
-              />
-            ));
-          })()}
-        </div>
-      </div>
+      <PostSolve
+        card={card}
+        outcome={outcome}
+        roundActions={roundActions}
+        tierLabel={tierLabel}
+        modeLabel={modeLabel}
+        mode={mode}
+      />
     );
   }
 
