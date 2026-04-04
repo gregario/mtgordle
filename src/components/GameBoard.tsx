@@ -9,9 +9,9 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Card, GameTier } from '@/types/card';
+import type { Card, GameTier, RoundAction } from '@/types/card';
 import { getPuzzleNumber, getCardIndex } from '@/config';
-import { filterCardsByPool } from '@/lib/game-engine';
+import { filterCardsByPool, canPass, applyPass, applyGuess, getRoundActions } from '@/lib/game-engine';
 import CardFrame from '@/components/CardFrame';
 import GuessInput from '@/components/GuessInput';
 import { validateGuess } from '@/lib/guess-validator.mjs';
@@ -29,6 +29,8 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [guessResult, setGuessResult] = useState<'correct' | 'wrong' | null>(null);
+  const [roundActions, setRoundActions] = useState<RoundAction[]>([]);
+  const [solved, setSolved] = useState(false);
 
   useEffect(() => {
     async function loadCard() {
@@ -73,17 +75,25 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
     const result = validateGuess(guessName, card);
     setGuessResult(result.isCorrect ? 'correct' : 'wrong');
 
+    const applied = applyGuess(round, roundActions, guessName, result.isCorrect);
+    setRound(applied.nextRound);
+    setRoundActions(applied.actions);
+
     if (result.isCorrect) {
-      // Win — reveal all clues
-      setRound(6);
-    } else {
-      // Wrong guess — advance to next round (reveal next clue)
-      setRound(r => Math.min(r + 1, 6));
+      setSolved(true);
     }
 
     // Clear the result flash after a short delay
     setTimeout(() => setGuessResult(null), 1200);
-  }, [card, round]);
+  }, [card, round, roundActions]);
+
+  const handlePass = useCallback(() => {
+    if (!canPass(round, solved)) return;
+
+    const applied = applyPass(round, roundActions);
+    setRound(applied.nextRound);
+    setRoundActions(applied.actions);
+  }, [round, roundActions, solved]);
 
   if (loading) {
     return (
@@ -130,7 +140,7 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
       {/* ── Card frame ─────────────────────────────────────────── */}
       <CardFrame card={card} round={round} />
 
-      {/* ── Round indicator dots ───────────────────────────────── */}
+      {/* ── Round indicator dots with action history (AC-FA1-021) ── */}
       <div
         style={{
           display: 'flex',
@@ -138,18 +148,34 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
           justifyContent: 'center',
         }}
       >
-        {[1, 2, 3, 4, 5, 6].map((r) => (
-          <div
-            key={r}
-            style={{
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              backgroundColor: r <= round ? 'var(--color-accent)' : 'var(--color-border)',
-              transition: 'background-color 0.2s ease',
-            }}
-          />
-        ))}
+        {(() => {
+          const indicators = getRoundActions(roundActions);
+          const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' };
+          return [1, 2, 3, 4, 5, 6].map((r) => {
+            const action = indicators[r - 1];
+            let bg: string;
+            if (action) {
+              bg = ACTION_COLORS[action.color];
+            } else if (r === round) {
+              bg = 'var(--color-accent)';
+            } else {
+              bg = 'var(--color-border)';
+            }
+            return (
+              <div
+                key={r}
+                title={action ? action.type : r === round ? 'current' : ''}
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: bg,
+                  transition: 'background-color 0.2s ease',
+                }}
+              />
+            );
+          });
+        })()}
       </div>
 
       {/* ── Guess result feedback ─────────────────────────────────── */}
@@ -170,13 +196,36 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         </div>
       )}
 
-      {/* ── Guess input ───────────────────────────────────────────── */}
-      <GuessInput
-        poolCards={poolCards}
-        onGuess={handleGuess}
-        disabled={round >= 6}
-        placeholder={round >= 6 ? 'Game over' : 'Type a card name...'}
-      />
+      {/* ── Guess input + pass button (AC-FA1-017, AC-FA1-019) ──── */}
+      <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'flex-start', width: '100%', maxWidth: '420px', justifyContent: 'center' }}>
+        <GuessInput
+          poolCards={poolCards}
+          onGuess={handleGuess}
+          disabled={round >= 6 || solved}
+          placeholder={solved ? 'Solved!' : round >= 6 ? 'Game over' : 'Type a card name...'}
+        />
+        {canPass(round, solved) && (
+          <button
+            onClick={handlePass}
+            aria-label="Pass this round"
+            style={{
+              padding: '12px 16px',
+              fontSize: 'var(--font-size-base)',
+              fontFamily: 'var(--font-family)',
+              fontWeight: 600,
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-text-muted)',
+              border: '2px solid var(--color-border)',
+              borderRadius: 'var(--radius-md)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'border-color 0.15s ease, color 0.15s ease',
+            }}
+          >
+            Pass
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -36,6 +36,11 @@ export type GameMode = 'daily' | 'practice';
 /** Status of a single clue reveal */
 export type ClueStatus = 'locked' | 'revealed' | 'passed';
 
+/** What happened in a given round */
+export type RoundAction =
+  | { type: 'pass' }
+  | { type: 'guess'; name: string; isCorrect: boolean };
+
 /** One guess attempt */
 export interface GuessAttempt {
   name: string;

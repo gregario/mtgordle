@@ -5,7 +5,7 @@
  * to determine what to reveal at each round.
  */
 
-import type { Card, GameTier } from '@/types/card';
+import type { Card, GameTier, RoundAction } from '@/types/card';
 
 /** Which clue regions are visible at a given round (1-6). Round 0 = nothing. */
 export interface ClueVisibility {
@@ -87,4 +87,74 @@ export function getRound5Content(card: Card): { type: 'flavor' | 'artist'; text:
 export function filterCardsByPool(cards: Card[], tier: GameTier, mode: 'daily' | 'practice'): Card[] {
   const pool = `${tier}-${mode}` as Card['pool'];
   return cards.filter(c => c.pool === pool);
+}
+
+// ---------------------------------------------------------------------------
+// Pass mechanic — round advancement and history tracking
+// ---------------------------------------------------------------------------
+
+const TOTAL_ROUNDS = 6;
+
+/**
+ * Whether the player can pass on the current round.
+ * Pass is allowed on rounds 1-5 when the game is not yet solved.
+ */
+export function canPass(round: number, solved: boolean): boolean {
+  return !solved && round >= 1 && round < TOTAL_ROUNDS;
+}
+
+/**
+ * Apply a pass action: record it and advance to the next round.
+ */
+export function applyPass(
+  round: number,
+  actions: RoundAction[],
+): { nextRound: number; actions: RoundAction[] } {
+  const newActions = [...actions, { type: 'pass' as const }];
+  return { nextRound: Math.min(round + 1, TOTAL_ROUNDS), actions: newActions };
+}
+
+/**
+ * Apply a guess action: record it and advance round.
+ * Correct guess jumps to round 6 (all clues revealed).
+ * Wrong guess advances by 1.
+ */
+export function applyGuess(
+  round: number,
+  actions: RoundAction[],
+  name: string,
+  isCorrect: boolean,
+): { nextRound: number; actions: RoundAction[] } {
+  const newActions = [...actions, { type: 'guess' as const, name, isCorrect }];
+  const nextRound = isCorrect ? TOTAL_ROUNDS : Math.min(round + 1, TOTAL_ROUNDS);
+  return { nextRound, actions: newActions };
+}
+
+/** Display indicator for a round action. */
+export interface RoundActionIndicator {
+  type: 'pass' | 'wrong' | 'correct';
+  color: 'gray' | 'red' | 'green';
+}
+
+/**
+ * Convert raw round actions into display indicators for the round history.
+ * Pass → gray, wrong guess → red, correct guess → green.
+ */
+export function getRoundActions(actions: RoundAction[]): RoundActionIndicator[] {
+  return actions.map((action): RoundActionIndicator => {
+    if (action.type === 'pass') {
+      return { type: 'pass', color: 'gray' };
+    }
+    if (action.isCorrect) {
+      return { type: 'correct', color: 'green' };
+    }
+    return { type: 'wrong', color: 'red' };
+  });
+}
+
+/**
+ * Format the round indicator text.
+ */
+export function getRoundActionDisplay(round: number): string {
+  return `Round ${round} of ${TOTAL_ROUNDS}`;
 }
