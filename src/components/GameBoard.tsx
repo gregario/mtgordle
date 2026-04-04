@@ -8,7 +8,7 @@
  * autocomplete, and the round indicator.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Card, GameTier, RoundAction } from '@/types/card';
 import { getPuzzleNumber, getCardIndex } from '@/config';
 import { filterCardsByPool, canPass, applyPass, applyGuess, getRoundActions, isGameOver, getGameOutcome } from '@/lib/game-engine';
@@ -16,6 +16,8 @@ import type { GameOutcome } from '@/lib/game-engine';
 import CardFrame from '@/components/CardFrame';
 import GuessInput from '@/components/GuessInput';
 import { validateGuess } from '@/lib/guess-validator.mjs';
+
+const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } as const;
 
 interface GameBoardProps {
   tier: GameTier;
@@ -34,6 +36,16 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
   const [solved, setSolved] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [outcome, setOutcome] = useState<GameOutcome | null>(null);
+
+  const gameOverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (gameOverTimeoutRef.current) clearTimeout(gameOverTimeoutRef.current);
+      if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     async function loadCard() {
@@ -92,10 +104,10 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
       const gameOutcome = getGameOutcome(applied.actions);
       setOutcome(gameOutcome);
       // Delay transition so feedback flash is visible
-      setTimeout(() => setGameOver(true), 1200);
+      gameOverTimeoutRef.current = setTimeout(() => setGameOver(true), 1200);
     } else {
       // Clear the result flash after a short delay
-      setTimeout(() => setGuessResult(null), 1200);
+      flashTimeoutRef.current = setTimeout(() => setGuessResult(null), 1200);
     }
   }, [card, round, roundActions, gameOver]);
 
@@ -176,7 +188,6 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
           {(() => {
             const indicators = getRoundActions(roundActions);
-            const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' };
             return indicators.map((action, i) => (
               <div
                 key={i}
@@ -231,7 +242,6 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
       >
         {(() => {
           const indicators = getRoundActions(roundActions);
-          const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' };
           return [1, 2, 3, 4, 5, 6].map((r) => {
             const action = indicators[r - 1];
             let bg: string;
