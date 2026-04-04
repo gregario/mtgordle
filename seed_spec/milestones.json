@@ -1,0 +1,462 @@
+{
+  "product": "mtgordle",
+  "milestones": [
+    {
+      "name": "foundation-data-pipeline",
+      "display_name": "Foundation + Data Pipeline",
+      "feature_areas": ["FA1", "FA2"],
+      "depends_on_milestones": [],
+      "stories": [
+        {
+          "id": "project-scaffold",
+          "name": "Next.js Project Scaffold + Vercel Config",
+          "feature_area": "FA1",
+          "acceptance_criteria": [
+            "AC-FA1-001: Next.js project initializes with static export configured",
+            "AC-FA1-002: Vercel deployment succeeds and serves static pages",
+            "AC-FA1-003: File-based routing works for /simple, /cryptic, /practice, /terms paths"
+          ],
+          "user_journeys": [],
+          "depends_on": [],
+          "affected_entities": [],
+          "affected_screens": ["S1-home"],
+          "notes": "Use next export for pure static output. Configure vercel.json if needed. Include dark/light CSS custom properties from the start."
+        },
+        {
+          "id": "scryfall-data-pipeline",
+          "name": "Scryfall Build-Time Data Pipeline",
+          "feature_area": "FA2",
+          "acceptance_criteria": [
+            "AC-FA2-001: Build script downloads Scryfall Oracle Cards bulk data",
+            "AC-FA2-002: Build script extracts card fields: name, mana_cost, color_identity, type_line, oracle_text, flavor_text, set, set_name, rarity, artist, image_uris.normal, image_uris.art_crop",
+            "AC-FA2-003: Build script handles cards with missing flavor_text (null/undefined) gracefully",
+            "AC-FA2-004: Build script produces a compressed autocomplete index of all unique card names (~30K)",
+            "AC-FA2-005: Build completes in under 60 seconds"
+          ],
+          "user_journeys": [],
+          "depends_on": ["project-scaffold"],
+          "affected_entities": ["Card"],
+          "affected_screens": [],
+          "notes": "Download from https://api.scryfall.com/bulk-data/oracle-cards. Output two JSON files: card-details.json (curated 930) and autocomplete-index.json (all names). Use Oracle cards (one entry per unique card name) not All Cards (includes every printing)."
+        },
+        {
+          "id": "curated-card-pools",
+          "name": "Curated Card Pool JSON (930 Cards with Placeholder Lore)",
+          "feature_area": "FA2",
+          "acceptance_criteria": [
+            "AC-FA2-006: Simple daily pool contains 365 cards with recognition-based selection",
+            "AC-FA2-007: Cryptic daily pool contains 365 cards with deep-cut selection",
+            "AC-FA2-008: Simple practice pool contains 100 cards not in the daily pools",
+            "AC-FA2-009: Cryptic practice pool contains 100 cards not in the daily pools",
+            "AC-FA2-010: Each card has all clue fields populated: mana_cost, color_identity, type_line, rarity, set_era, oracle_text_first_line, flavor_text (nullable), artist, image_uri",
+            "AC-FA2-011: Each card has a lore_blurb field (placeholder text acceptable for foundation, replaced in lore milestone)",
+            "AC-FA2-012: Each card has a nicknames array (empty array acceptable for foundation, populated during lore curation)",
+            "AC-FA2-013: Card pools have zero overlap between daily and practice pools"
+          ],
+          "user_journeys": [],
+          "depends_on": ["scryfall-data-pipeline"],
+          "affected_entities": ["Card", "CardPool"],
+          "affected_screens": [],
+          "notes": "Cards should be selected with recognition-based criteria (A) with clue-difficulty filtering (dash of C). Universe Beyond cards (Deadpool, FF7) can be included in Simple pool. Curate set_era as a human-readable era label (e.g., 'Modern era (2010s)', 'Classic (1990s)')."
+        },
+        {
+          "id": "autocomplete-index",
+          "name": "Autocomplete Name Index (Full Scryfall Pool)",
+          "feature_area": "FA2",
+          "acceptance_criteria": [
+            "AC-FA2-014: Index contains all unique card names from Scryfall Oracle data",
+            "AC-FA2-015: Index file is under 500KB gzipped",
+            "AC-FA2-016: Index supports prefix matching and substring matching"
+          ],
+          "user_journeys": [],
+          "depends_on": ["scryfall-data-pipeline"],
+          "affected_entities": ["Card"],
+          "affected_screens": [],
+          "notes": "This is a separate file from card-details.json. Contains only card names (and optionally a lightweight structure for fuzzy matching). Loaded on game screen for autocomplete."
+        }
+      ]
+    },
+    {
+      "name": "core-game-loop",
+      "display_name": "Core Game Loop",
+      "feature_areas": ["FA1", "FA3"],
+      "depends_on_milestones": ["foundation-data-pipeline"],
+      "stories": [
+        {
+          "id": "tier-selection",
+          "name": "Tier Selection Screen (Home)",
+          "feature_area": "FA1",
+          "acceptance_criteria": [
+            "AC-FA1-004: Home screen shows Simple and Cryptic daily puzzle options",
+            "AC-FA1-005: Home screen shows Practice mode entry point",
+            "AC-FA1-006: Each option shows today's puzzle number (e.g., 'Simple #1')",
+            "AC-FA1-007: Footer contains T&Cs link"
+          ],
+          "user_journeys": ["J1-daily-simple", "J2-daily-cryptic", "J3-practice"],
+          "depends_on": [],
+          "affected_entities": [],
+          "affected_screens": ["S1-home"],
+          "notes": "This is the landing page. No marketing splash. Clean, game-first. Puzzle number = days_since(2026-04-04) + 1."
+        },
+        {
+          "id": "clue-progression-engine",
+          "name": "6-Round Clue Progression Engine",
+          "feature_area": "FA1",
+          "acceptance_criteria": [
+            "AC-FA1-008: Game loads the correct daily card based on tier and date",
+            "AC-FA1-009: Round 1 displays mana pips (SVG) and color identity only",
+            "AC-FA1-010: Round 2 reveals card type + subtype in the type line region",
+            "AC-FA1-011: Round 3 reveals rarity + set era in the appropriate region",
+            "AC-FA1-012: Round 4 reveals rules text (first line or keyword) in the text box",
+            "AC-FA1-013: Round 5 reveals flavor text in the lower text box, or artist name if no flavor text",
+            "AC-FA1-014: Round 6 fills the art region with the Scryfall card image",
+            "AC-FA1-015: CSS card frame maintains MTG card proportions (63:88 ratio) at all viewport sizes",
+            "AC-FA1-016: Empty clue regions show card-color-identity gradient or subtle empty state"
+          ],
+          "user_journeys": ["J1-daily-simple", "J2-daily-cryptic"],
+          "depends_on": ["tier-selection", "curated-card-pools"],
+          "affected_entities": ["Card", "GameState"],
+          "affected_screens": ["S2-game"],
+          "notes": "The CSS card frame should closely match a real MTG card — correct color identity borders, real SVG mana symbols (from mtg-vectors), proper type line. Art fills in last as the payoff. Deterministic daily selection: card_index = (days_since(2026-04-04)) % 365."
+        },
+        {
+          "id": "fuzzy-autocomplete",
+          "name": "Guess Input with Fuzzy Autocomplete",
+          "feature_area": "FA3",
+          "acceptance_criteria": [
+            "AC-FA3-001: Autocomplete searches the full Scryfall card pool (~30K names)",
+            "AC-FA3-002: Results appear within 100ms of keystroke",
+            "AC-FA3-003: Fuzzy matching handles typos (e.g., 'lightinng bolt' matches 'Lightning Bolt')",
+            "AC-FA3-004: Partial name matching works (e.g., 'lightning' shows Lightning Bolt, Lightning Helix, etc.)",
+            "AC-FA3-005: Special characters handled (e.g., 'Jötun' matches, apostrophes in names work)",
+            "AC-FA3-006: Nickname resolution works for curated cards (e.g., 'Bob' shows Dark Confidant)"
+          ],
+          "user_journeys": ["J1-daily-simple", "J2-daily-cryptic"],
+          "depends_on": ["autocomplete-index", "curated-card-pools"],
+          "affected_entities": ["Card"],
+          "affected_screens": ["S2-game"],
+          "notes": "Use a client-side fuzzy search library (e.g., Fuse.js). Nickname resolution: check nickname map first, then fall back to Oracle name fuzzy match. Results should show card name in a dropdown. Selecting a result fills the input. Submit with Enter or button."
+        },
+        {
+          "id": "pass-mechanic",
+          "name": "Pass Mechanic + Round Advancement",
+          "feature_area": "FA1",
+          "acceptance_criteria": [
+            "AC-FA1-017: Pass button is visible alongside the guess input on rounds 1-5",
+            "AC-FA1-018: Clicking pass advances to the next round and reveals the next clue",
+            "AC-FA1-019: Pass button is NOT shown on round 6 (must guess)",
+            "AC-FA1-020: Round indicator shows current round (e.g., 'Round 3 of 6')",
+            "AC-FA1-021: Previous rounds' actions are shown (pass/wrong guess indicators in the round display)"
+          ],
+          "user_journeys": ["J1-daily-simple"],
+          "depends_on": ["clue-progression-engine"],
+          "affected_entities": ["GameState"],
+          "affected_screens": ["S2-game"],
+          "notes": "Pass squares show as gray in the round history. Wrong guesses show as red. The guess input box position must NEVER move as rounds progress — the card frame is fixed size."
+        },
+        {
+          "id": "win-lose-detection",
+          "name": "Win/Lose Detection + Score Calculation",
+          "feature_area": "FA1",
+          "acceptance_criteria": [
+            "AC-FA1-022: Correct guess is detected (case-insensitive exact match against Oracle name)",
+            "AC-FA1-023: Score is calculated as the round number of correct guess (1/6 through 6/6)",
+            "AC-FA1-024: Failed game (wrong on round 6) scores as X/6",
+            "AC-FA1-025: Wrong guess on rounds 1-5 shows 'Wrong' feedback, advances to next round, reveals next clue",
+            "AC-FA1-026: Game state transitions to post-solve screen on correct guess or round 6 completion"
+          ],
+          "user_journeys": ["J1-daily-simple", "J2-daily-cryptic"],
+          "depends_on": ["clue-progression-engine"],
+          "affected_entities": ["GameState", "GameResult"],
+          "affected_screens": ["S2-game", "S3-post-solve"],
+          "notes": "Match against Oracle name. Also check nickname map — if player types a valid nickname that matches the answer card, accept it as correct."
+        }
+      ]
+    },
+    {
+      "name": "post-solve-experience",
+      "display_name": "Post-Solve Experience",
+      "feature_areas": ["FA4", "FA7"],
+      "depends_on_milestones": ["core-game-loop"],
+      "stories": [
+        {
+          "id": "post-solve-layout",
+          "name": "Post-Solve Screen Layout",
+          "feature_area": "FA4",
+          "acceptance_criteria": [
+            "AC-FA4-001: Score displayed prominently at top (e.g., '3/6')",
+            "AC-FA4-002: Share button is immediately below score, above the fold on mobile",
+            "AC-FA4-003: Card art displayed large below share button",
+            "AC-FA4-004: Lore blurb displayed below card art",
+            "AC-FA4-005: Personal stats section below lore blurb"
+          ],
+          "user_journeys": ["J4-post-solve"],
+          "depends_on": ["win-lose-detection"],
+          "affected_entities": ["GameResult"],
+          "affected_screens": ["S3-post-solve"],
+          "notes": "Order is critical for mobile: score → share → art → lore → stats. Share button MUST be above the fold. On the post-solve screen, show the full Scryfall card image (not the CSS card frame)."
+        },
+        {
+          "id": "share-grid-generation",
+          "name": "Share Grid Generation (Mana Pip Header + Emoji Squares)",
+          "feature_area": "FA4",
+          "acceptance_criteria": [
+            "AC-FA4-006: Share text includes header: 'MTGordle #[number] ([tier]) [score]/6'",
+            "AC-FA4-007: Second line shows mana pip emoji approximation of the card's color identity",
+            "AC-FA4-008: Emoji grid uses: green square = correct guess, red square = wrong guess, gray square = pass",
+            "AC-FA4-009: Grid stops at the winning round (Wordle-style, no unused squares shown)",
+            "AC-FA4-010: Failed game (X/6) shows all 6 squares",
+            "AC-FA4-011: Share text includes configurable URL on last line"
+          ],
+          "user_journeys": ["J5-sharing"],
+          "depends_on": ["win-lose-detection"],
+          "affected_entities": ["GameResult"],
+          "affected_screens": ["S3-post-solve"],
+          "notes": "Mana emoji mapping: W=⚪, U=🔵, B=⚫, R=🔴, G=🟢, colorless=◇, multicolor=🟡. Example output:\nMTGordle #1 (Simple) 3/6\n🔵⚪\n⬜🟥🟩\nmtgordle.vercel.app"
+        },
+        {
+          "id": "copy-to-clipboard",
+          "name": "Copy to Clipboard + Configurable URL",
+          "feature_area": "FA4",
+          "acceptance_criteria": [
+            "AC-FA4-012: Share button copies the share text to clipboard",
+            "AC-FA4-013: Visual confirmation shown after copy (e.g., button text changes to 'Copied!')",
+            "AC-FA4-014: Base URL is read from a single config constant (easy to update when domain changes)"
+          ],
+          "user_journeys": ["J5-sharing"],
+          "depends_on": ["share-grid-generation"],
+          "affected_entities": [],
+          "affected_screens": ["S3-post-solve"],
+          "notes": "Use navigator.clipboard.writeText(). Fallback for older browsers: textarea + execCommand. Config constant in a single file (e.g., config.ts) for the base URL."
+        },
+        {
+          "id": "lore-blurb-display",
+          "name": "Lore Blurb Display (Variable Depth)",
+          "feature_area": "FA7",
+          "acceptance_criteria": [
+            "AC-FA7-001: Lore blurb displayed on post-solve screen between card art and stats",
+            "AC-FA7-002: Short blurbs (one-liner) render inline without extra whitespace",
+            "AC-FA7-003: Long blurbs (paragraph) render with proper paragraph formatting",
+            "AC-FA7-004: Cards with placeholder lore show a generic message (e.g., card's type line and set info)"
+          ],
+          "user_journeys": ["J4-post-solve"],
+          "depends_on": ["post-solve-layout"],
+          "affected_entities": ["Card"],
+          "affected_screens": ["S3-post-solve"],
+          "notes": "Lore quality rubric (for build loop to enforce): must be original writing, based on verifiable public facts, must teach something, must be specific to THIS card, must have a hook in the first sentence, must avoid reproducing copyrighted text at length."
+        }
+      ]
+    },
+    {
+      "name": "stats-streaks-persistence",
+      "display_name": "Stats, Streaks & Persistence",
+      "feature_areas": ["FA5"],
+      "depends_on_milestones": ["core-game-loop"],
+      "stories": [
+        {
+          "id": "localstorage-stats-engine",
+          "name": "localStorage Stats Engine (Per-Tier Tracking)",
+          "feature_area": "FA5",
+          "acceptance_criteria": [
+            "AC-FA5-001: Game results are persisted to localStorage after each solve",
+            "AC-FA5-002: Stats are tracked separately for Simple and Cryptic tiers",
+            "AC-FA5-003: Stats include: games_played, games_won, score_distribution (array of counts for 1/6 through 6/6 and X/6)",
+            "AC-FA5-004: Stats survive page refresh and browser restart",
+            "AC-FA5-005: Corrupt or missing localStorage data is handled gracefully (initialize fresh)"
+          ],
+          "user_journeys": ["J6-stats"],
+          "depends_on": ["win-lose-detection"],
+          "affected_entities": ["PlayerStats"],
+          "affected_screens": [],
+          "notes": "Use a single localStorage key (e.g., 'mtgordle-stats') with a JSON object. Include a schema version field for future migrations."
+        },
+        {
+          "id": "streak-tracking",
+          "name": "Streak Tracking (Current, Max, Win %)",
+          "feature_area": "FA5",
+          "acceptance_criteria": [
+            "AC-FA5-006: Current streak increments on consecutive daily solves (not X/6)",
+            "AC-FA5-007: Current streak resets to 0 on a missed day or X/6 result",
+            "AC-FA5-008: Max streak is the highest current streak ever achieved",
+            "AC-FA5-009: Win percentage calculated as (games_won / games_played) * 100",
+            "AC-FA5-010: Streak is tracked per-tier (Simple streak and Cryptic streak are independent)"
+          ],
+          "user_journeys": ["J6-stats"],
+          "depends_on": ["localstorage-stats-engine"],
+          "affected_entities": ["PlayerStats"],
+          "affected_screens": [],
+          "notes": "Track the last_played_date per tier to detect missed days. Compare against current puzzle number, not calendar date (handles timezone edge cases)."
+        },
+        {
+          "id": "score-distribution-chart",
+          "name": "Personal Score Distribution Bar Chart",
+          "feature_area": "FA5",
+          "acceptance_criteria": [
+            "AC-FA5-011: Bar chart shows distribution of scores (1/6 through 6/6 and X/6)",
+            "AC-FA5-012: Bars are proportional to count (longest bar = most common score)",
+            "AC-FA5-013: Today's score is highlighted in the chart",
+            "AC-FA5-014: Chart renders correctly with 0 games played (empty state)"
+          ],
+          "user_journeys": ["J6-stats"],
+          "depends_on": ["localstorage-stats-engine"],
+          "affected_entities": ["PlayerStats"],
+          "affected_screens": ["S3-post-solve"],
+          "notes": "Simple horizontal bar chart, no charting library needed. CSS-only bars. Same style as Wordle's distribution chart."
+        },
+        {
+          "id": "stats-post-solve-integration",
+          "name": "Stats Integration into Post-Solve Screen",
+          "feature_area": "FA5",
+          "acceptance_criteria": [
+            "AC-FA5-015: Post-solve screen shows current streak and max streak",
+            "AC-FA5-016: Post-solve screen shows score distribution bar chart",
+            "AC-FA5-017: Stats section appears below lore blurb (below fold is OK)"
+          ],
+          "user_journeys": ["J4-post-solve", "J6-stats"],
+          "depends_on": ["post-solve-layout", "score-distribution-chart"],
+          "affected_entities": ["PlayerStats"],
+          "affected_screens": ["S3-post-solve"],
+          "notes": "Stats are always visible on post-solve — no separate stats page needed for V1. Streaks + distribution chart + win % all in one section."
+        }
+      ]
+    },
+    {
+      "name": "practice-mode",
+      "display_name": "Practice Mode",
+      "feature_areas": ["FA6"],
+      "depends_on_milestones": ["core-game-loop"],
+      "stories": [
+        {
+          "id": "practice-card-pool",
+          "name": "Practice Card Pool (100+100 Separate Cards)",
+          "feature_area": "FA6",
+          "acceptance_criteria": [
+            "AC-FA6-001: Simple practice pool contains 100 cards not in the Simple daily pool",
+            "AC-FA6-002: Cryptic practice pool contains 100 cards not in the Cryptic daily pool",
+            "AC-FA6-003: Practice pools are included in the static card-details JSON"
+          ],
+          "user_journeys": ["J3-practice"],
+          "depends_on": ["curated-card-pools"],
+          "affected_entities": ["Card", "CardPool"],
+          "affected_screens": [],
+          "notes": "These are separate from the 730 daily cards. No overlap. Same data structure per card."
+        },
+        {
+          "id": "practice-mode-flow",
+          "name": "Practice Mode Flow (Random Selection, Same Mechanic)",
+          "feature_area": "FA6",
+          "acceptance_criteria": [
+            "AC-FA6-004: Practice mode selects a random card from the chosen tier's practice pool",
+            "AC-FA6-005: Game mechanic is identical to daily mode (6 rounds, guess or pass, score)",
+            "AC-FA6-006: Player can play unlimited practice games",
+            "AC-FA6-007: Practice mode clearly labeled so player knows it's not the daily puzzle",
+            "AC-FA6-008: 'Play again' button appears on practice post-solve to start another round"
+          ],
+          "user_journeys": ["J3-practice"],
+          "depends_on": ["clue-progression-engine", "practice-card-pool"],
+          "affected_entities": ["GameState"],
+          "affected_screens": ["S2-game"],
+          "notes": "Reuse the same game component with a 'mode' prop (daily vs practice). Random selection uses Math.random(), not deterministic."
+        },
+        {
+          "id": "practice-mode-ui",
+          "name": "Practice Mode UI (No Share, No Stats Contribution)",
+          "feature_area": "FA6",
+          "acceptance_criteria": [
+            "AC-FA6-009: Share button is NOT shown on practice post-solve screen",
+            "AC-FA6-010: Practice results do NOT affect daily stats or streaks",
+            "AC-FA6-011: Practice post-solve still shows card art and lore blurb",
+            "AC-FA6-012: Practice mode has a 'Back to Home' link to return to tier selection"
+          ],
+          "user_journeys": ["J3-practice"],
+          "depends_on": ["practice-mode-flow"],
+          "affected_entities": [],
+          "affected_screens": ["S3-post-solve"],
+          "notes": "Practice is for fun/learning only. No competitive features. Lore blurbs still shown — the learning moment is part of the experience even in practice."
+        }
+      ]
+    },
+    {
+      "name": "visual-polish-theming",
+      "display_name": "Visual Polish & Theming",
+      "feature_areas": ["FA8"],
+      "depends_on_milestones": ["post-solve-experience"],
+      "stories": [
+        {
+          "id": "dark-light-theming",
+          "name": "Dark/Light Auto Theming (System Preference)",
+          "feature_area": "FA8",
+          "acceptance_criteria": [
+            "AC-FA8-001: Theme auto-detects from prefers-color-scheme media query",
+            "AC-FA8-002: Dark mode has appropriate contrast ratios (WCAG AA minimum)",
+            "AC-FA8-003: Light mode has appropriate contrast ratios (WCAG AA minimum)",
+            "AC-FA8-004: Card frame renders correctly in both themes"
+          ],
+          "user_journeys": [],
+          "depends_on": ["project-scaffold"],
+          "affected_entities": [],
+          "affected_screens": ["S1-home", "S2-game", "S3-post-solve", "S4-terms"],
+          "notes": "Use CSS custom properties (--bg, --text, --card-border, etc.) with @media (prefers-color-scheme: dark) override. Set up in foundation, refine in this story."
+        },
+        {
+          "id": "mana-pip-rendering",
+          "name": "Mana Pip SVG Rendering System",
+          "feature_area": "FA8",
+          "acceptance_criteria": [
+            "AC-FA8-005: Mana symbols render as SVGs (from mtg-vectors or fan recreation)",
+            "AC-FA8-006: All 5 colors + colorless + generic mana numbers render correctly",
+            "AC-FA8-007: Mana symbols scale correctly at different viewport sizes",
+            "AC-FA8-008: Hybrid/Phyrexian mana symbols render if present in card data",
+            "AC-FA8-009: Mana symbols used in clue 1 display, card frame, and anywhere mana costs appear"
+          ],
+          "user_journeys": [],
+          "depends_on": ["clue-progression-engine"],
+          "affected_entities": [],
+          "affected_screens": ["S2-game"],
+          "notes": "Check if mtg-vectors SVGs are fan recreations (safe to use) or official WotC assets. If official, create simple SVG alternatives. Mana cost string format from Scryfall is like '{2}{U}{B}' — parse and render each symbol."
+        },
+        {
+          "id": "mobile-first-layout",
+          "name": "Mobile-First Responsive Layout",
+          "feature_area": "FA8",
+          "acceptance_criteria": [
+            "AC-FA8-010: Game screen works on 375px viewport width (iPhone SE)",
+            "AC-FA8-011: Card frame is the primary visual element, centered, with guess input below",
+            "AC-FA8-012: Guess input never moves position as clues are revealed",
+            "AC-FA8-013: Post-solve screen scroll order: score → share → art → lore → stats",
+            "AC-FA8-014: Desktop layout uses centered column (max-width ~480px) maintaining mobile feel",
+            "AC-FA8-015: No horizontal scrolling at any viewport width"
+          ],
+          "user_journeys": [],
+          "depends_on": ["post-solve-layout"],
+          "affected_entities": [],
+          "affected_screens": ["S1-home", "S2-game", "S3-post-solve"],
+          "notes": "This is a mobile-first game. Desktop just centers it. Like Wordle — same single-column layout everywhere. Max-width container, auto margins."
+        },
+        {
+          "id": "spoiler-protection",
+          "name": "Spoiler Protection on Inbound Share Links",
+          "feature_area": "FA8",
+          "acceptance_criteria": [
+            "AC-FA8-016: Inbound link from share text lands on the game, not the post-solve",
+            "AC-FA8-017: If visitor hasn't played today's puzzle, they see the tier selection or game start",
+            "AC-FA8-018: No puzzle answer is exposed in URL parameters or page source"
+          ],
+          "user_journeys": ["J7-inbound-link"],
+          "depends_on": ["copy-to-clipboard"],
+          "affected_entities": [],
+          "affected_screens": ["S1-home"],
+          "notes": "Share URL is just the base domain (no puzzle ID or answer in the URL). The game determines today's puzzle from the date. Answers live in the static JSON but are not more exposed than Wordle's approach (client-side, viewable in source — acceptable for a free fan game)."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_milestones": 6,
+    "total_stories": 24,
+    "total_acceptance_criteria": 114,
+    "stories_per_milestone": {"min": 3, "max": 5, "avg": 4},
+    "longest_dependency_chain": 6,
+    "parallel_milestones": ["post-solve-experience", "stats-streaks-persistence", "practice-mode"]
+  }
+}
