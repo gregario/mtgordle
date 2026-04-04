@@ -162,12 +162,12 @@
         "public/data/autocomplete-index.json"
       ],
       "tests_added": 0,
-      "tests_passing": 0,
+      "tests_passing": 7,
       "serves_feature_areas": [
         "foundation-data-pipeline",
         "core-game-loop"
       ],
-      "notes": "36,606 unique Oracle card names. 745KB uncompressed, 241KB gzipped (under 500KB AC met)."
+      "notes": "36,606 unique Oracle card names. 745KB uncompressed, 241KB gzipped (under 500KB AC met). Already implemented during foundation phase — verified REUSE, no new code needed."
     },
     {
       "task": "mana-symbol-scaffold",
@@ -190,6 +190,52 @@
         "visual-polish-theming"
       ],
       "notes": "parseMana('{2}{U}{B}') → ['2','U','B']. tokenCategory() classifies generic/colour/hybrid/phyrexian. colorIdentityEmoji() for share grid. <ManaSymbol token='U'/> and <ManaCost cost='{2}{U}{B}'/> SVG components. No external font dependency."
+    },
+    {
+      "task": "tier-selection",
+      "acceptance_criteria": [
+        "AC-FA1-004",
+        "AC-FA1-005",
+        "AC-FA1-006",
+        "AC-FA1-007"
+      ],
+      "files_changed": [
+        "src/app/page.tsx",
+        "src/components/TierSelection.tsx",
+        "src/app/play/simple/page.tsx",
+        "src/app/play/cryptic/page.tsx",
+        "src/app/play/practice/page.tsx",
+        "tests/tier-selection.test.mjs"
+      ],
+      "tests_added": 15,
+      "tests_passing": 15,
+      "notes": "Home screen shows Simple #N and Cryptic #N daily puzzle options with descriptions, Practice mode entry, and T&Cs footer link. TierSelection is a client component that hydrates puzzle number from EPOCH_DATE on mount. Stub play routes created for /play/simple, /play/cryptic, /play/practice — game board will be implemented in clue-progression-engine story. Build produces 8 static routes, 95.9KB first-load JS on home."
+    },
+    {
+      "task": "clue-progression-engine",
+      "acceptance_criteria": [
+        "AC-FA1-008",
+        "AC-FA1-009",
+        "AC-FA1-010",
+        "AC-FA1-011",
+        "AC-FA1-012",
+        "AC-FA1-013",
+        "AC-FA1-014",
+        "AC-FA1-015",
+        "AC-FA1-016"
+      ],
+      "files_changed": [
+        "src/lib/game-engine.ts",
+        "src/components/CardFrame.tsx",
+        "src/components/GameBoard.tsx",
+        "src/app/play/simple/page.tsx",
+        "src/app/play/cryptic/page.tsx",
+        "src/app/play/practice/page.tsx",
+        "tests/game-engine.test.mjs"
+      ],
+      "tests_added": 65,
+      "tests_passing": 65,
+      "notes": "6-round clue progression engine with CSS card frame (63:88 ratio). Game engine in src/lib/game-engine.ts: getVisibleClues(), getCardBorderColor(), getCardFrameGradient(), getRound5Content(), filterCardsByPool(). CardFrame component renders MTG card with progressive reveal — empty regions show color-identity gradient, art fills in on round 6. GameBoard loads correct daily card by tier+date via fetch + filterCardsByPool. 65-test suite covers all 9 ACs: card loading, clue data per round, visibility matrix, border/gradient generation, pool filtering, frame proportions, required clue fields for all 730 daily cards. 175 total tests passing. Build succeeds: 8 static routes, 97.9KB first-load JS on play pages."
     }
   ],
   "skipped": [
@@ -288,6 +334,126 @@
       "affects": [
         "src/lib/mana.ts",
         "post-solve-experience"
+      ]
+    },
+    {
+      "decision": "scryfall-data-pipeline story already fully implemented during foundation phase — verified, no new code needed",
+      "context": "Story building phase dispatched for scryfall-data-pipeline, but foundation already built scripts/build-card-data.mjs, card-details.json (930 cards), and autocomplete-index.json (36,606 names). All 5 ACs verified passing.",
+      "alternatives_considered": [
+        "Rebuild from scratch (wasteful, identical output)",
+        "Add pipeline unit tests (foundation eval noted this as acceptable gap for committed build artifacts)"
+      ],
+      "rationale": "Search Before Building audit found all tasks are REUSE — existing implementation fully satisfies AC-FA2-001 through AC-FA2-005. 32 foundation tests + 37 mana tests all passing (84 total). No code changes warranted.",
+      "confidence": "high",
+      "affects": [
+        "scripts/build-card-data.mjs",
+        "public/data/card-details.json",
+        "public/data/autocomplete-index.json"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for tier-selection story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 1 EXTEND (page.tsx placeholder → full tier selection), 0 BUILD from scratch. Key reuse: getPuzzleNumber() from src/config.ts, Layout component, CSS custom properties, existing Link/routing patterns from terms page.",
+      "confidence": "high",
+      "affects": [
+        "src/app/page.tsx",
+        "src/components/TierSelection.tsx"
+      ]
+    },
+    {
+      "decision": "Static play routes (/play/simple, /play/cryptic, /play/practice) instead of dynamic [tier] route",
+      "context": "Next.js static export requires generateStaticParams for dynamic routes, which adds complexity",
+      "alternatives_considered": [
+        "/play/[tier] dynamic route with generateStaticParams — cleaner URL structure but requires explicit enumeration anyway",
+        "Query params (?tier=simple) — loses clean URLs"
+      ],
+      "rationale": "Three static routes is simpler and more explicit for a static export. Each page can have tier-specific metadata later. The clue-progression-engine story will likely refactor these to share a game component.",
+      "confidence": "high",
+      "affects": [
+        "src/app/play/simple/page.tsx",
+        "src/app/play/cryptic/page.tsx",
+        "src/app/play/practice/page.tsx"
+      ]
+    },
+    {
+      "decision": "TierSelection as client component with useEffect for puzzle number",
+      "context": "Puzzle number depends on current date — cannot be computed at build time for static export",
+      "alternatives_considered": [
+        "Server component with Date() — would freeze puzzle number at build time",
+        "Middleware rewrite — not available in static export"
+      ],
+      "rationale": "Client-side hydration ensures puzzle number is always current. Null initial state avoids hydration mismatch.",
+      "confidence": "high",
+      "affects": [
+        "src/components/TierSelection.tsx"
+      ]
+    },
+    {
+      "decision": "curated-card-pools story already fully implemented during foundation phase — verified, no new code needed",
+      "context": "Story building phase dispatched for curated-card-pools, but foundation already built public/data/card-details.json with 930 cards across 4 pools (365 simple-daily, 365 cryptic-daily, 100 simple-practice, 100 cryptic-practice). All 8 ACs (AC-FA2-006 through AC-FA2-013) verified passing via 14 foundation tests covering structure, pool sizes, uniqueness, and required fields.",
+      "alternatives_considered": [
+        "Rebuild card pools from scratch (wasteful, identical output)",
+        "Add separate test file for card pools (foundation.test.mjs already covers all ACs comprehensively)"
+      ],
+      "rationale": "Search Before Building audit found all tasks are REUSE — existing implementation fully satisfies all acceptance criteria. 84 total tests passing (32 foundation + 37 mana + 15 tier-selection). Zero overlap between pools validated by both pipeline and tests. No code changes warranted.",
+      "confidence": "high",
+      "affects": [
+        "public/data/card-details.json",
+        "scripts/build-card-data.mjs"
+      ]
+    },
+    {
+      "decision": "autocomplete-index story already fully implemented during foundation phase — verified, no new code needed",
+      "context": "Story building phase dispatched for autocomplete-index, but foundation already built public/data/autocomplete-index.json with 36,606 unique Oracle card names. All 3 ACs (AC-FA2-014 through AC-FA2-016) verified passing via 7 foundation tests covering array structure, uniqueness, sort order, and gzip size under 500KB.",
+      "alternatives_considered": [
+        "Rebuild autocomplete index from scratch (wasteful, identical output)",
+        "Add separate test file (foundation.test.mjs already covers all ACs comprehensively)"
+      ],
+      "rationale": "Search Before Building audit found all tasks are REUSE — existing implementation fully satisfies all acceptance criteria. 84 total tests passing (32 foundation + 37 mana + 15 tier-selection). No code changes warranted.",
+      "confidence": "high",
+      "affects": [
+        "public/data/autocomplete-index.json",
+        "scripts/build-card-data.mjs"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for clue-progression-engine story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 2 EXTEND (play route stubs → full game pages), 3 BUILD (game-engine.ts, CardFrame.tsx, GameBoard.tsx). Key reuse: getPuzzleNumber()/getCardIndex() from config.ts, ManaCost/ManaSymbol from foundation scaffold, Layout component, Card types, CSS custom properties.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/game-engine.ts",
+        "src/components/CardFrame.tsx",
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "Temporary 'Next Clue' button in GameBoard for round advancement",
+      "context": "Clue progression engine needs a way to advance rounds, but guess input and pass mechanic are separate stories",
+      "alternatives_considered": [
+        "Auto-advance on timer (changes game feel)",
+        "No advancement UI (untestable)"
+      ],
+      "rationale": "Simple button allows manual testing of all 6 rounds. Will be replaced by pass-mechanic and fuzzy-autocomplete stories which add the real guess/pass interaction.",
+      "confidence": "high",
+      "affects": [
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "Expanded clue-progression-engine test suite from 26 to 65 tests",
+      "context": "Prior invocation wrote 26 tests in tests/clue-engine.test.mjs. This invocation found existing implementation already committed (86e07de) and wrote comprehensive test suite as tests/game-engine.test.mjs covering all 9 ACs with getVisibleClues visibility matrix, getCardBorderColor, getCardFrameGradient, getRound5Content, filterCardsByPool, and required-field validation across all 730 daily cards.",
+      "alternatives_considered": [
+        "Keep the 26 existing tests (insufficient AC coverage)",
+        "Add only delta tests (harder to maintain two files)"
+      ],
+      "rationale": "Single comprehensive test file covers all ACs with clear describe blocks per AC. 175 total tests passing across all test files. Renamed to game-engine.test.mjs to match the source module name convention.",
+      "confidence": "high",
+      "affects": [
+        "tests/game-engine.test.mjs"
       ]
     }
   ],
@@ -481,6 +647,22 @@
       "cloudflare": false
     }
   },
+  "story_result": {
+    "story_id": "autocomplete-index",
+    "outcome": "pass",
+    "files_changed": [
+      "public/data/autocomplete-index.json"
+    ],
+    "tests_added": 0,
+    "tests_passing": 7,
+    "env_limitations": [],
+    "symptom": null,
+    "diagnosis": null,
+    "classification": null,
+    "fix_attempted": null,
+    "blocked_by": null,
+    "escalation": null
+  },
   "retry_counts": {},
   "previous_cycles": [],
   "supabase": {
@@ -489,6 +671,6 @@
     "connection_string": "https://joxusnbbsoqkoocwztmz.supabase.co"
   },
   "_current_milestone": "foundation-data-pipeline",
-  "_current_story": "project-scaffold",
+  "_current_story": "autocomplete-index",
   "_foundation_phase_complete": true
 }
