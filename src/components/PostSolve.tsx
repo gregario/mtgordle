@@ -5,6 +5,7 @@ import type { Card, RoundAction } from '@/types/card';
 import type { GameOutcome } from '@/lib/game-engine';
 import { getRoundActions } from '@/lib/game-engine';
 import { generateShareText } from '@/lib/share-grid';
+import { BASE_URL } from '@/config';
 
 const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } as const;
 
@@ -29,11 +30,35 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
       scoreDisplay: outcome.scoreDisplay,
       colorIdentity: card.color_identity,
       actions: roundActions,
+      baseUrl: BASE_URL,
     });
-    navigator.clipboard.writeText(shareText).then(() => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareText).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {
+        fallbackCopyToClipboard(shareText);
+      });
+    } else {
+      fallbackCopyToClipboard(shareText);
+    }
+  };
+
+  const fallbackCopyToClipboard = (text: string) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } catch {
+      // Copy failed silently — no feedback
+    }
+    document.body.removeChild(textarea);
   };
 
   return (
