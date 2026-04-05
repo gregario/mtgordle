@@ -85,6 +85,7 @@ export interface TierStats {
 
 /** Overall player statistics stored in localStorage */
 export interface PlayerStats {
+  _schema_version?: string;
   simple: TierStats;
   cryptic: TierStats;
 }

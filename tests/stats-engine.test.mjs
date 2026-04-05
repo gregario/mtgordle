@@ -18,6 +18,7 @@ import {
   loadStats,
   saveStats,
   STATS_STORAGE_KEY,
+  STATS_SCHEMA_VERSION,
 } from '../src/lib/stats-engine.mjs';
 
 // ---------------------------------------------------------------------------
@@ -287,6 +288,68 @@ describe('saveStats', () => {
     assert.ok(raw !== null);
     const parsed = JSON.parse(raw);
     assert.deepEqual(parsed, stats);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Schema version (AC-FIX-STATS-SV-001..005)
+// ---------------------------------------------------------------------------
+
+describe('schema version', () => {
+  test('STATS_SCHEMA_VERSION is exported as "1.0"', () => {
+    assert.equal(STATS_SCHEMA_VERSION, '1.0');
+  });
+
+  test('getDefaultPlayerStats includes _schema_version: "1.0" at top level', () => {
+    const defaults = getDefaultPlayerStats();
+    assert.equal(defaults._schema_version, '1.0');
+  });
+
+  test('saveStats persists _schema_version to storage', () => {
+    const storage = createMockStorage();
+    saveStats(getDefaultPlayerStats(), storage);
+    const raw = storage.getItem(STATS_STORAGE_KEY);
+    const parsed = JSON.parse(raw);
+    assert.equal(parsed._schema_version, '1.0');
+  });
+
+  test('loadStats falls back to defaults when stored blob is missing _schema_version (legacy)', () => {
+    const storage = createMockStorage();
+    const legacyBlob = {
+      simple: { ...getDefaultTierStats(), gamesPlayed: 42, gamesWon: 30 },
+      cryptic: getDefaultTierStats(),
+    };
+    storage.setItem(STATS_STORAGE_KEY, JSON.stringify(legacyBlob));
+
+    const loaded = loadStats(storage);
+    assert.deepEqual(loaded, getDefaultPlayerStats());
+    assert.equal(loaded.simple.gamesPlayed, 0);
+  });
+
+  test('loadStats falls back to defaults when _schema_version is unknown/future', () => {
+    const storage = createMockStorage();
+    const futureBlob = {
+      _schema_version: '9.9',
+      simple: { ...getDefaultTierStats(), gamesPlayed: 7 },
+      cryptic: getDefaultTierStats(),
+    };
+    storage.setItem(STATS_STORAGE_KEY, JSON.stringify(futureBlob));
+
+    const loaded = loadStats(storage);
+    assert.deepEqual(loaded, getDefaultPlayerStats());
+  });
+
+  test('loadStats preserves stored data when _schema_version matches current version', () => {
+    const storage = createMockStorage();
+    const original = getDefaultPlayerStats();
+    const updated = recordGameResult(original, makeResult({ tier: 'simple', puzzleNumber: 1 }));
+    saveStats(updated, storage);
+
+    const loaded = loadStats(storage);
+    assert.equal(loaded._schema_version, '1.0');
+    assert.equal(loaded.simple.gamesPlayed, 1);
+    assert.equal(loaded.simple.gamesWon, 1);
+    assert.equal(loaded.simple.currentStreak, 1);
   });
 });
 

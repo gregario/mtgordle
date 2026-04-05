@@ -4,6 +4,7 @@
 
 export {
   STATS_STORAGE_KEY,
+  STATS_SCHEMA_VERSION,
   getDefaultTierStats,
   getDefaultPlayerStats,
   recordGameResult,

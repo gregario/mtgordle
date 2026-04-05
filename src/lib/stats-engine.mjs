@@ -6,6 +6,7 @@
  */
 
 export const STATS_STORAGE_KEY = 'mtgordle-stats';
+export const STATS_SCHEMA_VERSION = '1.0';
 
 /** @returns {import('../types/card').TierStats} */
 export function getDefaultTierStats() {
@@ -22,6 +23,7 @@ export function getDefaultTierStats() {
 /** @returns {import('../types/card').PlayerStats} */
 export function getDefaultPlayerStats() {
   return {
+    _schema_version: STATS_SCHEMA_VERSION,
     simple: getDefaultTierStats(),
     cryptic: getDefaultTierStats(),
   };
@@ -110,7 +112,13 @@ export function loadStats(storage) {
   try {
     const raw = storage.getItem(STATS_STORAGE_KEY);
     if (!raw) return getDefaultPlayerStats();
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    // Safe migration: unknown or missing schema version → drop and return defaults.
+    // Keeps clients from choking on pre-versioned blobs or blobs written by a newer build.
+    if (!parsed || parsed._schema_version !== STATS_SCHEMA_VERSION) {
+      return getDefaultPlayerStats();
+    }
+    return parsed;
   } catch {
     return getDefaultPlayerStats();
   }
