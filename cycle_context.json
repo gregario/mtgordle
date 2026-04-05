@@ -383,6 +383,87 @@
       "tests_added": 21,
       "tests_passing": 21,
       "notes": "Pure lore-blurb.mjs module with isPlaceholderLore() (detects build-time placeholder pattern), formatLoreBlurb() (splits multi-paragraph blurbs on newlines, trims), getGenericLoreMessage() (type_line + set_name fallback). PostSolve now renders: placeholder cards get italic generic message (type · set), real lore gets paragraph-formatted display with proper spacing, short one-liners render inline. 21 tests covering all 4 ACs + data validation across all 930 cards. 361 total tests passing. Build succeeds: 8 static routes."
+    },
+    {
+      "task": "fix-1775348180078-0",
+      "acceptance_criteria": [
+        "AC-FIX-PS-001",
+        "AC-FIX-PS-002",
+        "AC-FIX-PS-003",
+        "AC-FIX-PS-004",
+        "AC-FIX-PS-005"
+      ],
+      "files_changed": [
+        "src/components/PostSolve.tsx",
+        "tests/postsovle-timeout-cleanup.test.mjs"
+      ],
+      "tests_added": 4,
+      "tests_passing": 4,
+      "notes": "Added copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null). Both setTimeout(() => setCopied(false), 2000) calls (clipboard API success path line 39, execCommand fallback path line 58) now store return value in copiedTimeoutRef.current. useEffect cleanup calls clearTimeout on unmount. Follows exact GameBoard.tsx pattern (gameOverTimeoutRef/flashTimeoutRef from cycle 6). 365 total tests passing. Build succeeds: 8 static routes."
+    },
+    {
+      "task": "localstorage-stats-engine",
+      "acceptance_criteria": [],
+      "files_changed": [
+        "src/lib/stats-engine.mjs",
+        "src/lib/stats-engine.ts",
+        "tests/stats-engine.test.mjs"
+      ],
+      "tests_added": 25,
+      "tests_passing": 25,
+      "notes": "Pure function stats engine in .mjs/.ts dual-export pattern (consistent with fuzzy-search, share-grid, lore-blurb). Functions: getDefaultTierStats(), getDefaultPlayerStats(), recordGameResult() (pure, immutable), isDuplicateGame(), loadStats(storage), saveStats(stats, storage). Per-tier tracking: gamesPlayed, gamesWon, currentStreak, maxStreak, lastPlayedPuzzle, guessDistribution. Practice mode ignored. localStorage I/O accepts injected storage for testability. 25 tests: wins, losses, streaks (start/increment/reset/max preservation/exceed), guess distribution accumulation, per-tier isolation, practice ignored, duplicate detection, localStorage load/save/corrupt recovery, immutability. 390 total tests passing. Build succeeds: 8 static routes."
+    },
+    {
+      "task": "streak-tracking",
+      "acceptance_criteria": [
+        "AC-FA5-006",
+        "AC-FA5-007",
+        "AC-FA5-008",
+        "AC-FA5-009",
+        "AC-FA5-010"
+      ],
+      "files_changed": [
+        "src/lib/stats-engine.mjs",
+        "src/lib/stats-engine.ts",
+        "tests/streak-tracking.test.mjs"
+      ],
+      "tests_added": 20,
+      "tests_passing": 20,
+      "notes": "Added missed-day streak reset: if lastPlayedPuzzle is non-null and puzzleNumber !== lastPlayedPuzzle + 1, streak resets before recording (starts at 1 on win, 0 on loss). Added getWinPercentage(tierStats) pure function returning rounded integer 0-100. Existing streak tests (25 in stats-engine.test.mjs) still pass — they used consecutive puzzle numbers. 410 total tests passing. Build succeeds: 8 static routes."
+    },
+    {
+      "task": "score-distribution-chart",
+      "acceptance_criteria": [
+        "AC-FA5-011",
+        "AC-FA5-012",
+        "AC-FA5-013",
+        "AC-FA5-014"
+      ],
+      "files_changed": [
+        "src/lib/score-distribution.mjs",
+        "src/lib/score-distribution.ts",
+        "src/components/ScoreDistributionChart.tsx",
+        "tests/score-distribution.test.mjs"
+      ],
+      "tests_added": 17,
+      "tests_passing": 17,
+      "notes": "Pure computeDistributionRows() helper + CSS-only horizontal bar chart component. Rows: 1..6 from guessDistribution, X = gamesPlayed-gamesWon. widthPercent scaled to max count (rounded). isEmpty non-enumerable flag on array return. Component renders empty-state card when isEmpty, otherwise 7 rows with data-highlighted attr for the active score (e.g. \"3\" for 3/6, \"X\" for a loss). Dual-export .mjs/.ts pattern consistent with stats-engine/share-grid/lore-blurb. 17 new tests (unit tests for the pure helper, structural tests for the component source). 427 total tests passing. Build succeeds: 8 static routes."
+    },
+    {
+      "task": "stats-post-solve-integration",
+      "acceptance_criteria": [
+        "AC-FA5-015",
+        "AC-FA5-016",
+        "AC-FA5-017"
+      ],
+      "files_changed": [
+        "src/components/PostSolve.tsx",
+        "src/components/GameBoard.tsx",
+        "tests/stats-post-solve-integration.test.mjs"
+      ],
+      "tests_added": 14,
+      "tests_passing": 14,
+      "notes": "Replaced stats-section placeholder with live stats panel: 4 stat tiles (Played, Win%, Current, Max) + ScoreDistributionChart with today score highlighted (1..6 wins as numeric string, losses as \"X\"). On mount, PostSolve loads PlayerStats from localStorage, records the completed game via recordGameResult (guarded by isDuplicateGame for daily mode; practice is a silent no-op at the engine level), and persists via saveStats. Accepts new tier: GameTier prop so stats are scoped to the active pool. 441 total tests passing (14 new). Build succeeds: 8 static routes, 102 kB first-load JS on play pages."
     }
   ],
   "skipped": [
@@ -979,6 +1060,218 @@
       "affects": [
         "src/lib/lore-blurb.mjs"
       ]
+    },
+    {
+      "decision": "Search Before Building audit for fix-1775348180078-0 (PostSolve setTimeout cleanup)",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 1 REFACTOR-THEN-BUILD (PostSolve.tsx — add useRef + useEffect cleanup for existing setTimeout calls). Pattern directly copied from GameBoard.tsx (gameOverTimeoutRef/flashTimeoutRef). No new modules needed, only test file added.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Single copiedTimeoutRef for both setTimeout paths (clipboard API + execCommand fallback)",
+      "context": "Both setTimeout calls set the same state (setCopied(false)) with the same delay (2000ms). Only one can be active at a time since they're in mutually exclusive code paths.",
+      "alternatives_considered": [
+        "Two separate refs (clipboardTimeoutRef + fallbackTimeoutRef) — over-engineering for mutually exclusive paths"
+      ],
+      "rationale": "One ref suffices because the clipboard API path and the execCommand fallback path are mutually exclusive within a single handleShare invocation. If the clipboard API succeeds, the fallback never runs, and vice versa. A new click will overwrite .current, which is correct — the previous timeout either already fired or should be superseded.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for localstorage-stats-engine story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 0 REUSE (TierStats/PlayerStats/GameResult types exist in src/types/card.ts), 1 BUILD (stats-engine.mjs — no existing stats code). Key reuse: existing type definitions, .mjs/.ts dual-export pattern from fuzzy-search/share-grid/lore-blurb.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs",
+        "src/lib/stats-engine.ts"
+      ]
+    },
+    {
+      "decision": "Stats engine as .mjs with .ts re-export wrapper (dual-export pattern)",
+      "context": "Node test runner cannot import TypeScript; React components need typed imports",
+      "alternatives_considered": [
+        "TypeScript only — tests would need ts-node or compilation step",
+        "Pure .mjs only — no type safety for component consumers"
+      ],
+      "rationale": "Same pattern as fuzzy-search.mjs/.ts, share-grid.mjs/.ts, lore-blurb.mjs/.ts. Proven pattern in this codebase. Core logic in .mjs for node:test compatibility, thin .ts wrapper for typed imports.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs",
+        "src/lib/stats-engine.ts"
+      ]
+    },
+    {
+      "decision": "Practice mode games silently ignored by recordGameResult()",
+      "context": "practice-mode-ui story specifies \"No Stats Contribution\" — practice games should not affect player statistics",
+      "alternatives_considered": [
+        "Throw error on practice mode — too aggressive, caller must guard",
+        "Record but tag as practice — unnecessary complexity for no-stats requirement"
+      ],
+      "rationale": "Silent no-op is safest: caller can pass any GameResult without checking mode first. Practice mode exclusion tested explicitly.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs"
+      ]
+    },
+    {
+      "decision": "Injected storage parameter instead of direct localStorage access",
+      "context": "loadStats/saveStats need localStorage in browser but testability in Node",
+      "alternatives_considered": [
+        "Global localStorage mock in test setup — fragile, leaks between tests",
+        "jest.fn() mocking — project uses node:test, not Jest"
+      ],
+      "rationale": "Dependency injection via storage parameter. Simple, testable, no mocking framework needed. Callers pass localStorage in browser, mock in tests.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for streak-tracking story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 3 REUSE (AC-FA5-006 streak increment, AC-FA5-008 maxStreak, AC-FA5-010 per-tier — all already in recordGameResult), 1 EXTEND (AC-FA5-007 missed-day detection — existing streak logic needed consecutive puzzle number check), 1 BUILD (AC-FA5-009 getWinPercentage — new pure function). Key reuse: existing TierStats fields (currentStreak, maxStreak, gamesWon, gamesPlayed, lastPlayedPuzzle).",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs",
+        "src/lib/stats-engine.ts"
+      ]
+    },
+    {
+      "decision": "Missed-day detection via puzzle number gap rather than calendar date comparison",
+      "context": "AC-FA5-007 says streak resets on missed day. Spec note says compare puzzle numbers not calendar dates.",
+      "alternatives_considered": [
+        "Calendar date comparison via Date objects — timezone-sensitive, spec warns against this",
+        "Consecutive-day tracking with Date storage — adds schema field, over-engineers for puzzle-number domain"
+      ],
+      "rationale": "Puzzle number is already tracked in lastPlayedPuzzle. A gap of >1 between lastPlayedPuzzle and new puzzleNumber definitively means a day was skipped. No timezone issues. No new fields needed.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for score-distribution-chart story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 0 REUSE (no existing chart/distribution UI components), 2 BUILD (pure helper computeDistributionRows + React ScoreDistributionChart). Key reuse: existing TierStats.guessDistribution / gamesPlayed / gamesWon fields from stats-engine, CSS custom properties (--color-correct, --color-pass, --spacing-*, --radius-*), and the .mjs/.ts dual-export pattern.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/score-distribution.mjs",
+        "src/lib/score-distribution.ts",
+        "src/components/ScoreDistributionChart.tsx"
+      ]
+    },
+    {
+      "decision": "Losses row derived as gamesPlayed - gamesWon rather than a separate stored field",
+      "context": "AC-FA5-011 requires an X/6 row in the distribution chart. guessDistribution only records wins by guessCount.",
+      "alternatives_considered": [
+        "Add a dedicated lossCount field to TierStats — schema change, risk of drift with gamesPlayed/gamesWon",
+        "Record losses under guessDistribution[0] or guessDistribution[7] — overloads a win-only field with a sentinel value"
+      ],
+      "rationale": "gamesPlayed and gamesWon are already the source of truth. losses = gamesPlayed - gamesWon is a pure derivation, always consistent, zero schema surface. No migration needed.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/score-distribution.mjs"
+      ]
+    },
+    {
+      "decision": "computeDistributionRows returns an array with a non-enumerable isEmpty flag",
+      "context": "Callers need both the 7 rows (to map over) and an empty-state signal. Wrapping in { rows, isEmpty } forces every call site to destructure and map separately.",
+      "alternatives_considered": [
+        "Return { rows, isEmpty } wrapper — ergonomic cost at every call site",
+        "Expose a separate isEmptyDistribution() helper — two calls, potential for drift"
+      ],
+      "rationale": "Non-enumerable property on the array keeps rows.map / rows.find ergonomic AND surfaces the empty-state flag in one place. JSON-serialization-safe since enumerable=false skips it. Single source of truth.",
+      "confidence": "medium",
+      "affects": [
+        "src/lib/score-distribution.mjs",
+        "src/components/ScoreDistributionChart.tsx"
+      ]
+    },
+    {
+      "decision": "highlightScore prop typed as string (e.g. \"3\" or \"X\") rather than a discriminated union",
+      "context": "Component needs to highlight the row matching today’s result. Today’s result can be 1..6 (win) or X (loss).",
+      "alternatives_considered": [
+        "highlightScore: number | \"X\" | null — requires callers to coerce and branch",
+        "Pass the entire GameOutcome and derive inside the component — couples chart to outcome shape"
+      ],
+      "rationale": "Row labels are already strings (\"1\"..\"6\",\"X\"). Caller passes the label it wants to highlight; component does one string equality check. Minimal surface, trivially stringifiable.",
+      "confidence": "high",
+      "affects": [
+        "src/components/ScoreDistributionChart.tsx"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for stats-post-solve-integration",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 5 REUSE (loadStats, saveStats, recordGameResult, isDuplicateGame, getWinPercentage from stats-engine — all already built), 1 REUSE (ScoreDistributionChart component from score-distribution-chart story), 1 EXTEND (PostSolve stats-section: replace placeholder with live content), 1 EXTEND (GameBoard: pass tier prop through to PostSolve). 0 BUILD. Entire story is wiring — every required primitive exists.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx",
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "PostSolve records the game result on mount (not in GameBoard)",
+      "context": "Someone has to call recordGameResult + saveStats exactly once per completed game. Two candidates: GameBoard (at game-over transition) or PostSolve (on mount).",
+      "alternatives_considered": [
+        "Record in GameBoard when isGameOver transitions to true — couples persistence to the gameplay component, and GameBoard then has to re-load stats just to pass them to PostSolve",
+        "Record in a useEffect in GameBoard before rendering PostSolve — same coupling, adds an extra render cycle"
+      ],
+      "rationale": "PostSolve already owns the post-solve UX. Recording + loading + rendering all happen in the component that displays the stats. isDuplicateGame guards against double-recording if the component remounts (e.g. React strict-mode dev). Single responsibility — GameBoard stays focused on gameplay.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Stats section renders in both daily and practice modes",
+      "context": "practice-mode-ui story (AC-FA6-010) says practice results do NOT affect stats. It does not say to hide stats display.",
+      "alternatives_considered": [
+        "Hide stats-section on practice — would require conditional render + different test expectations, and removes a useful information surface for no clear spec reason",
+        "Show a different practice-specific panel — scope creep, not in the story"
+      ],
+      "rationale": "recordGameResult is already a silent no-op for practice mode (localstorage-stats-engine decision). So calling it from practice post-solve is safe — no state change. Rendering accumulated stats on practice post-solve is informational and matches the spec note \"Stats are always visible on post-solve\". Minimal surface.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "highlightScore derived as String(outcome.score) on win, \"X\" on loss",
+      "context": "ScoreDistributionChart.highlightScore prop is string | null. Row labels are \"1\"..\"6\" and \"X\".",
+      "alternatives_considered": [
+        "Pass null when the row has zero count — adds a branch for an edge case the chart already handles",
+        "Pass outcome.scoreDisplay (\"3/6\") — would require the chart to parse, defeating string-equality simplicity"
+      ],
+      "rationale": "The chart uses a single string equality. Passing the bare label matches that contract exactly. Even at 0 games played the chart renders its empty state and ignores highlightScore — no branching needed.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Four stat tiles (Played, Win%, Current, Max) above the distribution chart",
+      "context": "AC-FA5-015 only requires current + max streak. Spec note says \"Streaks + distribution chart + win % all in one section\".",
+      "alternatives_considered": [
+        "Show only currentStreak + maxStreak — satisfies the letter of AC-FA5-015 but misses the spec note about win % and games played context",
+        "Show streaks inline as a sentence — less scannable, harder to compare against Wordle-style stats players already know"
+      ],
+      "rationale": "Four equal tiles in a grid is the Wordle pattern, which the product explicitly compares itself to in adjacent stories. getWinPercentage and gamesPlayed already exist on TierStats. Displaying them costs zero engine work and gives the section enough visual weight to justify the border-top separator.",
+      "confidence": "medium",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
     }
   ],
   "factory_questions": [
@@ -1005,13 +1298,93 @@
   "evaluation_report": {
     "qa": {
       "verdict": "PASS",
-      "verdict_cycle": 7,
-      "milestone": "post-solve-experience",
+      "verdict_cycle": 9,
+      "milestone": "stats-streaks-persistence",
       "criteria_results": [
         {
-          "criterion": "AC-FA4-001",
+          "criterion": "AC-FA5-001",
           "verdict": "pass",
-          "evidence": "PostSolve.tsx: data-testid='score-display' with fontSize '3rem', fontWeight 800. Score value from outcome.scoreDisplay. Verified by 3 tests in post-solve-layout.test.mjs."
+          "evidence": "stats-engine.mjs: saveStats(stats, storage) persists to STATS_STORAGE_KEY ('mtgordle-stats'). PostSolve.tsx calls saveStats on game completion via useEffect. 3 tests in stats-engine.test.mjs verify persistence (saveStats stores under correct key, loadStats retrieves)."
+        },
+        {
+          "criterion": "AC-FA5-002",
+          "verdict": "pass",
+          "evidence": "PlayerStats type has separate 'simple' and 'cryptic' TierStats objects. recordGameResult isolates updates to stats[tier] — simple result never touches cryptic. 2 per-tier isolation tests verify: 'simple result only affects simple tier', 'cryptic result only affects cryptic tier'."
+        },
+        {
+          "criterion": "AC-FA5-003",
+          "verdict": "pass",
+          "evidence": "TierStats contains: gamesPlayed, gamesWon, guessDistribution (object keyed by guessCount). getDefaultTierStats() initializes all to 0/{}. recordGameResult accumulates all fields. 6+ tests verify gamesPlayed/gamesWon increments and guessDistribution accumulation."
+        },
+        {
+          "criterion": "AC-FA5-004",
+          "verdict": "pass",
+          "evidence": "stats-engine.mjs: saveStats serializes to JSON string, loadStats deserializes. loadStats test: 'loads previously saved stats' — saves via saveStats, creates new loadStats call (fresh parse from mock storage) and verifies gamesPlayed/gamesWon/streak all restored."
+        },
+        {
+          "criterion": "AC-FA5-005",
+          "verdict": "pass",
+          "evidence": "loadStats() has try/catch returning getDefaultPlayerStats() on JSON.parse failure. Test: 'returns defaults when storage has invalid JSON' — sets storage to 'not json', verifies loadStats returns default stats. Test: 'returns defaults when storage is empty'."
+        },
+        {
+          "criterion": "AC-FA5-006",
+          "verdict": "pass",
+          "evidence": "recordGameResult: currentStreak = prev.currentStreak + 1 on win + consecutive puzzle. streak-tracking.test.mjs: 'consecutive puzzle numbers increment streak' — win puzzles 1,2,3 → currentStreak 3. 'first win starts streak at 1'."
+        },
+        {
+          "criterion": "AC-FA5-007",
+          "verdict": "pass",
+          "evidence": "recordGameResult: if (!result.solved) currentStreak = 0; missedDay = lastPlayedPuzzle !== null && puzzleNumber !== lastPlayedPuzzle + 1 → currentStreak = 1 (restart). streak-tracking.test.mjs: 'X/6 result resets streak to 0', 'missed day (non-consecutive puzzle number) resets streak', 'missed multiple days resets streak'."
+        },
+        {
+          "criterion": "AC-FA5-008",
+          "verdict": "pass",
+          "evidence": "recordGameResult: maxStreak = Math.max(prev.maxStreak, currentStreak). streak-tracking.test.mjs: 'max streak preserved after loss' (maxStreak stays 2 after streak reset), 'max streak preserved after missed day', 'new streak can exceed old max'."
+        },
+        {
+          "criterion": "AC-FA5-009",
+          "verdict": "pass",
+          "evidence": "getWinPercentage(tierStats) = Math.round((gamesWon / gamesPlayed) * 100), returns 0 when gamesPlayed=0. streak-tracking.test.mjs: 5 tests verify 0% (no games), 100% (all wins), 50% (half wins), 67% (2/3 rounded), 0% (all losses)."
+        },
+        {
+          "criterion": "AC-FA5-010",
+          "verdict": "pass",
+          "evidence": "recordGameResult isolates to stats[tier]. streak-tracking.test.mjs: 'simple streak independent of cryptic streak' (win 3 simple, lose cryptic → simple=3, cryptic=0). 'missed day on one tier does not affect the other' (3 tests)."
+        },
+        {
+          "criterion": "AC-FA5-011",
+          "verdict": "pass",
+          "evidence": "computeDistributionRows() returns 7-element array with labels ['1','2','3','4','5','6','X']. score-distribution.test.mjs: 'computeDistributionRows returns 7 rows with labels 1,2,3,4,5,6,X in order', 'counts for 1-6 come from guessDistribution', 'X row count equals gamesPlayed-gamesWon'."
+        },
+        {
+          "criterion": "AC-FA5-012",
+          "verdict": "pass",
+          "evidence": "computeDistributionRows: widthPercent = Math.round((count / maxCount) * 100). score-distribution.test.mjs: 'longest bar has widthPercent 100, others scaled proportionally' (1:25%, 2:50%, 3:100%), 'X bar participates in scaling when losses are highest', 'widthPercent always in [0,100]'."
+        },
+        {
+          "criterion": "AC-FA5-013",
+          "verdict": "env_limited",
+          "evidence": "ScoreDistributionChart.tsx: data-highlighted={highlighted ? 'true' : 'false'} per row, where highlighted = (highlightScore === row.label). score-distribution.test.mjs: 'component renders a data-highlighted attribute for rows' (grep on source), 'component compares highlightScore against row label'. Visual highlighting (CSS color change) requires browser — code-verified."
+        },
+        {
+          "criterion": "AC-FA5-014",
+          "verdict": "pass",
+          "evidence": "computeDistributionRows: result.isEmpty = (gamesPlayed === 0). ScoreDistributionChart branches on rows.isEmpty → empty state div. score-distribution.test.mjs: 'isEmpty flag on result indicates no games played', 'isEmpty false once any game is played', 'component renders an empty state when isEmpty is true', 'component has data-testid score-distribution-chart'."
+        },
+        {
+          "criterion": "AC-FA5-015",
+          "verdict": "pass",
+          "evidence": "PostSolve.tsx: StatTile with testId='stat-current-streak' displays tierStats.currentStreak. StatTile with testId='stat-max-streak' displays tierStats.maxStreak. stats-post-solve-integration.test.mjs: 3 tests verify currentStreak/maxStreak references and data-testid markers."
+        },
+        {
+          "criterion": "AC-FA5-016",
+          "verdict": "pass",
+          "evidence": "PostSolve.tsx: imports ScoreDistributionChart from '@/components/ScoreDistributionChart'. Renders <ScoreDistributionChart tierStats={tierStats} highlightScore={highlightScore} /> inside stats-section. stats-post-solve-integration.test.mjs: 3 tests verify import, rendering, and highlightScore prop."
+        },
+        {
+          "criterion": "AC-FA5-017",
+          "verdict": "pass",
+          "evidence": "PostSolve.tsx: lore-blurb section at line 216, stats-section div at line 241. Source order confirms lore before stats. stats-post-solve-integration.test.mjs: 'stats-section still appears after lore-blurb in source order' (indexOf lore < indexOf stats), 'ScoreDistributionChart appears inside stats-section'."
         },
         {
           "criterion": "AC-FA4-002",
@@ -1104,12 +1477,12 @@
         "dead_elements": 0,
         "broken_links": 0,
         "pages_checked": 0,
-        "note": "No browser walk — deployment ENV_LIMITED (no VERCEL_TOKEN). All checks code/artifact-based. 361/361 tests pass."
+        "note": "No browser walk — deployment ENV_LIMITED (no VERCEL_TOKEN). All checks code/artifact-based. 441/441 tests pass. Build succeeds: 8 static routes, 102kB first-load JS."
       },
       "criteria_pass_rate": 1,
       "env_limited_count": 1,
       "fail_count": 0,
-      "_prior_milestone_criteria_omitted": "core-game-loop criteria (AC-FA1-004 through AC-FIX-GB-006) verified in cycle 6 evaluation. All remain passing — 361/361 tests confirm no regression.",
+      "_prior_milestone_criteria_omitted": "Foundation, core-game-loop, and post-solve-experience criteria verified in prior cycles. All remain passing — 441/441 tests confirm no regression.",
       "_prior_milestone_criteria_stub": [
         {
           "criterion": "AC-FA1-004",
@@ -1290,85 +1663,41 @@
       "code_quality_baseline": {
         "eslint_errors": 0,
         "eslint_warnings": 0,
-        "eslint_note": "No ESLint config (known global improvement, tracked as global-001). TypeScript strict: 0 errors.",
+        "eslint_note": "No ESLint config (global improvement item global-001, unchanged). TypeScript strict: 0 errors.",
         "duplication_pct": 1.5,
-        "duplication_note": "Stable at 1.5%. Post-solve-experience stories added pure modules (share-grid.mjs, lore-blurb.mjs) with no duplication. PostSolve.tsx ACTION_COLORS is module-level const (consistent with GameBoard pattern).",
+        "duplication_note": "Stable at 1.5%. stats-engine.mjs and score-distribution.mjs add no duplication. StatTile is a 25-line inner component — not a duplication pattern.",
         "circular_deps": 0,
         "dead_code_items": 0,
-        "files_over_300_lines": 0,
+        "files_over_300_lines": 1,
         "files_over_300_lines_detail": [
-          "No files over 300 lines. GameBoard.tsx: 269 (down from 322 — post-solve code extracted to PostSolve.tsx). PostSolve.tsx: 195. CardFrame.tsx: 252. GuessInput.tsx: 243."
+          "PostSolve.tsx: 335 lines (up from 195 — expected: stats integration added ~140 lines). GameBoard.tsx: 270. CardFrame.tsx: 252. GuessInput.tsx: 243."
         ],
         "npm_audit": {
           "critical": 1,
           "high": 0,
           "moderate": 0,
           "low": 0,
-          "note": "Next.js version advisory — unchanged from cycle 6. All critical CVEs target server-side features. Static export is unaffected."
+          "note": "Next.js version advisory — unchanged from cycle 4. CVEs target server-side features only. Static export is unaffected."
         },
         "degraded": false,
-        "degradation_vs_prev": "No degradation. files_over_300_lines: 1 → 0 (improvement: GameBoard.tsx shrunk by extracting PostSolve). Duplication stable at 1.5%. All other metrics unchanged."
+        "degradation_vs_prev": "files_over_300_lines: 0→1 (PostSolve.tsx 195→335, expected scope growth). Not a regression. All other metrics stable."
       },
       "performance_baseline": {
         "lighthouse_scores": null,
-        "note": "No deployment URL — Lighthouse not run. Build verified: 8 static routes. Post-solve page bundle similar to play pages (~100KB including Fuse.js)."
+        "note": "No deployment URL — Lighthouse not run. Build verified: 8 static routes. 102kB first-load JS on play pages."
       },
       "code_quality_warning": false,
+      "_cycle9_qa_note": "Cycle 9 feature-build. 17/17 stats-streaks-persistence ACs pass (16 verified, 1 env_limited: AC-FA5-013 visual highlight). AI code audit 89/100. Health 95.",
       "ai_code_audit": {
-        "score": 88,
+        "score": 89,
         "dimensions": {
-          "architecture": {
-            "score": 90,
-            "findings": [
-              "PostSolve extracted from GameBoard — clean separation of concerns. share-grid.mjs and lore-blurb.mjs follow established .mjs/.ts dual-export pattern.",
-              "All post-solve logic is in pure functions testable with Node. PostSolve receives all state via props, no ambient coupling."
-            ]
-          },
-          "consistency": {
-            "score": 90,
-            "findings": [
-              "Consistent with established codebase patterns: ACTION_COLORS module-level const in PostSolve mirrors GameBoard pattern. .mjs+.ts wrapper for share-grid and lore-blurb mirrors fuzzy-search. CSS custom properties throughout."
-            ]
-          },
-          "robustness": {
-            "score": 85,
-            "findings": [
-              "Clipboard fallback handles missing navigator.clipboard and .catch(). isPlaceholderLore null-guards empty/null blurbs.",
-              "LOW: setCopied setTimeout not stored in ref — minor unmount risk (2s window).",
-              "LOW: PostSolve img has no onError handler — acceptable for curated Scryfall URLs."
-            ]
-          },
-          "production_risks": {
-            "score": 87,
-            "findings": [
-              "BASE_URL imported from config.ts (no hardcoding).",
-              "execCommand deprecated but no browser alternative for clipboard fallback — acceptable.",
-              "LOW: setCopied timeout not cleaned up on unmount.",
-              "LOW: img onError not handled in PostSolve."
-            ]
-          },
-          "security": {
-            "score": 95,
-            "findings": [
-              "Static export. Share text generated from structured data only (not user input). clipboard.writeText receives generated string. No user text in DOM."
-            ]
-          },
-          "dead_hallucinated": {
-            "score": 88,
-            "findings": [
-              "isPlaceholderLore accepts cardName parameter but does not use it — detection is card-agnostic. Minor unused param, non-confusing.",
-              "All exports from share-grid.mjs and lore-blurb.mjs consumed by PostSolve and tests. .ts wrappers intentional (documented pattern)."
-            ]
-          },
-          "tech_debt": {
-            "score": 85,
-            "findings": [
-              "stats-section is a placeholder ('Stats coming soon') — intentional and documented (stats-streaks-persistence is next milestone).",
-              "execCommand deprecated — no alternative; acceptable tech debt.",
-              "No ESLint config — global improvement item (tracked as global-001).",
-              "No React error boundary around GameBoard async fetch (unchanged, LOW)."
-            ]
-          }
+          "architecture": {"score": 90, "findings": ["Pure stats engine (stats-engine.mjs) + pure distribution helper (score-distribution.mjs). .mjs/.ts dual-export consistent with fuzzy-search/share-grid/lore-blurb. PostSolve integrates via useEffect + isDuplicateGame guard."]},
+          "consistency": {"score": 88, "findings": ["STATS_STORAGE_KEY mirrors BASE_URL pattern. StatTile inner component follows PostSolve ACTION_COLORS indicator pattern. useEffect stats hydration follows clipboard useEffect pattern."]},
+          "robustness": {"score": 86, "findings": ["loadStats try/catch. isDuplicateGame guard. window undefined SSR guard. recordGameResult immutable. LOW: no schema version validation in loadStats (spec note, not AC)."]},
+          "production_risks": {"score": 87, "findings": ["Named constant for storage key. isDuplicateGame guard for daily. Practice mode explicitly ignored. copiedTimeoutRef cleanup present. LOW: localStorage disabled in strict incognito = silent stat fail."]},
+          "security": {"score": 95, "findings": ["Static export. Stats from typed GameResult only. No user input to DOM."]},
+          "dead_hallucinated": {"score": 90, "findings": ["All exports consumed. computeDistributionRows consumed by ScoreDistributionChart. getWinPercentage consumed by PostSolve. modeLabel rendered. All imports used."]},
+          "tech_debt": {"score": 87, "findings": ["No ESLint (global-001). No schema version field (spec note, V1 acceptable). No React error boundary on GameBoard fetch (unchanged). execCommand deprecated (no alternative)."]}
         },
         "critical_findings": []
       },
@@ -1381,88 +1710,72 @@
       "a11y_review": {
         "ran": false,
         "verdict": "ENV_LIMITED",
-        "reason": "No deployment URL. Code inspection: PostSolve share button has visible text label ('Share'/'Copied!'). Card art img has alt={card.name}. PostSolve uses semantic h2. All interactive elements reachable via keyboard in code inspection."
+        "reason": "No deployment URL. Code inspection: ScoreDistributionChart has role='img' + aria-label='Personal score distribution'. Share button has visible text label. Card art has alt={card.name}. StatTile values have accessible numeric labels."
       },
       "design_review": {
         "ran": false,
         "verdict": "ENV_LIMITED",
-        "reason": "No deployment URL. Code inspection: CSS custom properties for theme consistency. Share button uses --color-accent. Score display uses --color-correct/--color-wrong semantically. Card art at 300px max-width with border-radius. 380px max-width for lore blurb."
+        "reason": "No deployment URL. Code inspection: Stat tiles use tabular-nums font, 4-column grid. Distribution chart uses CSS transitions. Highlighted bar uses --color-correct. Consistent CSS custom properties throughout."
       },
       "fix_tasks": [],
-      "health_score": 93,
+      "health_score": 95,
       "health_score_breakdown": {
         "base": 100,
         "deductions": [
-          {
-            "reason": "LOW: No ESLint config (global improvement, tracked)",
-            "amount": -1
-          },
-          {
-            "reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable for static export)",
-            "amount": -2
-          },
-          {
-            "reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review skipped",
-            "amount": -2
-          },
-          {
-            "reason": "LOW: setCopied setTimeout not cleaned up on unmount",
-            "amount": -1
-          },
-          {
-            "reason": "LOW: img onError not handled in PostSolve",
-            "amount": -1
-          }
+          {"reason": "LOW: No ESLint config (global-001, unchanged)", "amount": -1},
+          {"reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable)", "amount": -2},
+          {"reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review not run", "amount": -2}
         ],
-        "wtf_likelihood": "0.2/min — clean component boundaries, well-structured share and lore modules. Stats placeholder is self-explanatory.",
+        "wtf_likelihood": "0.1/min — Wordle-familiar stats panel, clean implementation, no confusing interactions.",
         "wtf_adjustment": 0,
-        "final_score": 93,
-        "note": "Cycle 7 feature-build. 18 post-solve-experience criteria all pass (code-verified). 361/361 tests pass. Build succeeds. files_over_300_lines: 1→0 (improvement). Health 92→93. Minor items: setCopied unmount (LOW), img onError (LOW)."
+        "final_score": 95,
+        "note": "Cycle 9 feature-build (stats-streaks-persistence). 17/17 ACs pass. 441/441 tests pass. Health 94→95. Stats placeholder resolved; PostSolve.tsx file-size slight increase expected."
       }
     },
     "design": {
-      "note": "Design review ENV_LIMITED — no deployment URL available. Code inspection verifies CSS custom properties, semantic color usage (correct/wrong), proper card art sizing.",
+      "note": "Design review ENV_LIMITED. Code inspection: Wordle-style stat tiles (4-column grid, large tabular-nums values), horizontal distribution bar chart with CSS transitions, highlighted bar using --color-correct, consistent CSS custom properties.",
       "design_review": null,
       "a11y_review": null
     },
     "po": {
       "journey_quality": [
         {
-          "journey": "Win game → post-solve screen",
+          "journey": "Win game → post-solve screen → view stats",
           "steps": [
-            "Guess correct → 1.2s feedback flash → post-solve screen transition",
-            "Score displayed prominently (e.g. '3/6') in green at top",
-            "Share button immediately below score → copies Wordle-style share text with emoji grid",
-            "Card art (full Scryfall image) displayed below share button",
-            "Lore blurb: real flavor text formatted (multi-paragraph supported) or generic type·set fallback for placeholder",
-            "Stats section placeholder below lore"
+            "Correct guess → 1.2s feedback → post-solve screen",
+            "Score prominently displayed in green, share button, card art, lore blurb",
+            "Stats panel: Played/Win%/Current/Max tiles with live values",
+            "Distribution chart: today's score bar highlighted in green",
+            "isDuplicateGame prevents double-counting on page refresh"
           ],
           "quality": "pass",
-          "notes": "Complete post-solve experience implemented. 69 tests across 4 test files cover all ACs."
+          "notes": "Stats placeholder fully replaced with live data. Wordle-familiar layout. 76 new tests across 4 test files."
         },
         {
           "journey": "Lose game (X/6) → post-solve screen",
           "steps": [
-            "Exhaust 6 rounds → post-solve screen",
-            "Score displays 'X/6' in red",
-            "Share grid shows all 6 squares (no early stop)",
-            "Card reveal, lore, stats — all sections present"
+            "Score 'X/6' in red. Streak resets to 0.",
+            "Distribution chart: 'X' bar highlighted. Win% decreases."
           ],
           "quality": "pass",
-          "notes": "Failure path tested by 3 share-grid tests (AC-FA4-010) and 3 post-solve-layout tests."
+          "notes": "Loss path: X/6 highlighted. currentStreak resets. Verified by streak-tracking tests."
+        },
+        {
+          "journey": "Return player — stats persist across sessions",
+          "steps": [
+            "Play day N → stats saved to localStorage",
+            "Refresh → stats loaded from localStorage",
+            "Play day N+1 consecutive → streak increments",
+            "Skip day, play day N+3 → streak resets to 1 (missed-day detection via puzzleNumber gap)"
+          ],
+          "quality": "pass",
+          "notes": "Missed-day detection via puzzle number gap (not calendar date — timezone-safe). isDuplicateGame prevents double-recording."
         }
       ],
       "screen_quality": [
         {
-          "screen": "Post-Solve Screen",
-          "assessment": "Complete post-solve experience: score (3rem prominent), share button, card art, lore blurb, stats placeholder. Section ordering matches spec. Score color semantic (green=win, red=lose). Share text is Wordle-style with emoji grid.",
-          "information_hierarchy": "pass",
-          "visual_balance": "not-verified (no deployment URL)",
-          "density": "appropriate"
-        },
-        {
-          "screen": "Home / Tier Selection (carried — no regression)",
-          "assessment": "Unchanged from core-game-loop milestone. All sections pass.",
+          "screen": "Post-Solve Screen (Stats Panel)",
+          "assessment": "4 stat tiles (Played, Win%, Current, Max) in 4-column grid. Distribution bar chart with 7 rows (1-6 + X). Today's score highlighted. Empty state for first game. Section ordering matches spec.",
           "information_hierarchy": "pass",
           "visual_balance": "not-verified (no deployment URL)",
           "density": "appropriate"
@@ -1473,114 +1786,54 @@
         "passed": 5,
         "pass_rate_pct": 100,
         "results": [
-          {
-            "heuristic": "Completeness",
-            "verdict": "pass",
-            "evidence": "All 18 post-solve-experience ACs implemented (14 FA4 + 4 FA7). 361/361 tests pass. Build succeeds."
-          },
-          {
-            "heuristic": "Share Experience Quality",
-            "verdict": "pass",
-            "evidence": "Wordle-style share format: header line, mana pip emoji line, emoji grid (⬜🟥🟩), URL. Stops at winning round. All 17 share-grid tests cover edge cases."
-          },
-          {
-            "heuristic": "Lore Depth",
-            "verdict": "pass",
-            "evidence": "Variable depth: placeholder detection routes to generic 'type · set' message; real lore renders paragraph-formatted. Multi-paragraph support via newline splitting."
-          },
-          {
-            "heuristic": "Scope Discipline",
-            "verdict": "pass",
-            "evidence": "Stats section correctly deferred ('Stats coming soon'). stats-streaks-persistence is the next milestone. Implementation self-documents the boundary."
-          },
-          {
-            "heuristic": "Reversibility",
-            "verdict": "pass",
-            "evidence": "PostSolve is a separate component with clear props interface. share-grid.mjs and lore-blurb.mjs are pure modules. No tight coupling."
-          }
+          {"heuristic": "Completeness", "verdict": "pass", "evidence": "All 17 stats ACs implemented. 441/441 tests pass. Stats placeholder ('Stats coming soon') fully replaced."},
+          {"heuristic": "Visibility of System Status", "verdict": "pass", "evidence": "4 stat tiles show live values. Distribution chart shows historical spread. Today's result highlighted immediately."},
+          {"heuristic": "Accuracy & Integrity", "verdict": "pass", "evidence": "isDuplicateGame prevents double-recording. Per-tier isolation verified. Practice mode excluded. Missed-day detection via puzzle number."},
+          {"heuristic": "Scope Discipline", "verdict": "pass", "evidence": "No separate stats page — spec says stats on post-solve only for V1. Practice exclusion at engine level (correct boundary)."},
+          {"heuristic": "Reversibility", "verdict": "pass", "evidence": "Pure function stats engine easy to extend. ScoreDistributionChart accepts tierStats as prop — reusable. No tight coupling."}
         ]
       },
       "verdict": "PRODUCTION_READY",
-      "milestone": "post-solve-experience",
+      "milestone": "stats-streaks-persistence",
       "confidence": 0.92,
-      "confidence_adjusted": 0.94,
+      "confidence_adjusted": 0.93,
       "env_limited_impact": {
-        "excluded_criteria": [
-          "AC-FA4-012"
-        ],
-        "excluded_checks": [
-          "Lighthouse performance",
-          "a11y automated scan",
-          "visual design review",
-          "live clipboard copy verification"
-        ],
-        "rationale": "No deployment URL. AC-FA4-012 clipboard API requires browser context — code path verified, mock tests pass. ENV_LIMITED does not affect confidence_adjusted (code structure confirmed)."
+        "excluded_criteria": ["AC-FA5-013"],
+        "excluded_checks": ["Lighthouse performance", "a11y automated scan", "visual design review", "live localStorage verification"],
+        "rationale": "No deployment URL. AC-FA5-013 visual highlight requires browser — data-highlighted attribute code-verified. ENV_LIMITED does not meaningfully affect confidence_adjusted."
       },
       "recommended_action": "continue",
       "improvement_items": [
         {
-          "id": "imp-stats-placeholder",
-          "description": "Stats section shows 'Stats coming soon' placeholder. Real stats (win rate, streak) are a key engagement hook for return players.",
-          "evidence": "PostSolve.tsx data-testid='stats-section' — text 'Stats coming soon'",
-          "scope": "future-milestone",
-          "milestone_target": "stats-streaks-persistence",
-          "severity": "medium",
-          "grounding": "Vision: stats-streaks-persistence milestone is next. Stats section is correctly placeholdered until then."
-        },
-        {
-          "id": "imp-settimeout-copied-leak",
-          "description": "setCopied setTimeout not stored in ref — minor unmount risk if user navigates away within 2s after copying.",
-          "evidence": "PostSolve.tsx handleShare() — setTimeout 2000ms not stored in useRef",
+          "id": "imp-stats-schema-version",
+          "description": "No schema version field in localStorage stats JSON. Spec notes say 'Include a schema version field for future migrations.' Without it, a future format change would silently load incompatible data.",
+          "evidence": "stats-engine.mjs getDefaultPlayerStats() returns { simple: TierStats, cryptic: TierStats } — no _schema_version field.",
           "scope": "this-milestone",
           "severity": "low",
-          "grounding": "React best practice: timeouts should be cleaned up on unmount to prevent setState-on-unmounted-component warnings."
+          "grounding": "milestones.json localstorage-stats-engine.notes: 'Include a schema version field for future migrations.' Pattern used in cycle_context.json itself (_schema_version: '1.0')."
         },
         {
           "id": "imp-no-eslint",
-          "description": "No ESLint configuration. Global improvement item (already in global_improvements.json as global-001).",
+          "description": "No ESLint configuration. Global improvement item (already persisted as global-001).",
           "evidence": "package.json — no eslint devDependency",
           "scope": "global",
           "severity": "low",
-          "grounding": "Code quality baseline."
-        }
-      ],
-      "resolved_items": [
-        {
-          "id": "imp-no-share-button",
-          "resolved_in_cycle": 7,
-          "resolution": "Share button implemented in PostSolve.tsx. generateShareText() produces Wordle-style share text. navigator.clipboard.writeText + execCommand fallback. 'Copied!' visual confirmation. AC-FA4-006 through AC-FA4-014 verified by 30 tests."
+          "grounding": "Code quality baseline. Tracked as global-001."
         }
       ]
     },
-    "health_score": 93,
+    "health_score": 95,
     "health_score_breakdown": {
       "base": 100,
       "deductions": [
-        {
-          "reason": "LOW: No ESLint config (global-001, unchanged)",
-          "amount": -1
-        },
-        {
-          "reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable for static export)",
-          "amount": -2
-        },
-        {
-          "reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review skipped",
-          "amount": -2
-        },
-        {
-          "reason": "LOW: setCopied setTimeout not cleaned up on unmount",
-          "amount": -1
-        },
-        {
-          "reason": "LOW: img onError not handled in PostSolve",
-          "amount": -1
-        }
+        {"reason": "LOW: No ESLint config (global-001, unchanged)", "amount": -1},
+        {"reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable)", "amount": -2},
+        {"reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review not run", "amount": -2}
       ],
-      "wtf_likelihood": "0.2/min — clean component boundaries, obvious placeholder, intuitive share flow.",
+      "wtf_likelihood": "0.1/min — Wordle-familiar stats panel, clean implementation.",
       "wtf_adjustment": 0,
-      "final_score": 93,
-      "note": "Cycle 7 feature-build. 18 post-solve-experience ACs pass. 361/361 tests pass. files_over_300_lines: 1→0. Health 92→93. Prior MEDIUM items resolved (setTimeout, ACTION_COLORS from cycle 6). New minor items: setCopied unmount (LOW), img onError (LOW)."
+      "final_score": 95,
+      "note": "Cycle 9 feature-build. 17 stats ACs pass. 441/441 tests pass. Health 94→95."
     },
     "re_walk_requests": []
   },
@@ -1779,27 +2032,36 @@
         "url": "https://mtgordle.vercel.app",
         "timestamp": "2026-04-04T23:54:27.524Z",
         "cycle": 1
+      },
+      {
+        "version": null,
+        "previous": null,
+        "url": "https://mtgordle.vercel.app",
+        "timestamp": "2026-04-05T00:22:42.081Z",
+        "cycle": 1
+      },
+      {
+        "version": null,
+        "previous": null,
+        "url": "https://mtgordle.vercel.app",
+        "timestamp": "2026-04-05T09:17:42.664Z",
+        "cycle": 1
       }
     ]
   },
   "story_result": {
-    "story_id": "lore-blurb-display",
+    "story_id": "stats-post-solve-integration",
     "outcome": "pass",
     "files_changed": [
-      "src/lib/lore-blurb.mjs",
-      "src/lib/lore-blurb.ts",
       "src/components/PostSolve.tsx",
-      "tests/lore-blurb.test.mjs"
+      "src/components/GameBoard.tsx",
+      "tests/stats-post-solve-integration.test.mjs"
     ],
-    "tests_added": 21,
-    "tests_passing": 21,
-    "env_limitations": [],
-    "symptom": null,
-    "diagnosis": null,
-    "classification": null,
-    "fix_attempted": null,
-    "blocked_by": null,
-    "escalation": null
+    "tests_added": 14,
+    "tests_passing": 14,
+    "env_limitations": [
+      "Structural tests only — node:test harness has no React runtime, so assertions inspect JSX source rather than rendered output. Consistent with post-solve-layout.test.mjs and score-distribution.test.mjs."
+    ]
   },
   "qa_fix_results": {
     "phase": "milestone-fix",
@@ -1867,8 +2129,8 @@
     "slot_acquired": true,
     "connection_string": "https://joxusnbbsoqkoocwztmz.supabase.co"
   },
-  "_current_milestone": "post-solve-experience",
-  "_current_story": "lore-blurb-display",
+  "_current_milestone": "stats-streaks-persistence",
+  "_current_story": "stats-post-solve-integration",
   "_foundation_phase_complete": true,
   "diff_scope": {
     "frontend": true,
@@ -1878,154 +2140,151 @@
     "docs": false,
     "prompts": false,
     "changed_files": [
-      "src/components/PostSolve.tsx",
       "src/components/GameBoard.tsx",
-      "src/lib/share-grid.mjs",
-      "src/lib/share-grid.ts",
-      "src/lib/lore-blurb.mjs",
-      "src/lib/lore-blurb.ts",
-      "tests/post-solve-layout.test.mjs",
-      "tests/share-grid.test.mjs",
-      "tests/copy-to-clipboard.test.mjs",
-      "tests/lore-blurb.test.mjs",
-      "tests/gameboard-quality.test.mjs"
+      "src/components/PostSolve.tsx",
+      "src/components/ScoreDistributionChart.tsx",
+      "src/lib/score-distribution.mjs",
+      "src/lib/score-distribution.ts",
+      "src/lib/stats-engine.mjs",
+      "src/lib/stats-engine.ts",
+      "tests/score-distribution.test.mjs",
+      "tests/stats-engine.test.mjs",
+      "tests/stats-post-solve-integration.test.mjs",
+      "tests/streak-tracking.test.mjs"
     ],
-    "note": "Cycle 7: post-solve-experience milestone evaluation. 4 stories completed: post-solve-layout, share-grid-generation, copy-to-clipboard, lore-blurb-display. 11 files changed (4 source, 2 .ts wrappers, 5 test files). All frontend."
+    "note": "Cycle 9: feature-build for stats-streaks-persistence milestone. 11 files changed: 4 new source files (stats-engine.mjs/ts, score-distribution.mjs/ts), 3 modified components (PostSolve.tsx, GameBoard.tsx, ScoreDistributionChart.tsx), 4 new test files. Frontend + tests, no backend."
   },
   "evaluation_tier": "full",
   "cycle_type": "feature-build",
-  "tier_rationale": "Previous milestone (core-game-loop) was promoted by analyzing phase. Current milestone is post-solve-experience — first evaluation of this milestone with 4 new feature stories. Per cycle type rules: feature-build (new features added for a new milestone). Full tier applies: all three sub-phases run.",
+  "tier_rationale": "This is the first evaluation of the stats-streaks-persistence milestone. All 4 stories (localstorage-stats-engine, streak-tracking, score-distribution-chart, stats-post-solve-integration) are new feature tasks. Previous phase was building. Full evaluation tier: all sub-phases run.",
   "test_integrity_report": {
     "spec_coverage_pct": 100,
     "po_check_coverage_pct": 100,
-    "total_criteria": 18,
+    "total_criteria": 17,
     "total_po_checks": 0,
-    "total_tests": 361,
+    "total_tests": 441,
     "orphaned_count": 0,
     "orphaned_removed": [],
     "orphaned_renamed": [],
     "stale_regenerated_count": 0,
-    "newly_generated_count": 0,
+    "newly_generated_count": 76,
     "test_suite_pass": true,
     "verdict": "PASS",
     "coverage_complete": true,
-    "_cycle7_note": "361/361 pass (live run). post-solve-experience milestone: 18 criteria across 4 stories. All have matching tests. AC-FA4-001–005 in post-solve-layout.test.mjs; AC-FA4-006–011 in share-grid.test.mjs; AC-FA4-012–014 in copy-to-clipboard.test.mjs; AC-FA7-001–004 in lore-blurb.test.mjs. All prior 292 core-game-loop tests also pass (regression-clean).",
+    "_cycle9_note": "441/441 pass (live run). 17 stats-streaks-persistence criteria (AC-FA5-001 through AC-FA5-017) all covered. 4 new test files: stats-engine.test.mjs (25 tests, AC-FA5-001 through AC-FA5-005 + streak foundations), streak-tracking.test.mjs (20 tests, AC-FA5-006 through AC-FA5-010 with explicit describe-block AC labels), score-distribution.test.mjs (17 tests, AC-FA5-011 through AC-FA5-014), stats-post-solve-integration.test.mjs (14 tests, AC-FA5-015 through AC-FA5-017). All prior 365 tests regression-clean.",
     "feature_not_implemented": [],
     "criteria_covered": {
-      "post-solve-layout": [
-        "AC-FA4-001",
-        "AC-FA4-002",
-        "AC-FA4-003",
-        "AC-FA4-004",
-        "AC-FA4-005"
+      "localstorage-stats-engine": [
+        "AC-FA5-001",
+        "AC-FA5-002",
+        "AC-FA5-003",
+        "AC-FA5-004",
+        "AC-FA5-005"
       ],
-      "share-grid-generation": [
-        "AC-FA4-006",
-        "AC-FA4-007",
-        "AC-FA4-008",
-        "AC-FA4-009",
-        "AC-FA4-010",
-        "AC-FA4-011"
+      "streak-tracking": [
+        "AC-FA5-006",
+        "AC-FA5-007",
+        "AC-FA5-008",
+        "AC-FA5-009",
+        "AC-FA5-010"
       ],
-      "copy-to-clipboard": [
-        "AC-FA4-012",
-        "AC-FA4-013",
-        "AC-FA4-014"
+      "score-distribution-chart": [
+        "AC-FA5-011",
+        "AC-FA5-012",
+        "AC-FA5-013",
+        "AC-FA5-014"
       ],
-      "lore-blurb-display": [
-        "AC-FA7-001",
-        "AC-FA7-002",
-        "AC-FA7-003",
-        "AC-FA7-004"
+      "stats-post-solve-integration": [
+        "AC-FA5-015",
+        "AC-FA5-016",
+        "AC-FA5-017"
       ]
     },
-    "env_limited": [
-      {
-        "criterion": "AC-FA4-012",
-        "reason": "navigator.clipboard.writeText requires a real browser context — tests mock it with node:test. Fallback path (textarea+execCommand) also code-verified.",
-        "code_evidence": "tests/copy-to-clipboard.test.mjs covers all 3 clipboard ACs; PostSolve.tsx has explicit navigator.clipboard branch + execCommand fallback"
-      }
-    ],
-    "notes": "Cycle 7 feature-build. 361/361 tests pass (live run). 18 post-solve-experience criteria all covered. 4 new test files added this milestone. No orphaned tests. No stale tests. Build succeeds: 8 static routes."
+    "env_limited": [],
+    "traceability_note": "This project uses describe-block naming convention for criterion traceability (e.g., 'describe(AC-FA5-006: streak increments...)') rather than @criterion annotations. streak-tracking.test.mjs explicitly names all 5 ACs. score-distribution.test.mjs names ACs in describe headers. stats-post-solve-integration.test.mjs names ACs in comment block header. stats-engine.test.mjs uses functional grouping (wins/losses/streaks/per-tier) — all 5 AC-FA5-001 through AC-FA5-005 covered by functional coverage. Equivalent traceability to @criterion annotation pattern.",
+    "notes": "Cycle 9 feature-build. 441/441 tests pass (live run). 17 stats-streaks-persistence criteria covered across 4 new test files. 76 new tests (25+20+17+14). No orphaned tests. No stale tests. Build succeeds: 8 static routes, 102kB first-load JS on play pages."
   },
   "code_review_report": {
     "code_quality_baseline": {
       "eslint_errors": 0,
       "eslint_warnings": 0,
-      "eslint_note": "No ESLint config — linting not configured. TypeScript strict mode: 0 errors. (global improvement item, unchanged)",
+      "eslint_note": "No ESLint config — linting not configured. TypeScript strict mode: 0 errors. (global improvement item global-001, unchanged)",
       "duplication_pct": 1.5,
-      "duplication_note": "Stable at 1.5% — no regressions from post-solve-experience stories. Pure modules (share-grid.mjs, lore-blurb.mjs) add no duplication. Clipboard fallback in PostSolve is a single inlined function, not a duplicate pattern.",
+      "duplication_note": "Stable at 1.5%. Minor duplication in play route stubs (simple/practice pages, 15 lines). stats-engine.mjs and score-distribution.mjs add no duplication — pure function patterns. StatTile is a local 25-line inline component in PostSolve, not a duplication pattern.",
       "circular_deps": 0,
       "dead_code_items": 0,
-      "files_over_300_lines": 0,
+      "files_over_300_lines": 1,
       "files_over_300_lines_detail": [
-        "No files over 300 lines — GameBoard.tsx shrunk from 322→269 as post-solve code extracted to PostSolve.tsx (195 lines). Largest: GameBoard.tsx 269, CardFrame.tsx 252, GuessInput.tsx 243."
+        "PostSolve.tsx: 335 lines (up from 195 in cycle 7). Stats integration with StatTile inner component added ~140 lines. Expected growth given scope. StatTile is a simple 25-line inner component — extracting to its own file would add indirection without benefit for current scope. Largest files: PostSolve.tsx 335, GameBoard.tsx 270, CardFrame.tsx 252, GuessInput.tsx 243."
       ],
       "npm_audit": {
         "critical": 1,
         "high": 0,
         "moderate": 0,
         "low": 0,
-        "note": "Next.js version advisory — unchanged. All critical CVEs target server-side features (Server Actions, Middleware, Image Optimizer, SSR). Static export is unaffected. Risk INFORMATIONAL."
+        "note": "Next.js version advisory — unchanged from cycle 4. All critical CVEs target server-side features (Server Actions, Middleware, Image Optimizer, SSR). Static export is unaffected. Risk INFORMATIONAL."
       },
       "degraded": false,
-      "degradation_vs_prev": "No degradation. Files over 300 lines: 1 → 0 (GameBoard refactored). Duplication stable at 1.5%. All other metrics unchanged."
+      "degradation_vs_prev": "Minor metric shift: files_over_300_lines 0→1 (PostSolve.tsx grew from 195→335 lines due to expected stats integration). Not a regression — expected scope growth. All other metrics stable: duplication 1.5%, circular deps 0, dead code 0, ESLint 0 errors."
     },
     "ai_code_audit": {
-      "score": 88,
+      "score": 89,
       "dimensions": {
         "architecture": {
           "score": 90,
           "findings": [
-            "Clean separation maintained and improved: PostSolve extracted from GameBoard, further reducing GameBoard's concerns. share-grid.mjs and lore-blurb.mjs continue the .mjs/.ts dual-export pattern for Node testability.",
-            "generateShareText() is a pure function with zero side effects — correct placement in lib/. isPlaceholderLore/formatLoreBlurb/getGenericLoreMessage are all pure — correct placement.",
-            "PostSolve receives all state via props from GameBoard — no ambient coupling."
+            "Pure function stats engine in stats-engine.mjs — all computation stateless and testable in Node. Dual .mjs/.ts export pattern consistent with fuzzy-search, share-grid, lore-blurb.",
+            "score-distribution.mjs pure helper computeDistributionRows() correct placement in lib/. ScoreDistributionChart is pure presentation consuming computed rows.",
+            "PostSolve integrates stats via useEffect (correct: side effect on mount). isDuplicateGame guard prevents double-recording on React re-renders. GameBoard passes tier prop correctly."
           ]
         },
         "consistency": {
-          "score": 90,
+          "score": 88,
           "findings": [
-            "Consistent with established patterns: .mjs pure logic + .ts re-export wrapper (same as fuzzy-search, share-grid). ACTION_COLORS defined at module-level in PostSolve consistent with GameBoard pattern. CSS custom properties used throughout."
+            "Follows established .mjs/.ts dual-export pattern (stats-engine, score-distribution). StatTile extracted as local component in PostSolve — consistent with existing inner-component pattern (getRoundActions indicators).",
+            "useEffect + useState stats hydration follows the clipboard useEffect pattern from PostSolve. copiedTimeoutRef useRef cleanup already in place (cycle 8 fix).",
+            "STATS_STORAGE_KEY constant follows BASE_URL pattern from config.ts — good."
           ]
         },
         "robustness": {
-          "score": 85,
+          "score": 86,
           "findings": [
-            "Clipboard fallback handles missing navigator.clipboard API and .catch(). execCommand try/catch present.",
-            "isPlaceholderLore null-guards: `if (!blurb || blurb.trim().length === 0) return true`.",
-            "LOW: PostSolve <img> has alt={card.name} (good) but no onError handler — broken image shows empty space. Low risk for curated dataset with known valid Scryfall URLs.",
-            "LOW: setCopied timeout in PostSolve is not stored in a ref — minor unmount risk if user navigates away within 2s (not cleaned up)."
+            "loadStats try/catch returns defaults on corrupt/missing data (AC-FA5-005). isDuplicateGame prevents double-recording. window undefined guard in useEffect (SSR safe).",
+            "recordGameResult is immutable — returns new stats without mutating input. Verified by test.",
+            "LOW: loadStats does not validate schema version — future stats format changes could silently load incompatible data. Spec notes mention schema version field but no AC enforces it. Low risk at V1.",
+            "LOW: PostSolve <img> still has no onError handler (unchanged from cycle 8, curated URLs reliable)."
           ]
         },
         "production_risks": {
           "score": 87,
           "findings": [
-            "No hardcoded URLs — BASE_URL imported from config.ts (AC-FA4-014).",
-            "document.execCommand('copy') is deprecated but still the standard browser fallback with no alternative. Acceptable use.",
-            "LOW: setCopied setTimeout not cleaned up on unmount (2s window — low practical risk).",
-            "LOW: img onError not handled in PostSolve (Scryfall URLs are curated and reliable)."
+            "STATS_STORAGE_KEY is a named constant — no hardcoded string in consumer code.",
+            "isDuplicateGame guard correct — daily mode only. Practice mode explicitly ignored in recordGameResult (mode === 'practice' early return).",
+            "copiedTimeoutRef useRef cleanup already applied (cycle 8) — no setTimeout leaks.",
+            "LOW: loadStats accepts storage param for testability but uses window.localStorage in production without fallback if localStorage is disabled (incognito strict mode). Stats would silently fail to persist. Low risk for a casual game."
           ]
         },
         "security": {
           "score": 95,
           "findings": [
-            "Static export — no server-side code. Share text generated from structured card data (not user input). No user text written to DOM. clipboard.writeText receives generated string only. npm audit CRITICAL inapplicable."
+            "Static export — no server-side code. Stats written from typed GameResult (not user input). localStorage key is a constant. No injection vectors. npm audit CRITICAL inapplicable."
           ]
         },
         "dead_hallucinated": {
-          "score": 88,
+          "score": 90,
           "findings": [
-            "isPlaceholderLore(blurb, cardName) accepts cardName parameter but does not use it — the detection pattern is card-agnostic. Minor dead parameter. Low risk, not confusing in context.",
-            "All exports from share-grid.mjs and lore-blurb.mjs are consumed by PostSolve and tests. share-grid.ts and lore-blurb.ts are intentional thin wrappers (documented pattern)."
+            "All exports from stats-engine.mjs consumed by PostSolve and tests. score-distribution.mjs consumed by ScoreDistributionChart and tests. score-distribution.ts and stats-engine.ts are intentional thin wrappers (documented pattern).",
+            "modeLabel prop in PostSolve is rendered in the h2 header — not dead.",
+            "getWinPercentage is a pure utility function consumed by PostSolve (winPct display). Not dead."
           ]
         },
         "tech_debt": {
-          "score": 85,
+          "score": 87,
           "findings": [
-            "stats-section is a placeholder ('Stats coming soon') — intentional and documented (stats-streaks-persistence is the next milestone).",
-            "execCommand deprecated fallback — no alternative; acceptable tech debt.",
-            "No ESLint config — global improvement item (unchanged, tracked).",
-            "No React error boundary around GameBoard async fetch (unchanged, LOW)."
+            "No ESLint config — global improvement item (unchanged, tracked as global-001).",
+            "No React error boundary around GameBoard async fetch (unchanged, LOW).",
+            "loadStats does not validate schema version — spec note calls for future migration field. No AC enforces it. Acceptable V1 debt — single localStorage key, simple structure.",
+            "execCommand deprecated fallback in PostSolve (unchanged) — no alternative; acceptable tech debt."
           ]
         }
       },
@@ -2038,14 +2297,15 @@
       "carried_forward_from_cycle": 4
     },
     "changed_files": [
-      "src/components/PostSolve.tsx",
       "src/components/GameBoard.tsx",
-      "src/lib/share-grid.mjs",
-      "src/lib/share-grid.ts",
-      "src/lib/lore-blurb.mjs",
-      "src/lib/lore-blurb.ts"
+      "src/components/PostSolve.tsx",
+      "src/components/ScoreDistributionChart.tsx",
+      "src/lib/score-distribution.mjs",
+      "src/lib/score-distribution.ts",
+      "src/lib/stats-engine.mjs",
+      "src/lib/stats-engine.ts"
     ],
-    "evaluator_observations": "Cycle 7 feature-build — post-solve-experience milestone. 4 stories: post-solve-layout, share-grid-generation, copy-to-clipboard, lore-blurb-display. Architecture continues to improve: GameBoard shrunk (269 lines, down from 322), PostSolve extracted cleanly (195 lines), two pure logic modules added. Score 88/100. 0 critical findings. files_over_300_lines: 1 → 0 (improvement). Minor items: setCopied timeout not cleaned up (2s unmount risk, LOW), unused cardName param in isPlaceholderLore (LOW)."
+    "evaluator_observations": "Cycle 9 feature-build — stats-streaks-persistence milestone. 4 new source modules (stats-engine, score-distribution, ScoreDistributionChart), PostSolve.tsx extended with live stats panel. Score 89/100 (vs 90 in cycle 8). Minor: PostSolve.tsx now 335 lines (0→1 file over 300). All 7 code dimensions clean. 0 critical findings. Consistent with established .mjs/.ts dual-export pattern."
   },
   "evaluator_observations": [
     {
@@ -2178,73 +2438,119 @@
       "reasoning": "This is the first full evaluation for post-solve-experience feature area — no prior evaluation_report.po exists for this milestone. Dual-voice eligibility condition 1 met.",
       "alternatives_considered": [],
       "confidence": 1
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "8",
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "milestone": "post-solve-experience",
+      "decision": "Evaluation complete. Verdict: QA PASS + PO PRODUCTION_READY. All gates pass. Routing to analyzing.",
+      "reasoning": "Cycle 8 re-evaluation. Previous phase: building implementing fix-1775348180078-0 (deepen:improvements change spec from analyzing phase cycle 7). Sub-Phase 0 (Test Integrity): PASS — 365/365 tests pass (live run). 23 criteria covered (18 post-solve-experience + 5 fix). 4 new tests in postsovle-timeout-cleanup.test.mjs. No orphans, no stale. Sub-Phase 1 (QA Gate): PASS — all 23 ACs pass or env_limited. Health 94 (up from 93). AI code audit 90 (up from 88). imp-settimeout-copied-leak RESOLVED. Sub-Phase 2 (PO Review): PRODUCTION_READY — confidence 0.95 (up from 0.94). imp-settimeout-copied-leak resolved (was the only this-milestone item). No remaining this-milestone improvement items. Routing to analyzing for milestone promotion decision.",
+      "alternatives_considered": [
+        "Classify as qa-fix (gate tier) — rejected: previous phase was building implementing a change spec from analyzing, not milestone-fix. Correct classification is re-evaluation (full tier).",
+        "Skip PO Review (carry forward) — rejected: full tier requires all three sub-phases. Re-running confirms improvement item resolved and confidence increase to 0.95.",
+        "Enable dual-voice — rejected: prior evaluation_report.po exists for post-solve-experience (cycle 7, confidence 0.94 ≥ 0.8). active_spec unchanged. None of the three dual-voice eligibility conditions met."
+      ],
+      "confidence": 0.99
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "8",
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "decision": "Dual-voice PO Review NOT enabled for cycle 8.",
+      "reasoning": "Prior evaluation_report.po exists for post-solve-experience (cycle 7). Previous confidence 0.94 ≥ 0.8. active_spec not updated by analyzing phase (only deepen:improvements change spec generated — not a spec revision). None of the three dual-voice eligibility conditions met.",
+      "alternatives_considered": [],
+      "confidence": 1
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "9",
+      "timestamp": "2026-04-05T14:00:00.000Z",
+      "milestone": "stats-streaks-persistence",
+      "decision": "Evaluation complete. Verdict: QA PASS + PO PRODUCTION_READY. All gates pass. Routing to analyzing.",
+      "reasoning": "Cycle 9 feature-build — stats-streaks-persistence milestone. 4 stories completed: localstorage-stats-engine, streak-tracking, score-distribution-chart, stats-post-solve-integration. Sub-Phase 0 (Test Integrity): PASS — 441/441 tests pass (live run). 17 stats-streaks-persistence criteria covered across 4 new test files (76 new tests). No orphans. No stale tests. Sub-Phase 1 (Code Review + QA): PASS — all 17 ACs pass (1 env_limited: AC-FA5-013 visual highlight requires browser). Health 95. AI code audit 89/100. 0 critical findings. Security SKIPPED (static). a11y/design ENV_LIMITED. Sub-Phase 2 (PO Review): PRODUCTION_READY — confidence 0.92/0.93. Dual-voice enabled (first full evaluation of stats-streaks-persistence). One this-milestone item: imp-stats-schema-version (LOW, spec note, no AC). Routing to analyzing for milestone promotion decision.",
+      "alternatives_considered": [
+        "Route to milestone-fix for imp-stats-schema-version — rejected: spec note is not an acceptance criterion. No AC requires schema version field. LOW severity code quality improvement, not a blocking bug.",
+        "Classify as re-evaluation — rejected: previous phase was building (not analyzing generating change specs). This is the first evaluation of stats-streaks-persistence milestone. Correct classification is feature-build.",
+        "Skip PO Review (carry forward post-solve verdict) — rejected: full tier requires all three sub-phases. This is the first evaluation of this milestone — dual-voice correctly enabled."
+      ],
+      "confidence": 0.97
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "9",
+      "timestamp": "2026-04-05T14:00:00.000Z",
+      "decision": "Dual-voice PO Review enabled for stats-streaks-persistence.",
+      "reasoning": "This is the first full evaluation for stats-streaks-persistence feature area — no prior evaluation_report.po exists for this milestone. Dual-voice eligibility condition 1 met.",
+      "alternatives_considered": [],
+      "confidence": 1
     }
   ],
   "next_phase": "analyzing",
-  "next_phase_rationale": "Cycle 7 feature-build (post-solve-experience milestone): all gates pass. Sub-Phase 0 (Test Integrity): PASS — 361/361 tests pass. 18 post-solve-experience criteria covered by 4 test files. No orphans, no stale tests. Sub-Phase 1 (QA Gate): PASS — 18 ACs pass (code-verified). Health 93. 0 failures. 0 critical findings. Sub-Phase 2 (PO Review): PRODUCTION_READY — confidence 0.92 (adjusted 0.94). imp-no-share-button resolved. Routing to analyzing for milestone promotion decision.",
+  "next_phase_rationale": "Cycle 9 feature-build (stats-streaks-persistence milestone): all gates pass. Sub-Phase 0 (Test Integrity): PASS — 441/441 tests pass (live run). 17 stats-streaks-persistence criteria covered across 4 new test files. No orphans, no stale tests. Sub-Phase 1 (Code Review + QA): PASS — all 17 ACs code-verified (1 env_limited: AC-FA5-013 visual). Health 95. 0 critical findings. Sub-Phase 2 (PO Review): PRODUCTION_READY — confidence 0.92/0.93. One this-milestone improvement item (imp-stats-schema-version, LOW). Routing to analyzing for milestone promotion decision.",
   "review_readiness_dashboard": {
     "test_integrity": {
       "passed": true,
-      "timestamp": "2026-04-05T00:00:00.000Z",
-      "milestone": "post-solve-experience",
-      "note": "Cycle 7 feature-build: 361/361 tests pass (live run). 18 post-solve-experience criteria covered across 4 test files. No orphans. No stale tests. 292 core-game-loop tests all still pass (regression-clean)."
+      "timestamp": "2026-04-05T14:00:00.000Z",
+      "milestone": "stats-streaks-persistence",
+      "note": "Cycle 9 feature-build: 441/441 tests pass (live run). 17 stats criteria covered across 4 new test files (stats-engine, streak-tracking, score-distribution, stats-post-solve-integration). 76 new tests. No orphans. No stale tests. All prior 365 tests regression-clean."
     },
     "qa_gate": {
       "passed": true,
-      "timestamp": "2026-04-05T00:00:00.000Z",
-      "milestone": "post-solve-experience",
-      "note": "Cycle 7 feature-build: 18 ACs pass (AC-FA4-001 through AC-FA4-014 + AC-FA7-001 through AC-FA7-004, code-verified). Health 93. 0 failures. 0 critical findings."
+      "timestamp": "2026-04-05T14:00:00.000Z",
+      "milestone": "stats-streaks-persistence",
+      "note": "Cycle 9 feature-build: 17/17 ACs pass (16 code-verified, 1 env_limited: AC-FA5-013 visual highlighting). Health 95. 0 critical findings. 0 failures."
     },
     "ai_code_audit": {
       "passed": true,
-      "timestamp": "2026-04-05T00:00:00.000Z",
-      "score": 88,
-      "note": "Cycle 7 full run: 88/100. Architecture 90, Consistency 90, Robustness 85, Production risks 87, Security 95, Dead/hallucinated 88, Tech debt 85. 0 critical findings. Minor: setCopied unmount, unused cardName param."
+      "timestamp": "2026-04-05T14:00:00.000Z",
+      "score": 89,
+      "note": "Cycle 9: 89/100. Architecture 90, Consistency 88, Robustness 86, Production risks 87, Security 95, Dead/hallucinated 90, Tech debt 87. 0 critical findings."
     },
     "security_review": {
       "passed": true,
-      "timestamp": "2026-04-05T00:00:00.000Z",
+      "timestamp": "2026-04-05T14:00:00.000Z",
       "note": "SKIPPED — static export, diff_scope.backend == false. No server-side code. Carried from cycle 4."
     },
     "a11y_review": {
       "passed": true,
-      "timestamp": "2026-04-05T00:00:00.000Z",
-      "note": "ENV_LIMITED — no deployment URL. Code inspection: PostSolve share button has visible text label, card art has alt={card.name}, semantic h2 heading. No WCAG A violations found in code review."
+      "timestamp": "2026-04-05T14:00:00.000Z",
+      "note": "ENV_LIMITED — no deployment URL. Code inspection: ScoreDistributionChart has role='img' + aria-label. Share button has visible text. Card art has alt={card.name}. No WCAG A violations found."
     },
     "design_review": {
       "passed": true,
-      "timestamp": "2026-04-05T00:00:00.000Z",
-      "note": "ENV_LIMITED — no deployment URL. Code inspection: CSS custom properties, semantic score colors (correct/wrong), card art 300px max-width, lore blurb 380px max-width."
+      "timestamp": "2026-04-05T14:00:00.000Z",
+      "note": "ENV_LIMITED — no deployment URL. Code inspection: Wordle-style stat tiles (tabular-nums, 4-column grid). Distribution chart with CSS transitions. Highlighted bar uses --color-correct. Consistent CSS custom properties."
     },
     "po_review": {
       "passed": true,
-      "timestamp": "2026-04-05T00:00:00.000Z",
-      "milestone": "post-solve-experience",
-      "note": "PRODUCTION_READY — confidence 0.92 (adjusted 0.94). imp-no-share-button resolved. Remaining items: imp-stats-placeholder (future-milestone, expected), imp-settimeout-copied-leak (LOW this-milestone), imp-no-eslint (global)."
+      "timestamp": "2026-04-05T14:00:00.000Z",
+      "milestone": "stats-streaks-persistence",
+      "note": "PRODUCTION_READY — confidence 0.92/0.93. One this-milestone improvement item: imp-stats-schema-version (LOW, spec note, no AC). Global: imp-no-eslint (already global-001)."
     }
   },
-  "dual_voice_po_review": false,
+  "dual_voice_po_review": true,
   "analysis_recommendation": {
-    "action": "deepen:improvements",
-    "rationale": "post-solve-experience milestone: PO verdict PRODUCTION_READY with confidence_adjusted 0.94 (>= 0.9 PROMOTE threshold). However, one validated this-milestone improvement item remains: imp-settimeout-copied-leak (setCopied setTimeout in PostSolve.tsx not cleaned up on unmount). Per Step 2.7, this-milestone items override promote to deepen:improvements. This is the same class of bug resolved in cycle 6 for GameBoard.tsx — expected to converge in one iteration."
+    "action": "promote",
+    "rationale": "post-solve-experience milestone: All 5 PROMOTE conditions verified by analyzing phase. (1) PO verdict PRODUCTION_READY. (2) confidence_adjusted 0.95 >= 0.9. (3) Zero quality gaps — no fix_tasks, no critical findings. (4) Confidence trend improving (+0.01, 0.94→0.95), not regressing. (5) Zero validated this-milestone improvement items — imp-settimeout-copied-leak resolved in cycle 8, imp-stats-placeholder dropped (future-milestone), imp-no-eslint already persisted as global-001. Decomposition health: no structural issues. 365/365 tests pass. Health 94. AI code audit 90/100. No escalations. Milestone is ready for promotion."
   },
   "analysis_result": {
     "phase": "analyzing",
-    "cycle": 7,
-    "timestamp": "2026-04-05T12:00:00.000Z",
+    "cycle": 8,
+    "timestamp": "2026-04-05T13:00:00.000Z",
     "confidence_trend": {
-      "current": 0.94,
-      "previous": 0.93,
+      "current": 0.95,
+      "previous": 0.94,
       "delta": 0.01,
       "direction": "stable",
-      "consecutive_same_direction": 1,
+      "consecutive_same_direction": 2,
       "flags": [
         "none"
       ],
-      "note": "Cross-milestone comparison: previous confidence_adjusted 0.93 was core-game-loop (cycle 6 promote). Current 0.94 is post-solve-experience (cycle 7 first evaluation). Both above PROMOTE threshold. No confidence_history key — delta computed from last analysis_result."
+      "note": "Confidence improved from 0.94 (cycle 7, first post-solve-experience evaluation) to 0.95 (cycle 8, after deepen:improvements fix). Delta +0.01 is within stable band (+/-0.02) but trending upward. Two consecutive cycles of stable/improving confidence. No regression, no plateau. Previous milestone (core-game-loop) promoted at 0.93."
     },
-    "recommendation": "deepen:improvements",
-    "recommendation_reasoning": "Post-solve-experience milestone meets 4 of 5 PROMOTE conditions: (1) PO verdict PRODUCTION_READY. (2) confidence_adjusted 0.94 >= 0.9 threshold. (3) Zero quality gaps — no fix_tasks, no critical findings. (4) Confidence trend stable/improving, not regressing. However, condition (5) fails: one validated this-milestone improvement item remains — imp-settimeout-copied-leak (PostSolve.tsx setCopied setTimeout not stored in ref, minor unmount risk). Per Step 2.7, this-milestone items override promote to deepen:improvements. This is the exact same class of bug that was resolved in cycle 6 for GameBoard.tsx (imp-settimeout-cleanup) — mechanical useRef + useEffect cleanup pattern. Expected to converge in one iteration. Other improvement items routed: imp-stats-placeholder dropped (future-milestone, stats-streaks-persistence), imp-no-eslint already in global_improvements.json as global-001.",
+    "recommendation": "promote",
+    "recommendation_reasoning": "All 5 PROMOTE conditions verified: (1) PO verdict PRODUCTION_READY. (2) confidence_adjusted 0.95 >= 0.9 threshold. (3) Zero quality gaps — evaluation_report.qa.fix_tasks is empty, ai_code_audit.critical_findings is empty, zero criteria failures. (4) Confidence trend not regressing — stable/improving at 0.94→0.95. (5) Zero validated this-milestone improvement items — imp-settimeout-copied-leak resolved in cycle 8 (copiedTimeoutRef added to PostSolve.tsx, 4 new tests, 365/365 pass), imp-stats-placeholder dropped (future-milestone, stats-streaks-persistence), imp-no-eslint already persisted as global-001. Deepen:improvements cycle from cycle 7 converged in one iteration as predicted. Health 94, AI code audit 90/100. No escalations. Milestone ready for promotion.",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
@@ -2253,35 +2559,26 @@
       "restructure_scope": "0% — no restructure needed",
       "structural_issues_found": false
     },
-    "root_cause_analysis": [
-      {
-        "gap_id": "imp-settimeout-copied-leak",
-        "gap_description": "setCopied setTimeout in PostSolve.tsx not stored in useRef — minor unmount risk if user navigates away within 2s after copying share text",
-        "root_cause": "implementation_bug",
-        "classification_confidence": 0.95,
-        "evidence": "PostSolve.tsx handleShare() calls setTimeout(() => setCopied(false), 2000) without storing the timeout ID in a ref. The same pattern was already identified and fixed in GameBoard.tsx (cycle 6, imp-settimeout-cleanup). The builder implemented the fix pattern in GameBoard but did not apply it to the new PostSolve component added in the same cycle. No factory_question or factory_decision relates to this — it's a missed consistency application.",
-        "related_factory_decision": null,
-        "related_factory_question": null,
-        "qa_coverage_gap": true
-      }
-    ],
+    "root_cause_analysis": [],
     "cross_cycle_patterns": [
       {
         "pattern": "setTimeout cleanup not applied to new components after being fixed in existing ones",
         "frequency": 3,
         "systemic_cause": "The QA code audit identifies setTimeout cleanup issues (robustness dimension) but does not promote them to fix_tasks. The PO improvement_items pipeline catches them instead, requiring an extra deepen:improvements cycle. This is the third occurrence: (1) foundation rarity fix, (2) GameBoard setTimeout/ACTION_COLORS, (3) PostSolve setCopied setTimeout.",
-        "recommended_action": "Calibrate the QA-to-fix-task threshold: any AI code audit finding at MEDIUM or above in the 'robustness' or 'production_risks' dimensions that matches a known pattern (setTimeout cleanup, useRef for timers) should be auto-promoted to fix_tasks. Three occurrences across 7 cycles is now a confirmed pattern. Alternatively, the building phase should check for setTimeout usage in any new component and proactively apply the cleanup pattern."
+        "recommended_action": "Calibrate QA-to-fix-task threshold: AI code audit findings at MEDIUM or above in robustness or production_risks dimensions matching known patterns (setTimeout cleanup, useRef for timers) should be auto-promoted to fix_tasks. Three occurrences across 8 cycles is a confirmed pattern. All three converged in one iteration each."
       },
       {
-        "pattern": "deepen:improvements cycles converge quickly for mechanical code quality fixes",
+        "pattern": "deepen:improvements cycles converge in exactly 1 iteration for mechanical code quality fixes",
         "frequency": 3,
-        "systemic_cause": "Same as above — QA audit flags issues but threshold doesn't promote to fix_tasks. All three deepen:improvements cycles (rarity fix, GameBoard quality, PostSolve timeout) are expected to converge in 1 iteration each because the fixes are mechanical.",
-        "recommended_action": "Continue current approach — the extra cycle cost is low (single-file changes, no design mode needed). Long-term: QA threshold calibration would eliminate these extra cycles entirely."
+        "systemic_cause": "All three deepen:improvements cycles (rarity fix, GameBoard quality, PostSolve timeout) were single-file mechanical changes. The extra cycle cost is low but non-zero.",
+        "recommended_action": "Monitor in future milestones. If pattern persists (stats-streaks-persistence, practice-mode), implement QA threshold calibration. Current approach functional but suboptimal."
       }
     ],
-    "change_spec_briefs": [
+    "change_spec_briefs": [],
+    "_cycle7_change_spec_briefs_archived": [
       {
         "gap_id": "imp-settimeout-copied-leak",
+        "_resolved_in_cycle": 8,
         "root_cause": "implementation_bug",
         "priority": "low",
         "affected_screens": [
@@ -2299,11 +2596,11 @@
     ],
     "escalations": [],
     "improvement_routing": {
-      "this_milestone_count": 1,
+      "this_milestone_count": 0,
       "global_persisted_count": 0,
       "future_dropped_count": 1,
       "convergence_guardrail_triggered": false,
-      "deepen_improvements_cycle_count": 0
+      "deepen_improvements_cycle_count": 1
     }
   },
   "phase_decisions": [
@@ -2492,6 +2789,46 @@
         "Group with other gaps — rejected: only one brief exists, no grouping possible",
         "Escalate as systemic issue — rejected: the fix is straightforward. The systemic observation (QA threshold calibration) was already logged by the analyzing phase"
       ]
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 8,
+      "timestamp": "2026-04-05T13:00:00.000Z",
+      "decision": "No circuit breaker detected — normal post-milestone analysis for post-solve-experience re-evaluation",
+      "reasoning": "No _circuit_breaker flag in cycle_context.json. Proceeding with standard PROMOTE evaluation."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 8,
+      "timestamp": "2026-04-05T13:00:00.000Z",
+      "decision": "Promote post-solve-experience milestone",
+      "reasoning": "All 5 PROMOTE conditions satisfied: (1) PO PRODUCTION_READY. (2) confidence_adjusted 0.95 >= 0.9. (3) Zero quality gaps — no fix_tasks, no critical findings, zero criteria failures. (4) Confidence trend stable/improving (+0.01, not regressing). (5) Zero remaining this-milestone improvement items — imp-settimeout-copied-leak resolved in cycle 8 (copiedTimeoutRef useRef + useEffect cleanup in PostSolve.tsx, 4 new tests, 365/365 pass). Deepen:improvements cycle from cycle 7 converged in one iteration as predicted. Health 94. AI code audit 90/100.",
+      "alternatives_considered": [
+        "Deepen further — rejected: no remaining quality gaps or improvement items. Confidence 0.95 well above threshold.",
+        "Notify-human about ENV_LIMITED checks (Lighthouse, a11y, design review) — rejected: excluded from confidence_adjusted by design. Code-based inspection shows proper accessibility attributes and semantic CSS usage. ENV_LIMITED penalty is structural (no deploy URL), not a quality concern.",
+        "Override promote due to img onError not handled in PostSolve — rejected: LOW severity, curated Scryfall URLs are reliable, not a blocking quality gap."
+      ]
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 8,
+      "timestamp": "2026-04-05T13:00:00.000Z",
+      "decision": "imp-stats-placeholder dropped as future-milestone scope",
+      "reasoning": "Stats section placeholder belongs to stats-streaks-persistence milestone (next in sequence). Will be built when that milestone runs. Same decision as cycle 7."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 8,
+      "timestamp": "2026-04-05T13:00:00.000Z",
+      "decision": "imp-no-eslint already persisted as global-001 — no duplicate write needed",
+      "reasoning": "global_improvements.json already contains global-001. No new global items discovered."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 8,
+      "timestamp": "2026-04-05T13:00:00.000Z",
+      "decision": "Confirmed pattern: setTimeout cleanup requiring deepen:improvements (third convergence, all 1-iteration)",
+      "reasoning": "All three occurrences of the QA-threshold gap pattern have now converged: (1) rarity fix in cycle 2-3, (2) GameBoard quality in cycle 5-6, (3) PostSolve timeout in cycle 7-8. Each converged in exactly one deepen:improvements iteration. Pattern is confirmed and documented in cross_cycle_patterns. Recommend QA threshold calibration for future milestones to eliminate these extra cycles."
     }
   ],
   "change_specs_pending": [
