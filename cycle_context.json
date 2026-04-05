@@ -528,6 +528,40 @@
       ],
       "tests_added": 10,
       "tests_passing": 10
+    },
+    {
+      "task": "dark-light-theming",
+      "acceptance_criteria": [
+        "AC-FA8-001",
+        "AC-FA8-002",
+        "AC-FA8-003",
+        "AC-FA8-004"
+      ],
+      "files_changed": [
+        "tests/theme-contrast.test.mjs"
+      ],
+      "tests_added": 19,
+      "tests_passing": 19
+    },
+    {
+      "task": "mobile-first-layout",
+      "acceptance_criteria": [
+        "AC-FA8-010",
+        "AC-FA8-011",
+        "AC-FA8-012",
+        "AC-FA8-013",
+        "AC-FA8-014",
+        "AC-FA8-015"
+      ],
+      "files_changed": [
+        "src/app/layout.tsx",
+        "src/app/globals.css",
+        "src/components/GameBoard.tsx",
+        "tests/mobile-first-layout.test.mjs"
+      ],
+      "tests_added": 13,
+      "tests_passing": 13,
+      "notes": "EXTEND story. Added Next.js viewport export (width=device-width, initialScale=1), reserved 36px minHeight guess-feedback-slot so guess input does not shift as flash toggles, added overflow-x:hidden to body as horizontal-scroll guard. Existing Layout (480px centered) and CardFrame (aspect-ratio 63/88, width:100%) already satisfied AC-FA8-011/013/014."
     }
   ],
   "skipped": [
@@ -1478,6 +1512,80 @@
       "affects": [
         "src/components/PostSolve.tsx"
       ]
+    },
+    {
+      "decision": "Treat dark-light-theming story as verify-and-guard, not rebuild",
+      "context": "Foundation already wrote full :root + @media (prefers-color-scheme: dark) override and CardFrame already uses var(--color-surface/border/text-muted/shadow-md). Story notes explicitly said 'Set up in foundation, refine in this story.'",
+      "alternatives_considered": [
+        "Rewrite theming using class-based .dark/.light toggle with useEffect+localStorage",
+        "Add a manual theme-switcher UI button",
+        "Adjust contrast to be even higher (AAA, 7:1)"
+      ],
+      "rationale": "AC-FA8-001 specifies prefers-color-scheme auto-detection — a manual toggle would be scope creep. Current palette already passes WCAG AA (>=4.5:1) by a comfortable margin on all body-text pairs in both themes, verified by computed luminance. Adding executable contrast guards is higher leverage than rewriting working code: any future token drift will now fail CI loudly. Boring technology (McKinley): CSS custom properties + media query is the standard zero-JS theme pattern.",
+      "confidence": "high",
+      "affects": [
+        "tests/theme-contrast.test.mjs",
+        "src/app/globals.css",
+        "src/components/CardFrame.tsx"
+      ]
+    },
+    {
+      "decision": "Use Next.js `viewport` export (not a raw <meta> tag) in src/app/layout.tsx",
+      "context": "AC-FA8-010 failure: no viewport meta was present anywhere in the app, so mobile browsers would render at desktop width. Next.js 14 App Router deprecated manual <meta name=\"viewport\"> in favour of the typed `viewport` export (or generateViewport).",
+      "alternatives_considered": [
+        "Hand-write <meta name=\"viewport\"> inside <head> of RootLayout",
+        "Set it via next.config.mjs"
+      ],
+      "rationale": "The typed Viewport export is the framework-blessed, boring-technology path for App Router. It composes with the rest of the `metadata`/`viewport` system, gets type-checked, and is what the Next.js docs recommend. Raw <meta> tags inside RootLayout still work but bypass the intended API and would drift from framework conventions over time.",
+      "confidence": "high",
+      "affects": [
+        "src/app/layout.tsx"
+      ]
+    },
+    {
+      "decision": "Reserve a fixed-height slot for guess-result feedback rather than absolute-positioning it",
+      "context": "AC-FA8-012 requires guess input position to be stable as clues reveal. The feedback pill is conditionally rendered between the round-indicator dots and the guess input. Toggling it on/off pushed the input down ~36px each round, violating the spec.",
+      "alternatives_considered": [
+        "position:absolute the feedback pill so it overlaps other content",
+        "Always render the pill with visibility:hidden when inactive",
+        "Reserve a minHeight:36px slot that holds the pill when visible and stays empty otherwise (chosen)"
+      ],
+      "rationale": "Reserved slot is the simplest layout-stable solution and keeps the feedback in natural document flow (accessibility-friendly, no z-index games). visibility:hidden would work but leaves a dead element in the accessibility tree. Absolute positioning risks overlapping the card frame or the input on small viewports. The 36px height matches the pill's actual rendered height (8px padding × 2 + ~20px line) so no vertical jank when toggling.",
+      "confidence": "high",
+      "affects": [
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "Add body { overflow-x: hidden } as a horizontal-scroll safety net",
+      "context": "AC-FA8-015 requires no horizontal scrolling at any viewport. The Layout max-width + width:100% children already prevent overflow in principle, but a single errant fixed-width element (future regression) would cause a horizontal scrollbar.",
+      "alternatives_considered": [
+        "Rely solely on max-width constraints and box-sizing:border-box",
+        "Use overflow-x:clip (newer, no scroll container)",
+        "overflow-x:hidden (chosen for browser support)"
+      ],
+      "rationale": "overflow-x:hidden on body has near-universal browser support (clip is newer/less supported). This is a belt-and-braces guard — it does not replace proper width constraints but catches future regressions cheaply. No user-visible side effect since no content legitimately needs horizontal scroll in a single-column mobile layout.",
+      "confidence": "high",
+      "affects": [
+        "src/app/globals.css"
+      ]
+    },
+    {
+      "decision": "mobile-first-layout as EXTEND/verify-and-guard, not rebuild",
+      "context": "Foundation already installed a 480px centered column Layout, CardFrame with aspect-ratio 63/88, and PostSolve with the spec's scroll order (score→share→art→lore→stats). Search-Before-Building audit: 3/6 ACs already satisfied by foundation code (AC-FA8-011, AC-FA8-013, AC-FA8-014); 3/6 needed small additions (AC-FA8-010 viewport export, AC-FA8-012 reserved slot, AC-FA8-015 overflow guard).",
+      "alternatives_considered": [
+        "Rewrite Layout.tsx to use CSS classes instead of inline styles",
+        "Add responsive breakpoints for tablet/desktop",
+        "Refactor to a global CSS grid instead of flex"
+      ],
+      "rationale": "Vision explicitly says 'This is a mobile-first game. Desktop just centers it. Like Wordle — same single-column layout everywhere.' No breakpoints needed. Existing inline-style Layout works and is consistent with the rest of the codebase — rewriting to classes would be scope creep. Adding 13 static source-analysis tests locks the current layout contract so future edits cannot regress it.",
+      "confidence": "high",
+      "affects": [
+        "src/app/layout.tsx",
+        "src/app/globals.css",
+        "src/components/GameBoard.tsx",
+        "tests/mobile-first-layout.test.mjs"
+      ]
     }
   ],
   "factory_questions": [
@@ -2084,7 +2192,7 @@
       "journey_quality": [
         {
           "journey": "J3-practice: Tier selection -> practice game (Simple Practice)",
-          "quality": 8.0,
+          "quality": 8,
           "notes": "TierSelection has Practice option. GameBoard shows 'Simple Practice' in h2. 6-round game mechanic identical to daily. Random card from simple-practice pool. Clean mode differentiation throughout."
         },
         {
@@ -2119,16 +2227,56 @@
         "passed": 10,
         "pass_rate_pct": 100,
         "results": [
-          {"heuristic": "1. Visibility of system status", "verdict": "pass", "evidence": "Practice label in h2 on both GameBoard and PostSolve — user always knows they are in practice mode."},
-          {"heuristic": "2. Match between system and real world", "verdict": "pass", "evidence": "Familiar 6-round Wordle mechanic. 'Play Again', 'Back to Home' are plain-language labels."},
-          {"heuristic": "3. User control and freedom", "verdict": "pass", "evidence": "Play Again for immediate re-try, Back to Home for clean exit. Both paths visible on post-solve."},
-          {"heuristic": "4. Consistency and standards", "verdict": "pass", "evidence": "Practice mode mirrors daily mode exactly — same game component, same visual structure. Mode-specific differences (no Share, add Play Again/Back to Home) are additive-only."},
-          {"heuristic": "5. Error prevention", "verdict": "pass", "evidence": "Practice stats silently no-op in recordGameResult — no accidental daily stat pollution possible. isDuplicateGame gated on daily mode."},
-          {"heuristic": "6. Recognition over recall", "verdict": "pass", "evidence": "Mode label on every screen (GameBoard header, PostSolve header). User never needs to remember they're in practice."},
-          {"heuristic": "7. Flexibility and efficiency of use", "verdict": "pass", "evidence": "Play Again enables rapid re-play without navigating back. Unlimited practice supported."},
-          {"heuristic": "8. Aesthetic and minimalist design", "verdict": "pass", "evidence": "Practice mode removes Share (clutter reduction). Adds only two affordances (Play Again, Back to Home) — both necessary."},
-          {"heuristic": "9. Help users recognize, diagnose, recover from errors", "verdict": "pass", "evidence": "N/A — no new error states introduced. Practice mode has fewer error conditions than daily (no duplicate-game guard)."},
-          {"heuristic": "10. Help and documentation", "verdict": "pass", "evidence": "Mode label is self-documenting. 'Practice' is immediately understood. No additional documentation needed."}
+          {
+            "heuristic": "1. Visibility of system status",
+            "verdict": "pass",
+            "evidence": "Practice label in h2 on both GameBoard and PostSolve — user always knows they are in practice mode."
+          },
+          {
+            "heuristic": "2. Match between system and real world",
+            "verdict": "pass",
+            "evidence": "Familiar 6-round Wordle mechanic. 'Play Again', 'Back to Home' are plain-language labels."
+          },
+          {
+            "heuristic": "3. User control and freedom",
+            "verdict": "pass",
+            "evidence": "Play Again for immediate re-try, Back to Home for clean exit. Both paths visible on post-solve."
+          },
+          {
+            "heuristic": "4. Consistency and standards",
+            "verdict": "pass",
+            "evidence": "Practice mode mirrors daily mode exactly — same game component, same visual structure. Mode-specific differences (no Share, add Play Again/Back to Home) are additive-only."
+          },
+          {
+            "heuristic": "5. Error prevention",
+            "verdict": "pass",
+            "evidence": "Practice stats silently no-op in recordGameResult — no accidental daily stat pollution possible. isDuplicateGame gated on daily mode."
+          },
+          {
+            "heuristic": "6. Recognition over recall",
+            "verdict": "pass",
+            "evidence": "Mode label on every screen (GameBoard header, PostSolve header). User never needs to remember they're in practice."
+          },
+          {
+            "heuristic": "7. Flexibility and efficiency of use",
+            "verdict": "pass",
+            "evidence": "Play Again enables rapid re-play without navigating back. Unlimited practice supported."
+          },
+          {
+            "heuristic": "8. Aesthetic and minimalist design",
+            "verdict": "pass",
+            "evidence": "Practice mode removes Share (clutter reduction). Adds only two affordances (Play Again, Back to Home) — both necessary."
+          },
+          {
+            "heuristic": "9. Help users recognize, diagnose, recover from errors",
+            "verdict": "pass",
+            "evidence": "N/A — no new error states introduced. Practice mode has fewer error conditions than daily (no duplicate-game guard)."
+          },
+          {
+            "heuristic": "10. Help and documentation",
+            "verdict": "pass",
+            "evidence": "Mode label is self-documenting. 'Practice' is immediately understood. No additional documentation needed."
+          }
         ]
       },
       "quality_gaps": null,
@@ -2382,17 +2530,20 @@
     ]
   },
   "story_result": {
-    "story_id": "practice-mode-ui",
+    "story_id": "mobile-first-layout",
     "outcome": "pass",
     "files_changed": [
-      "src/components/PostSolve.tsx",
-      "tests/practice-mode-ui.test.mjs"
+      "src/app/layout.tsx",
+      "src/app/globals.css",
+      "src/components/GameBoard.tsx",
+      "tests/mobile-first-layout.test.mjs"
     ],
-    "tests_added": 10,
-    "tests_passing": 10,
+    "tests_added": 13,
+    "tests_passing": 13,
     "env_limitations": [
-      "Component tests use static source-analysis (regex/structural) rather than a DOM runtime; matches existing practice-mode-flow/post-solve-layout test patterns since no React test renderer is configured."
-    ]
+      "Static source-analysis tests, not live viewport rendering. Actual 375px rendering verification deferred to QA browse phase."
+    ],
+    "notes": "EXTEND-heavy story. Foundation Layout.tsx (480px centered column, 100dvh) + CardFrame (aspect-ratio 63/88, maxWidth 315px, width:100%) + GuessInput (width:100%) already satisfied AC-FA8-011, AC-FA8-013 (PostSolve order), and AC-FA8-014 (max-width:480px). Three gaps closed: (1) AC-FA8-010 — added Next.js viewport export (width=device-width, initialScale=1, viewportFit=cover) to src/app/layout.tsx, which was missing and would have let mobile browsers render at desktop width. (2) AC-FA8-012 — wrapped conditional guess-result feedback pill in a reserved 36px minHeight slot (data-testid guess-feedback-slot) so the guess input does not shift vertically when the flash toggles on/off between clue rounds. (3) AC-FA8-015 — added overflow-x:hidden to body in globals.css as a belt-and-braces guard against any accidental overflow causing horizontal scroll. 13 new static source-analysis tests lock all 6 ACs into CI. Full suite: 512/512 passing. Build clean: 8 static routes, 95.9KB first-load JS."
   },
   "qa_fix_results": {
     "phase": "milestone-fix",
@@ -2460,8 +2611,8 @@
     "slot_acquired": true,
     "connection_string": "https://joxusnbbsoqkoocwztmz.supabase.co"
   },
-  "_current_milestone": "practice-mode",
-  "_current_story": "practice-mode-ui",
+  "_current_milestone": "visual-polish-theming",
+  "_current_story": "mobile-first-layout",
   "_foundation_phase_complete": true,
   "diff_scope": {
     "frontend": true,
@@ -2852,70 +3003,50 @@
   "dual_voice_po_review": true,
   "analysis_recommendation": {
     "action": "promote",
-    "rationale": "stats-streaks-persistence milestone cycle 10 (re-evaluation): PO verdict PRODUCTION_READY, confidence_adjusted 0.95 (>= 0.9), QA PASS (100% criteria pass rate), 6/6 Library heuristics pass, 0 quality gaps, 0 remaining this-milestone improvement items (imp-stats-schema-version was resolved this cycle). Confidence trend improving (0.92 -> 0.94 raw / ~0.95 adjusted). All PROMOTE conditions met per phase contract Step 3. 447/447 tests pass, build succeeds. Advance milestone to complete."
+    "rationale": "practice-mode milestone is PRODUCTION_READY: confidence_adjusted=0.93 (>=0.9), 0 quality gaps, 0 improvement items, QA PASS, health score 97, 480/480 tests pass, code audit 91/100, 0 critical findings. All 12 AC-FA6 practice-mode criteria code-verified. No structural issues, no circuit breaker, no env_limited exclusions needed."
   },
   "analysis_result": {
     "phase": "analyzing",
-    "cycle": 10,
-    "timestamp": "2026-04-05T00:00:00Z",
+    "cycle": "11",
+    "timestamp": "2026-04-05T10:36:13Z",
     "confidence_trend": {
-      "current": 0.95,
-      "previous": 0.93,
-      "delta": 0.02,
-      "direction": "improving",
-      "consecutive_same_direction": 1,
+      "current": 0.93,
+      "previous": null,
+      "delta": null,
+      "direction": "unknown",
+      "consecutive_same_direction": 0,
       "flags": [
         "none"
       ],
-      "note": "Cycle 9 is the FIRST evaluation of stats-streaks-persistence milestone. Previous 0.95 was the final cycle of the now-promoted post-solve-experience milestone — not directly comparable. Delta -0.02 is at the stable band boundary. Milestone-over-milestone confidence path: foundation 0.90 → core-game-loop 0.93 → post-solve 0.95 → stats 0.93. No regression detected (first evaluation of new milestone). No plateau."
+      "note": "confidence_history not present in cycle_context; trend cannot be computed from this phase's inputs. Prior milestone commit history (cycles 10-11) shows stable PRODUCTION_READY verdicts."
     },
     "recommendation": "promote",
-    "recommendation_reasoning": "All PROMOTE conditions met: (1) PO verdict PRODUCTION_READY, (2) confidence_adjusted 0.95 >= 0.9, (3) zero critical quality gaps (zero gaps total), (4) trend improving not regressing, (5) zero validated this-milestone improvement items remaining — the single item (imp-stats-schema-version) that triggered the cycle 9 deepen:improvements was resolved this cycle by the 4-file mechanical fix (stats-engine.mjs/ts, card.ts, stats-engine.test.mjs). The _schema_version field with safe-migration fallback closes the spec quality gap called out in milestones.json localstorage-stats-engine.notes. All 6 Library heuristics pass (Completeness, Visibility, Accuracy & Integrity, Scope Discipline, Reversibility, Forward Compatibility). QA PASS with 441/441 tests green, 0 console errors, successful build. Single-iteration convergence matches the established pattern for this milestone's deepen:improvements cycles.",
+    "recommendation_reasoning": "All PROMOTE conditions satisfied per Step 3: (1) PO verdict PRODUCTION_READY, (2) confidence_adjusted 0.93 >= 0.9, (3) zero critical quality gaps (quality_gaps array is empty), (4) no regressing trend signal, (5) zero validated this-milestone improvement items — so no deepen:improvements override applies. QA lens PASS, health 97, code audit 91/100, 480/480 tests passing with 12 AC-FA6 criteria covered across 3 new test files. The PO recommended_action was 'continue' but the evaluation package (PRODUCTION_READY + 0 gaps + 0 improvements + QA PASS) is the canonical milestone-complete signal; ANALYZING overrides to 'promote' to close the milestone rather than starting a new cycle with nothing to fix. No decomposition health issues: practice-mode is a feature-build on top of an existing foundation, no new shared infrastructure was needed, no schema debt, no silent degradation (0 skipped with infra/integration blockers; the 1 skipped item was not infrastructure-blocked).",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
       "schema_debt": [],
       "silent_degradation": [],
-      "restructure_scope": "0% — no structural issues detected",
+      "restructure_scope": "0% — no structural changes required",
       "structural_issues_found": false
     },
     "root_cause_analysis": [],
     "cross_cycle_patterns": [
       {
-        "pattern": "deepen:improvements cycles converging in a single iteration (rarity, GameBoard, PostSolve, stats-schema-version)",
-        "frequency": 4,
-        "systemic_cause": "Spec notes capture small completeness items that surface as low-priority improvement items; mechanical single-file fixes converge quickly",
-        "recommended_action": "Continue current pattern; no process change needed"
+        "pattern": "Clean milestone completion with no gaps",
+        "frequency": 1,
+        "systemic_cause": "practice-mode scope was small, well-specified, and built on stable foundation (stats-streaks-persistence milestone shipped in cycle 10). Spec clarity + existing infrastructure + targeted AC-FA6 tests yielded zero-gap delivery.",
+        "recommended_action": "Continue current decomposition and test-integrity discipline for remaining milestones. No process changes needed."
       }
     ],
     "change_spec_briefs": [],
-    "_cycle7_change_spec_briefs_archived": [
-      {
-        "gap_id": "imp-settimeout-copied-leak",
-        "_resolved_in_cycle": 8,
-        "root_cause": "implementation_bug",
-        "priority": "low",
-        "affected_screens": [
-          "Post-Solve Screen"
-        ],
-        "affected_journeys": [
-          "Win game → post-solve screen → share → navigate away within 2s",
-          "Lose game → post-solve screen → share �� navigate away within 2s"
-        ],
-        "what_good_looks_like": "PostSolve.tsx stores the setCopied setTimeout ID in a useRef. A useEffect cleanup function calls clearTimeout on the ref when the component unmounts. No React warnings about state updates on unmounted components. Pattern matches the GameBoard.tsx fix from cycle 6 (AC-FIX-GB-003 through AC-FIX-GB-005).",
-        "requires_design_mode": false,
-        "approach_hint": "Store setTimeout return value in useRef<ReturnType<typeof setTimeout> | null>(null). In useEffect cleanup, clearTimeout(ref.current). Single file change: src/components/PostSolve.tsx. Follow exact pattern from GameBoard.tsx gameOverTimeoutRef/flashTimeoutRef.",
-        "do_not_repeat": []
-      }
-    ],
     "escalations": [],
     "improvement_routing": {
       "this_milestone_count": 0,
       "global_persisted_count": 0,
       "future_dropped_count": 0,
       "convergence_guardrail_triggered": false,
-      "deepen_improvements_cycle_count": 0,
-      "note": "imp-stats-schema-version validated as this-milestone (grounded in milestones.json localstorage-stats-engine.notes). imp-no-eslint already persisted as global-001 — no duplicate write needed. No future-milestone items. First deepen:improvements cycle for stats-streaks-persistence milestone."
+      "deepen_improvements_cycle_count": 0
     }
   },
   "phase_decisions": [
@@ -3211,6 +3342,27 @@
       "decision": "Recommend PROMOTE for stats-streaks-persistence milestone",
       "reasoning": "PRODUCTION_READY + confidence_adjusted 0.95 + 0 gaps + 0 remaining this-milestone improvement items. imp-stats-schema-version (the sole item from cycle 9 deepen:improvements) was closed this cycle. All Step 3 PROMOTE conditions met. Alternative deepen:improvements rejected: no improvement items remain. Alternative continue rejected: no structural issues and confidence above threshold.",
       "timestamp": "2026-04-05T00:00:00Z"
+    },
+    {
+      "phase": "analyzing",
+      "cycle": "11",
+      "decision": "Recommend promote over continue",
+      "reasoning": "PO evaluator emitted recommended_action=continue but the evaluation package is unambiguously milestone-complete (PRODUCTION_READY + confidence_adjusted 0.93 + 0 gaps + 0 improvements + QA PASS). Continuing would start a new cycle with no fix targets. Promote closes the practice-mode milestone and advances the loop.",
+      "confidence": 0.95
+    },
+    {
+      "phase": "analyzing",
+      "cycle": "11",
+      "decision": "No root-cause classification performed",
+      "reasoning": "quality_gaps is empty and improvement_items is empty. Root-cause analysis is only required for gaps; there are none to classify.",
+      "confidence": 1
+    },
+    {
+      "phase": "analyzing",
+      "cycle": "11",
+      "decision": "Skipped decomposition health remediation",
+      "reasoning": "Checks 1-4 all negative: no missing foundation infrastructure needed by pending milestones, no integration gaps, no schema debt from this cycle, no silent degradation (0 infra/integration-blocked skips). practice-mode reused existing card/game infrastructure. No insert-foundation needed.",
+      "confidence": 0.9
     }
   ],
   "change_specs_pending": [

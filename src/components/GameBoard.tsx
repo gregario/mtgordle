@@ -234,23 +234,33 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         })()}
       </div>
 
-      {/* ── Guess result feedback ─────────────────────────────────── */}
-      {guessResult && (
-        <div
-          style={{
-            padding: '8px 16px',
-            borderRadius: 'var(--radius-md)',
-            fontSize: 'var(--font-size-sm)',
-            fontWeight: 600,
-            textAlign: 'center',
-            color: '#fff',
-            backgroundColor: guessResult === 'correct' ? 'var(--color-correct)' : 'var(--color-wrong)',
-            transition: 'opacity 0.3s ease',
-          }}
-        >
-          {guessResult === 'correct' ? 'Correct!' : 'Wrong — next clue revealed'}
-        </div>
-      )}
+      {/* ── Guess result feedback (AC-FA8-012: reserved slot keeps guess input position stable) ── */}
+      <div
+        data-testid="guess-feedback-slot"
+        style={{
+          minHeight: '36px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {guessResult && (
+          <div
+            style={{
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 600,
+              textAlign: 'center',
+              color: '#fff',
+              backgroundColor: guessResult === 'correct' ? 'var(--color-correct)' : 'var(--color-wrong)',
+              transition: 'opacity 0.3s ease',
+            }}
+          >
+            {guessResult === 'correct' ? 'Correct!' : 'Wrong — next clue revealed'}
+          </div>
+        )}
+      </div>
 
       {/* ── Guess input + pass button (AC-FA1-017, AC-FA1-019) ──── */}
       <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'flex-start', width: '100%', maxWidth: '420px', justifyContent: 'center' }}>
