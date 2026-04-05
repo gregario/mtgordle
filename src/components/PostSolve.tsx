@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Card, RoundAction } from '@/types/card';
 import type { GameOutcome } from '@/lib/game-engine';
 import { getRoundActions } from '@/lib/game-engine';
@@ -23,6 +23,13 @@ interface PostSolveProps {
 export default function PostSolve({ card, outcome, roundActions, tierLabel, modeLabel, mode, puzzleNumber }: PostSolveProps) {
   const indicators = getRoundActions(roundActions);
   const [copied, setCopied] = useState(false);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
 
   const handleShare = () => {
     const shareText = generateShareText({
@@ -36,7 +43,7 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(shareText).then(() => {
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
       }).catch(() => {
         fallbackCopyToClipboard(shareText);
       });
@@ -55,7 +62,7 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
     try {
       document.execCommand('copy');
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // Copy failed silently — no feedback
     }
