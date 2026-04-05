@@ -1,12 +1,21 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import type { Card, RoundAction } from '@/types/card';
+import type { Card, RoundAction, GameTier, PlayerStats } from '@/types/card';
 import type { GameOutcome } from '@/lib/game-engine';
 import { getRoundActions } from '@/lib/game-engine';
 import { generateShareText } from '@/lib/share-grid';
 import { BASE_URL } from '@/config';
 import { isPlaceholderLore, formatLoreBlurb, getGenericLoreMessage } from '@/lib/lore-blurb.mjs';
+import {
+  loadStats,
+  saveStats,
+  recordGameResult,
+  isDuplicateGame,
+  getDefaultPlayerStats,
+  getWinPercentage,
+} from '@/lib/stats-engine';
+import ScoreDistributionChart from '@/components/ScoreDistributionChart';
 
 const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } as const;
 
@@ -14,22 +23,66 @@ interface PostSolveProps {
   card: Card;
   outcome: GameOutcome;
   roundActions: RoundAction[];
+  tier: GameTier;
   tierLabel: string;
   modeLabel: string;
   mode: 'daily' | 'practice';
   puzzleNumber: number;
 }
 
-export default function PostSolve({ card, outcome, roundActions, tierLabel, modeLabel, mode, puzzleNumber }: PostSolveProps) {
+export default function PostSolve({
+  card,
+  outcome,
+  roundActions,
+  tier,
+  tierLabel,
+  modeLabel,
+  mode,
+  puzzleNumber,
+}: PostSolveProps) {
   const indicators = getRoundActions(roundActions);
   const [copied, setCopied] = useState(false);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [stats, setStats] = useState<PlayerStats>(() => getDefaultPlayerStats());
 
   useEffect(() => {
     return () => {
       if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
     };
   }, []);
+
+  // Hydrate stats on mount and record this game's result (daily only).
+  // recordGameResult is a no-op for practice mode, but we still load stats
+  // so the chart and streaks reflect the player's accumulated history.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storage = window.localStorage;
+    const loaded = loadStats(storage);
+    const alreadyRecorded =
+      mode === 'daily' && isDuplicateGame(loaded, tier, puzzleNumber);
+
+    let next = loaded;
+    if (!alreadyRecorded) {
+      const guessCount = roundActions.filter((a) => a.type === 'guess').length;
+      next = recordGameResult(loaded, {
+        tier,
+        mode,
+        puzzleNumber,
+        solved: outcome.won,
+        guessCount,
+        cluesUsed: roundActions.length,
+        completedAt: Date.now(),
+      });
+      if (next !== loaded) {
+        saveStats(next, storage);
+      }
+    }
+    setStats(next);
+  }, [tier, mode, puzzleNumber, outcome.won, roundActions]);
+
+  const tierStats = stats[tier];
+  const highlightScore = outcome.won && outcome.score !== null ? String(outcome.score) : 'X';
+  const winPct = getWinPercentage(tierStats);
 
   const handleShare = () => {
     const shareText = generateShareText({
@@ -183,7 +236,7 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
         )}
       </div>
 
-      {/* AC-FA4-005: Personal stats section below lore blurb */}
+      {/* AC-FA4-005 + AC-FA5-015 + AC-FA5-016 + AC-FA5-017: Personal stats below lore */}
       <div
         data-testid="stats-section"
         style={{
@@ -191,12 +244,92 @@ export default function PostSolve({ card, outcome, roundActions, tierLabel, mode
           maxWidth: '380px',
           padding: 'var(--spacing-md) 0',
           borderTop: '1px solid var(--color-border)',
-          color: 'var(--color-text-muted)',
-          fontSize: 'var(--font-size-sm)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-md)',
         }}
       >
-        <p>Stats coming soon</p>
+        <h3
+          style={{
+            fontSize: 'var(--font-size-base)',
+            fontWeight: 700,
+            textAlign: 'center',
+            margin: 0,
+          }}
+        >
+          {tierLabel} Statistics
+        </h3>
+
+        {/* AC-FA5-015: current streak + max streak (plus played & win%) */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 'var(--spacing-xs)',
+            textAlign: 'center',
+          }}
+        >
+          <StatTile
+            testId="stat-games-played"
+            value={tierStats.gamesPlayed}
+            label="Played"
+          />
+          <StatTile
+            testId="stat-win-percentage"
+            value={winPct}
+            label="Win %"
+          />
+          <StatTile
+            testId="stat-current-streak"
+            value={tierStats.currentStreak}
+            label="Current"
+          />
+          <StatTile
+            testId="stat-max-streak"
+            value={tierStats.maxStreak}
+            label="Max"
+          />
+        </div>
+
+        {/* AC-FA5-016: score distribution bar chart */}
+        <ScoreDistributionChart
+          tierStats={tierStats}
+          highlightScore={highlightScore}
+        />
       </div>
+    </div>
+  );
+}
+
+interface StatTileProps {
+  testId: string;
+  value: number;
+  label: string;
+}
+
+function StatTile({ testId, value, label }: StatTileProps) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <span
+        data-testid={testId}
+        style={{
+          fontSize: 'var(--font-size-xl, 1.75rem)',
+          fontWeight: 700,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {value}
+      </span>
+      <span
+        style={{
+          fontSize: '0.7rem',
+          color: 'var(--color-text-muted)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        }}
+      >
+        {label}
+      </span>
     </div>
   );
 }

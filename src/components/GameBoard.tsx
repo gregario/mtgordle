@@ -145,6 +145,7 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         card={card}
         outcome={outcome}
         roundActions={roundActions}
+        tier={tier}
         tierLabel={tierLabel}
         modeLabel={modeLabel}
         mode={mode}
