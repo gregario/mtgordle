@@ -37,6 +37,7 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
   const [solved, setSolved] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [outcome, setOutcome] = useState<GameOutcome | null>(null);
+  const [resetKey, setResetKey] = useState(0);
 
   const gameOverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,7 +84,7 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
       }
     }
     loadCard();
-  }, [tier, mode]);
+  }, [tier, mode, resetKey]);
 
   const handleGuess = useCallback((guessName: string) => {
     if (!card || gameOver) return;
@@ -111,6 +112,21 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
       flashTimeoutRef.current = setTimeout(() => setGuessResult(null), 1200);
     }
   }, [card, round, roundActions, gameOver]);
+
+  const handlePlayAgain = useCallback(() => {
+    if (gameOverTimeoutRef.current) clearTimeout(gameOverTimeoutRef.current);
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    setRound(1);
+    setGuessResult(null);
+    setRoundActions([]);
+    setSolved(false);
+    setGameOver(false);
+    setOutcome(null);
+    setCard(null);
+    setLoading(true);
+    setError(null);
+    setResetKey((k) => k + 1);
+  }, []);
 
   const handlePass = useCallback(() => {
     if (!canPass(round, solved)) return;
@@ -150,6 +166,7 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
         modeLabel={modeLabel}
         mode={mode}
         puzzleNumber={puzzleNumber ?? 0}
+        onPlayAgain={mode === 'practice' ? handlePlayAgain : undefined}
       />
     );
   }

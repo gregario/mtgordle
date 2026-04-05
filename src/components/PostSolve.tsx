@@ -28,6 +28,7 @@ interface PostSolveProps {
   modeLabel: string;
   mode: 'daily' | 'practice';
   puzzleNumber: number;
+  onPlayAgain?: () => void;
 }
 
 export default function PostSolve({
@@ -39,6 +40,7 @@ export default function PostSolve({
   modeLabel,
   mode,
   puzzleNumber,
+  onPlayAgain,
 }: PostSolveProps) {
   const indicators = getRoundActions(roundActions);
   const [copied, setCopied] = useState(false);
@@ -198,6 +200,29 @@ export default function PostSolve({
       >
         {copied ? 'Copied!' : 'Share'}
       </button>
+
+      {/* AC-FA6-008: Play Again button (practice mode only) */}
+      {onPlayAgain && (
+        <button
+          data-testid="play-again-button"
+          onClick={onPlayAgain}
+          style={{
+            padding: '12px 32px',
+            fontSize: 'var(--font-size-base)',
+            fontFamily: 'var(--font-family)',
+            fontWeight: 700,
+            backgroundColor: 'var(--color-surface)',
+            color: 'var(--color-text)',
+            border: '2px solid var(--color-border)',
+            borderRadius: 'var(--radius-md)',
+            cursor: 'pointer',
+            width: '100%',
+            maxWidth: '300px',
+          }}
+        >
+          Play Again
+        </button>
+      )}
 
       {/* AC-FA4-003: Card art displayed large below share button */}
       <div
