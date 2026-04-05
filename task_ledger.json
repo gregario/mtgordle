@@ -197,6 +197,44 @@
             "post-solve-layout"
           ],
           "acceptance_criteria": []
+        },
+        {
+          "id": "fix-postsovle-settimeout-cleanup",
+          "name": "Fix PostSolve.tsx setCopied setTimeout cleanup on unmount",
+          "status": "pending",
+          "depends_on": [
+            "copy-to-clipboard"
+          ],
+          "acceptance_criteria": [
+            {
+              "id": "AC-FIX-PS-001",
+              "description": "PostSolve.tsx declares a useRef<ReturnType<typeof setTimeout> | null>(null) for the setCopied timeout ID"
+            },
+            {
+              "id": "AC-FIX-PS-002",
+              "description": "Both setTimeout(() => setCopied(false), 2000) calls (clipboard API success path and execCommand fallback path) store their return value in the ref's .current property"
+            },
+            {
+              "id": "AC-FIX-PS-003",
+              "description": "A useEffect cleanup function calls clearTimeout on the timeout ref when the component unmounts"
+            },
+            {
+              "id": "AC-FIX-PS-004",
+              "description": "No React warnings about state updates on unmounted components when navigating away from post-solve screen within 2s of copying share text"
+            },
+            {
+              "id": "AC-FIX-PS-005",
+              "description": "npm run build and npm test pass with zero errors after all changes"
+            }
+          ],
+          "fix_metadata": {
+            "source_gap_id": "imp-settimeout-copied-leak",
+            "root_cause": "implementation_bug",
+            "priority": "low",
+            "scope_files": ["src/components/PostSolve.tsx"],
+            "do_not_repeat": [],
+            "approach": "Add useRef for timeout ID. Both setTimeout calls in handleShare and fallbackCopyToClipboard assign to ref.current. useEffect cleanup calls clearTimeout. Follows exact pattern from GameBoard.tsx (gameOverTimeoutRef/flashTimeoutRef)."
+          }
         }
       ]
     },

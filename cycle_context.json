@@ -2225,26 +2225,26 @@
   },
   "dual_voice_po_review": false,
   "analysis_recommendation": {
-    "action": "promote",
-    "rationale": "All PROMOTE conditions met for core-game-loop milestone. PO verdict PRODUCTION_READY, confidence_adjusted 0.93 (>= 0.9 threshold), zero quality gaps, both prior improvement items resolved (ACTION_COLORS extraction + setTimeout cleanup verified by 6 new ACs), health score improved 89→92, 292/292 tests passing. No remaining this-milestone improvement items. Remaining improvement items are future-scope (share button → post-solve-experience) and global (ESLint → already in global_improvements.json)."
+    "action": "deepen:improvements",
+    "rationale": "post-solve-experience milestone: PO verdict PRODUCTION_READY with confidence_adjusted 0.94 (>= 0.9 PROMOTE threshold). However, one validated this-milestone improvement item remains: imp-settimeout-copied-leak (setCopied setTimeout in PostSolve.tsx not cleaned up on unmount). Per Step 2.7, this-milestone items override promote to deepen:improvements. This is the same class of bug resolved in cycle 6 for GameBoard.tsx — expected to converge in one iteration."
   },
   "analysis_result": {
     "phase": "analyzing",
-    "cycle": 6,
-    "timestamp": "2026-04-05T00:00:00.000Z",
+    "cycle": 7,
+    "timestamp": "2026-04-05T12:00:00.000Z",
     "confidence_trend": {
-      "current": 0.93,
-      "previous": 0.87,
-      "delta": 0.06,
-      "direction": "improving",
+      "current": 0.94,
+      "previous": 0.93,
+      "delta": 0.01,
+      "direction": "stable",
       "consecutive_same_direction": 1,
       "flags": [
         "none"
       ],
-      "note": "No confidence_history key available. Previous confidence (0.87) taken from cycle 5 analysis_result reasoning. Delta +0.06 is healthy improvement from deepen:improvements cycle resolving both code quality items."
+      "note": "Cross-milestone comparison: previous confidence_adjusted 0.93 was core-game-loop (cycle 6 promote). Current 0.94 is post-solve-experience (cycle 7 first evaluation). Both above PROMOTE threshold. No confidence_history key — delta computed from last analysis_result."
     },
-    "recommendation": "promote",
-    "recommendation_reasoning": "All five PROMOTE conditions are satisfied: (1) PO verdict is PRODUCTION_READY. (2) confidence_adjusted is 0.93, exceeding the 0.9 threshold — the +0.06 improvement from cycle 5's 0.87 is attributable to resolving the two improvement items (ACTION_COLORS duplication, setTimeout cleanup) that were dragging code quality scores. (3) Zero quality gaps — no items in fix_tasks, no critical findings in AI code audit. (4) Confidence trend is improving, not regressing. (5) No remaining this-milestone improvement items — both imp-action-colors-duplication and imp-settimeout-cleanup appear in resolved_items with cycle 6 verification. The two remaining improvement_items are out of scope: imp-no-share-button is future-milestone (post-solve-experience), and imp-no-eslint is global (already persisted as global-001). Health score rose from 89 to 92 with MEDIUM deductions eliminated. 292/292 tests pass across 57 criteria. The deepen:improvements cycle (cycle 5→6) converged in one iteration as predicted.",
+    "recommendation": "deepen:improvements",
+    "recommendation_reasoning": "Post-solve-experience milestone meets 4 of 5 PROMOTE conditions: (1) PO verdict PRODUCTION_READY. (2) confidence_adjusted 0.94 >= 0.9 threshold. (3) Zero quality gaps — no fix_tasks, no critical findings. (4) Confidence trend stable/improving, not regressing. However, condition (5) fails: one validated this-milestone improvement item remains — imp-settimeout-copied-leak (PostSolve.tsx setCopied setTimeout not stored in ref, minor unmount risk). Per Step 2.7, this-milestone items override promote to deepen:improvements. This is the exact same class of bug that was resolved in cycle 6 for GameBoard.tsx (imp-settimeout-cleanup) — mechanical useRef + useEffect cleanup pattern. Expected to converge in one iteration. Other improvement items routed: imp-stats-placeholder dropped (future-milestone, stats-streaks-persistence), imp-no-eslint already in global_improvements.json as global-001.",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
@@ -2253,23 +2253,57 @@
       "restructure_scope": "0% — no restructure needed",
       "structural_issues_found": false
     },
-    "root_cause_analysis": [],
-    "cross_cycle_patterns": [
+    "root_cause_analysis": [
       {
-        "pattern": "deepen:improvements cycles converge quickly for mechanical code quality fixes",
-        "frequency": 2,
-        "systemic_cause": "The QA code audit identifies code quality issues (robustness, production_risks dimensions) but does not promote them to fix_tasks. The PO improvement_items pipeline catches them instead, requiring an extra deepen cycle.",
-        "recommended_action": "Consider calibrating the QA-to-fix-task threshold for code quality items flagged by the AI code audit at MEDIUM severity or above. This would allow them to be fixed in the QA-fix phase rather than requiring a full deepen:improvements cycle. Not blocking — the current pipeline works, just adds one cycle of latency."
+        "gap_id": "imp-settimeout-copied-leak",
+        "gap_description": "setCopied setTimeout in PostSolve.tsx not stored in useRef — minor unmount risk if user navigates away within 2s after copying share text",
+        "root_cause": "implementation_bug",
+        "classification_confidence": 0.95,
+        "evidence": "PostSolve.tsx handleShare() calls setTimeout(() => setCopied(false), 2000) without storing the timeout ID in a ref. The same pattern was already identified and fixed in GameBoard.tsx (cycle 6, imp-settimeout-cleanup). The builder implemented the fix pattern in GameBoard but did not apply it to the new PostSolve component added in the same cycle. No factory_question or factory_decision relates to this — it's a missed consistency application.",
+        "related_factory_decision": null,
+        "related_factory_question": null,
+        "qa_coverage_gap": true
       }
     ],
-    "change_spec_briefs": [],
+    "cross_cycle_patterns": [
+      {
+        "pattern": "setTimeout cleanup not applied to new components after being fixed in existing ones",
+        "frequency": 3,
+        "systemic_cause": "The QA code audit identifies setTimeout cleanup issues (robustness dimension) but does not promote them to fix_tasks. The PO improvement_items pipeline catches them instead, requiring an extra deepen:improvements cycle. This is the third occurrence: (1) foundation rarity fix, (2) GameBoard setTimeout/ACTION_COLORS, (3) PostSolve setCopied setTimeout.",
+        "recommended_action": "Calibrate the QA-to-fix-task threshold: any AI code audit finding at MEDIUM or above in the 'robustness' or 'production_risks' dimensions that matches a known pattern (setTimeout cleanup, useRef for timers) should be auto-promoted to fix_tasks. Three occurrences across 7 cycles is now a confirmed pattern. Alternatively, the building phase should check for setTimeout usage in any new component and proactively apply the cleanup pattern."
+      },
+      {
+        "pattern": "deepen:improvements cycles converge quickly for mechanical code quality fixes",
+        "frequency": 3,
+        "systemic_cause": "Same as above — QA audit flags issues but threshold doesn't promote to fix_tasks. All three deepen:improvements cycles (rarity fix, GameBoard quality, PostSolve timeout) are expected to converge in 1 iteration each because the fixes are mechanical.",
+        "recommended_action": "Continue current approach — the extra cycle cost is low (single-file changes, no design mode needed). Long-term: QA threshold calibration would eliminate these extra cycles entirely."
+      }
+    ],
+    "change_spec_briefs": [
+      {
+        "gap_id": "imp-settimeout-copied-leak",
+        "root_cause": "implementation_bug",
+        "priority": "low",
+        "affected_screens": [
+          "Post-Solve Screen"
+        ],
+        "affected_journeys": [
+          "Win game → post-solve screen → share → navigate away within 2s",
+          "Lose game → post-solve screen → share �� navigate away within 2s"
+        ],
+        "what_good_looks_like": "PostSolve.tsx stores the setCopied setTimeout ID in a useRef. A useEffect cleanup function calls clearTimeout on the ref when the component unmounts. No React warnings about state updates on unmounted components. Pattern matches the GameBoard.tsx fix from cycle 6 (AC-FIX-GB-003 through AC-FIX-GB-005).",
+        "requires_design_mode": false,
+        "approach_hint": "Store setTimeout return value in useRef<ReturnType<typeof setTimeout> | null>(null). In useEffect cleanup, clearTimeout(ref.current). Single file change: src/components/PostSolve.tsx. Follow exact pattern from GameBoard.tsx gameOverTimeoutRef/flashTimeoutRef.",
+        "do_not_repeat": []
+      }
+    ],
     "escalations": [],
     "improvement_routing": {
-      "this_milestone_count": 0,
+      "this_milestone_count": 1,
       "global_persisted_count": 0,
       "future_dropped_count": 1,
       "convergence_guardrail_triggered": false,
-      "deepen_improvements_cycle_count": 1
+      "deepen_improvements_cycle_count": 0
     }
   },
   "phase_decisions": [
@@ -2401,152 +2435,188 @@
       "timestamp": "2026-04-05T00:00:00.000Z",
       "decision": "Systemic observation: QA-to-fix pipeline threshold may need calibration for code quality items",
       "reasoning": "Both improvement items in cycle 5 were implementation_bug classified with QA coverage gap noted. The AI code audit flagged both at MEDIUM severity but they were not promoted to fix_tasks — requiring a deepen:improvements cycle instead. This pattern occurred once (foundation rarity fix) and once (gameboard quality). Two occurrences across 6 cycles is not yet a strong pattern, but worth monitoring. If it recurs in the next milestone, a systemic fix to the QA threshold is warranted."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 7,
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "decision": "No circuit breaker detected — normal post-milestone analysis for post-solve-experience",
+      "reasoning": "No _circuit_breaker flag in cycle_context.json. Proceeding with standard analysis."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 7,
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "decision": "Override promote → deepen:improvements due to validated this-milestone improvement item imp-settimeout-copied-leak",
+      "reasoning": "confidence_adjusted 0.94 >= 0.9 and PO verdict PRODUCTION_READY — all PROMOTE conditions met EXCEPT condition 5: validated this-milestone improvement item imp-settimeout-copied-leak exists. PostSolve.tsx setCopied setTimeout not stored in ref is the same class of bug fixed in GameBoard.tsx (cycle 6). Grounding validated: React best practice for timeout cleanup is a legitimate production robustness concern, confirmed by AI code audit flagging it in both robustness (85) and production_risks (87) dimensions. Single-file mechanical fix expected to converge in one iteration.",
+      "alternatives_considered": [
+        "Promote directly — rejected: phase contract requires deepen:improvements when validated this-milestone items exist and convergence guardrail has not triggered. This is the first deepen:improvements cycle for post-solve-experience.",
+        "Classify imp-settimeout-copied-leak as ungrounded and drop — rejected: the grounding (React best practice) is supported by the AI code audit findings AND by the precedent of the identical pattern being fixed in GameBoard.tsx in cycle 6. Dropping would be inconsistent."
+      ]
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 7,
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "decision": "imp-settimeout-copied-leak classified as implementation_bug (confidence 0.95)",
+      "reasoning": "No spec ambiguity (React cleanup patterns are well-known). No design choice (no visual impact). No missing context (the builder applied this exact pattern in GameBoard.tsx in the same cycle). This is an implementation oversight — the cleanup pattern was not carried from GameBoard to PostSolve. QA coverage gap: the AI code audit flagged it as LOW in robustness and production_risks but did not promote to fix_tasks."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 7,
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "decision": "imp-stats-placeholder dropped as future-milestone scope",
+      "reasoning": "Stats section placeholder belongs to stats-streaks-persistence milestone (next in sequence). Will be built when that milestone runs."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 7,
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "decision": "imp-no-eslint already persisted as global-001 — no duplicate write needed",
+      "reasoning": "global_improvements.json already contains global-001. No new global items discovered in this cycle."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 7,
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "decision": "Confirmed pattern: setTimeout cleanup not auto-promoted from QA audit to fix_tasks (third occurrence)",
+      "reasoning": "This is now the third time the QA-to-fix pipeline has missed a setTimeout cleanup issue: (1) cycle 1 — foundation rarity type mismatch, (2) cycle 5 — GameBoard setTimeout/ACTION_COLORS, (3) cycle 7 — PostSolve setCopied setTimeout. All three were caught by PO improvement_items and required a deepen:improvements cycle. The pattern is confirmed. Recommendation: calibrate QA threshold so robustness/production_risks findings matching known patterns (setTimeout, useRef cleanup) are auto-promoted to fix_tasks."
+    },
+    {
+      "phase": "change-spec-generation",
+      "cycle": 7,
+      "timestamp": "2026-04-05T12:30:00.000Z",
+      "decision": "Generated fix story fix-postsovle-settimeout-cleanup for imp-settimeout-copied-leak",
+      "reasoning": "Single brief from analyzing phase. Validated against vision: code quality fix, no scope expansion, no vision conflict. Mechanical single-file fix following established GameBoard.tsx pattern (cycle 6). 5 acceptance criteria covering ref declaration, both setTimeout paths, useEffect cleanup, unmount safety, and build/test pass. No design mode needed. Expected to converge in one iteration.",
+      "alternatives_considered": [
+        "Group with other gaps — rejected: only one brief exists, no grouping possible",
+        "Escalate as systemic issue — rejected: the fix is straightforward. The systemic observation (QA threshold calibration) was already logged by the analyzing phase"
+      ]
     }
   ],
   "change_specs_pending": [
     {
-      "spec_id": "fix-gameboard-quality",
+      "spec_id": "fix-postsovle-settimeout-cleanup",
       "gap_ids": [
-        "imp-action-colors-duplication",
-        "imp-settimeout-cleanup"
+        "imp-settimeout-copied-leak"
       ],
-      "priority": "medium",
+      "priority": "low",
       "requires_design_mode": false,
       "design_passes_needed": [],
-      "criteria_count": 6,
+      "criteria_count": 5,
       "root_cause": "implementation_bug",
       "affected_screens": [
-        "Game Board"
+        "Post-Solve Screen"
       ],
       "affected_journeys": [
-        "Daily game loop (Simple tier)",
-        "Daily game loop (Cryptic tier)"
+        "Win game → post-solve screen → share → navigate away within 2s",
+        "Lose game → post-solve screen → share → navigate away within 2s"
       ],
-      "approach_summary": "Extract ACTION_COLORS to module-level const; add useRef + useEffect cleanup for all setTimeout calls in GameBoard.tsx",
+      "approach_summary": "Add useRef for setCopied timeout ID in PostSolve.tsx; both setTimeout calls store ID in ref; useEffect cleanup calls clearTimeout on unmount. Follows GameBoard.tsx pattern from cycle 6.",
       "gap_evidence": {
         "gaps": [
           {
-            "gap_id": "imp-action-colors-duplication",
-            "category": "content_change",
+            "gap_id": "imp-settimeout-copied-leak",
+            "category": "performance_improvement",
             "severity": "low",
             "root_cause": "implementation_bug",
-            "root_cause_evidence": "DRY violation — identical ACTION_COLORS object literal ({ gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' }) defined at two separate locations in GameBoard.tsx: line 179 (post-solve round history dots) and line 234 (in-game round indicator dots). Both were added independently by the pass-mechanic and win-lose-detection stories.",
-            "current_state": "GameBoard.tsx lines 179 and 234 each define const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } inside IIFE render blocks.",
-            "po_review_assessment": "ACTION_COLORS object defined twice in GameBoard.tsx (lines 179 and 234). Should be extracted to a module-level const.",
-            "heuristics_failed": [],
-            "previous_attempts": "First attempt."
-          },
-          {
-            "gap_id": "imp-settimeout-cleanup",
-            "category": "performance_improvement",
-            "severity": "medium",
-            "root_cause": "implementation_bug",
-            "root_cause_evidence": "Standard React cleanup pattern (useRef for timeout IDs + clearTimeout in useEffect cleanup) was not applied. Two setTimeout calls at lines 95 and 98 of GameBoard.tsx set state (setGameOver, setGuessResult) after a 1200ms delay without storing timeout IDs or cleaning up on unmount. If the component unmounts during the delay (e.g., user navigates away mid-game), React will warn about state updates on unmounted components.",
-            "current_state": "GameBoard.tsx line 95: setTimeout(() => setGameOver(true), 1200) — game-over delay. Line 98: setTimeout(() => setGuessResult(null), 1200) — feedback flash clear. Neither stores the timeout ID. No useEffect cleanup calls clearTimeout.",
-            "po_review_assessment": "Two setTimeout calls in GameBoard (game-over delay, feedback flash clear) are not cleaned up on unmount. React will warn about state updates on unmounted components.",
+            "root_cause_evidence": "PostSolve.tsx handleShare() line 39 calls setTimeout(() => setCopied(false), 2000) without storing the timeout ID. fallbackCopyToClipboard() line 58 does the same. Neither stores the ID in a ref. No useEffect cleanup calls clearTimeout. If the component unmounts within 2s of copying (user navigates away), React will warn about state updates on unmounted components. The same pattern was already identified and fixed in GameBoard.tsx (cycle 6, AC-FIX-GB-003 through AC-FIX-GB-005) but was not applied to PostSolve when it was added in the same cycle.",
+            "current_state": "PostSolve.tsx line 39: setTimeout(() => setCopied(false), 2000) in navigator.clipboard.writeText success handler. Line 58: setTimeout(() => setCopied(false), 2000) in fallbackCopyToClipboard execCommand success path. Neither stores timeout ID. No useEffect cleanup.",
+            "po_review_assessment": "setCopied setTimeout not stored in ref — minor unmount risk if user navigates away within 2s after copying.",
             "heuristics_failed": [],
             "previous_attempts": "First attempt."
           }
         ]
       },
       "target_state": {
-        "from_library_heuristics": "No Library heuristics violated — these are code quality patterns (DRY, React cleanup) not covered by product heuristics.",
+        "from_library_heuristics": "No Library heuristics violated — this is a React cleanup pattern not covered by product heuristics.",
         "from_reference_products": "N/A — code quality fix, no reference product comparison applicable.",
-        "concrete_description": "After the fix: (1) ACTION_COLORS is a single module-level const defined once near the top of GameBoard.tsx, outside any component function. Both the post-solve round history dots (current line 179 area) and the in-game round indicator dots (current line 234 area) reference this single const. (2) Both setTimeout calls (game-over delay and feedback flash clear) store their returned timeout IDs in useRef variables. A useEffect cleanup function calls clearTimeout on both refs when the component unmounts. No React warnings occur when navigating away from the game board during an active timeout."
+        "concrete_description": "After the fix: PostSolve.tsx declares a useRef<ReturnType<typeof setTimeout> | null>(null) for the copied timeout. Both setTimeout calls (clipboard API success path at line 39 and execCommand fallback path at line 58) assign their return value to ref.current. A useEffect cleanup function calls clearTimeout(ref.current) when the component unmounts. The 'Copied!' → 'Share' button text transition still works identically for users who remain on the screen. No React warnings occur when navigating away from the post-solve screen within 2s of copying."
       },
       "design_requirements": {
         "requires_design_mode": false,
-        "design_mode_scope": "N/A — no visual or UX changes. Pure code refactor.",
+        "design_mode_scope": "N/A — no visual or UX changes. Pure code quality fix.",
         "design_direction": "N/A",
-        "design_constraints": "No visual output changes. The round indicator dots and post-solve history dots must render identically before and after the fix."
+        "design_constraints": "No visual output changes. The share button 'Copied!' → 'Share' transition must work identically before and after the fix."
       },
       "acceptance_criteria": [
         {
-          "id": "AC-FIX-GB-001",
-          "name": "ACTION_COLORS defined once at module level",
-          "given": "GameBoard.tsx source code",
-          "when": "A developer searches for 'ACTION_COLORS' in GameBoard.tsx",
-          "then": "Exactly one definition exists, at module scope (outside the GameBoard function), as a const",
-          "measurement": "grep -c 'ACTION_COLORS' src/components/GameBoard.tsx returns exactly 3 (1 definition + 2 references). grep 'const ACTION_COLORS' returns exactly 1 match, located before 'export default function GameBoard'.",
-          "closes_gap": "imp-action-colors-duplication"
+          "id": "AC-FIX-PS-001",
+          "name": "Timeout ref declared",
+          "given": "PostSolve.tsx source code",
+          "when": "A developer inspects the component's ref declarations",
+          "then": "A useRef<ReturnType<typeof setTimeout> | null>(null) is declared for the setCopied timeout ID",
+          "measurement": "grep for 'useRef' in PostSolve.tsx finds a timeout ref declaration with ReturnType<typeof setTimeout> type annotation. useRef is imported from 'react'.",
+          "closes_gap": "imp-settimeout-copied-leak"
         },
         {
-          "id": "AC-FIX-GB-002",
-          "name": "Both render sites reference shared const",
-          "given": "GameBoard.tsx with the extracted ACTION_COLORS const",
-          "when": "The post-solve history dots and in-game round indicator dots are rendered",
-          "then": "Both use ACTION_COLORS[action.color] referencing the module-level const. No inline object literals defining gray/red/green color mappings exist anywhere in the component.",
-          "measurement": "grep for '{ gray:' in GameBoard.tsx returns 1 match (the const definition). No matches inside JSX or render functions.",
-          "closes_gap": "imp-action-colors-duplication"
+          "id": "AC-FIX-PS-002",
+          "name": "Both setTimeout calls store ID in ref",
+          "given": "PostSolve.tsx with the timeout ref",
+          "when": "handleShare clipboard API success fires OR fallbackCopyToClipboard execCommand success fires",
+          "then": "The setTimeout return value is assigned to ref.current before or at the point of the call. Both code paths (navigator.clipboard and execCommand fallback) store the timeout ID.",
+          "measurement": "grep for 'setTimeout' in PostSolve.tsx returns exactly 2 matches, each preceded by or wrapped in an assignment to the ref's .current property.",
+          "closes_gap": "imp-settimeout-copied-leak"
         },
         {
-          "id": "AC-FIX-GB-003",
-          "name": "setTimeout IDs stored in useRef",
-          "given": "GameBoard.tsx source code",
-          "when": "A developer inspects setTimeout usage",
-          "then": "Each setTimeout call assigns its return value to a .current property of a useRef<ReturnType<typeof setTimeout> | null>. At least two useRef declarations exist for timeout tracking.",
-          "measurement": "grep for 'useRef' in GameBoard.tsx finds timeout ref declarations. grep for 'setTimeout' finds assignments to ref.current.",
-          "closes_gap": "imp-settimeout-cleanup"
-        },
-        {
-          "id": "AC-FIX-GB-004",
+          "id": "AC-FIX-PS-003",
           "name": "useEffect cleanup calls clearTimeout",
-          "given": "GameBoard.tsx with timeout refs",
+          "given": "PostSolve.tsx with timeout ref storing the active timeout ID",
           "when": "The component unmounts (useEffect cleanup runs)",
-          "then": "clearTimeout is called on all timeout ref .current values. The cleanup function is in a useEffect with an empty or appropriate dependency array.",
-          "measurement": "grep for 'clearTimeout' in GameBoard.tsx finds at least 2 calls inside a useEffect return function.",
-          "closes_gap": "imp-settimeout-cleanup"
+          "then": "clearTimeout is called on the timeout ref .current value. The cleanup function is in a useEffect with an empty dependency array (runs only on unmount).",
+          "measurement": "grep for 'clearTimeout' in PostSolve.tsx finds a call inside a useEffect return function. The useEffect has [] as its dependency array.",
+          "closes_gap": "imp-settimeout-copied-leak"
         },
         {
-          "id": "AC-FIX-GB-005",
-          "name": "No unmount warnings",
-          "given": "A game in progress with an active setTimeout (e.g., after a wrong guess with the 1200ms feedback flash pending)",
-          "when": "The component unmounts before the timeout fires (simulated by test or navigation)",
-          "then": "No React warning about 'Can't perform a React state update on an unmounted component' appears in console",
-          "measurement": "Unit test: mount GameBoard, trigger a guess, unmount before 1200ms, assert no console.error/warn calls matching the unmounted component pattern.",
-          "closes_gap": "imp-settimeout-cleanup"
+          "id": "AC-FIX-PS-004",
+          "name": "No unmount warnings after copy",
+          "given": "Post-solve screen displayed after a completed game, user has tapped 'Share' and 'Copied!' is showing",
+          "when": "The component unmounts before the 2s timeout fires (simulated by test or navigation)",
+          "then": "No React warning about state updates on unmounted components appears in console",
+          "measurement": "Unit test: mount PostSolve, trigger handleShare, unmount before 2000ms, assert no console.error/warn calls matching the unmounted component pattern.",
+          "closes_gap": "imp-settimeout-copied-leak"
         },
         {
-          "id": "AC-FIX-GB-006",
+          "id": "AC-FIX-PS-005",
           "name": "Build and tests pass",
-          "given": "All GameBoard.tsx changes applied",
+          "given": "All PostSolve.tsx changes applied",
           "when": "npm run build and npm test are executed",
-          "then": "Zero TypeScript errors, zero test failures, build produces static export with all routes",
-          "measurement": "npm run build exits 0; npm test exits 0; all existing 280+ tests continue to pass",
-          "closes_gap": "imp-action-colors-duplication,imp-settimeout-cleanup"
+          "then": "Zero TypeScript errors, zero test failures, build succeeds, all existing 361+ tests continue to pass",
+          "measurement": "npm run build exits 0; npm test exits 0; no regressions in existing test suites.",
+          "closes_gap": "imp-settimeout-copied-leak"
         }
       ],
       "scope": {
         "in_scope": [
-          "src/components/GameBoard.tsx — extract ACTION_COLORS to module level, add useRef + useEffect cleanup for setTimeout calls"
+          "src/components/PostSolve.tsx — add useRef for timeout ID, store setTimeout return values, add useEffect cleanup"
         ],
         "out_of_scope": [
-          "CardFrame.tsx (no changes needed)",
-          "GuessInput.tsx (no changes needed)",
-          "game-engine.ts (no changes needed — getRoundActions returns data, colors are a UI concern)",
-          "Post-solve screen restructure (deferred to post-solve-experience milestone)",
-          "Any visual output changes — render must be pixel-identical before and after"
+          "GameBoard.tsx (already fixed in cycle 6 — do not modify)",
+          "share-grid.mjs (pure function, no timeouts)",
+          "lore-blurb.mjs (pure function, no timeouts)",
+          "Any visual output changes — share button behavior must be identical before and after",
+          "Stats section (future milestone)"
         ],
         "regression_risk": [
-          "Round indicator dot colors could regress if ACTION_COLORS const is moved but a reference is missed — verify both render sites use the shared const",
-          "Existing 280+ tests covering AC-FA1-017 through AC-FA1-026 should be re-run to verify no game mechanic regression"
+          "The 'Copied!' → 'Share' button text transition relies on the setTimeout firing correctly — verify the timeout still fires when the component stays mounted",
+          "Existing 361+ tests covering all post-solve-experience ACs should be re-run to verify no regression"
         ]
       },
       "root_cause_context": {
         "classification": "implementation_bug",
-        "what_went_wrong": "Two stories (pass-mechanic and win-lose-detection) independently added action rendering to GameBoard.tsx. Each defined its own ACTION_COLORS object because they were implemented in separate sessions without cross-referencing each other's additions. Similarly, the 1200ms setTimeout calls for game-over transition and feedback flash were added during win-lose-detection without applying the standard React cleanup pattern (useRef + clearTimeout in useEffect). The QA code audit flagged both (robustness 80, production_risks 76) but they were not promoted to fix tasks in that cycle.",
-        "why_previous_approach_failed": "N/A — first attempt for both gaps.",
-        "whats_different_this_time": "Both are mechanical refactors with clear before/after states. ACTION_COLORS extraction is a move + delete. setTimeout cleanup is a well-documented React pattern. Single-file scope, no design or architectural decisions needed."
+        "what_went_wrong": "The PostSolve component was added in cycle 7 during the post-solve-experience milestone build. The builder implemented the setTimeout cleanup pattern in GameBoard.tsx (cycle 6, AC-FIX-GB-003 through AC-FIX-GB-005) but did not carry the same pattern forward to the new PostSolve component. The setCopied setTimeout calls in handleShare and fallbackCopyToClipboard were written without useRef storage or useEffect cleanup. The QA code audit flagged it in robustness (85) and production_risks (87) but did not promote it to fix_tasks — it was caught as a PO improvement item instead.",
+        "why_previous_approach_failed": "N/A — first attempt for this gap.",
+        "whats_different_this_time": "Mechanical single-file fix following an established pattern (GameBoard.tsx cycle 6). The exact code pattern is documented in the codebase. Expected to converge in one iteration."
       }
     }
   ],
   "change_spec_generation_summary": {
     "phase": "change-spec-generation",
-    "cycle": "5",
-    "timestamp": "2026-04-04T00:00:00.000Z",
+    "cycle": 7,
+    "timestamp": "2026-04-05T12:30:00.000Z",
     "total_specs_generated": 1,
-    "total_criteria_across_specs": 6,
-    "gaps_addressed": 2,
+    "total_criteria_across_specs": 5,
+    "gaps_addressed": 1,
     "gaps_deferred": [],
     "gaps_escalated": []
   }
