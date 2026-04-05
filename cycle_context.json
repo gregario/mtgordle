@@ -2349,7 +2349,7 @@
   },
   "infrastructure": {
     "staging_url": "https://mtgordle.vercel.app",
-    "production_url": null,
+    "production_url": "https://mtgordle.vercel.app",
     "supabase_ref": null,
     "sentry_dsn": null,
     "supabase_url": "https://joxusnbbsoqkoocwztmz.supabase.co",
@@ -2410,7 +2410,9 @@
         "timestamp": "2026-04-05T11:00:29.012Z",
         "cycle": 1
       }
-    ]
+    ],
+    "last_deploy_timestamp": "2026-04-05T13:02:40Z",
+    "last_deploy_version": "0.2.0"
   },
   "story_result": {
     "story_id": "spoiler-protection",
@@ -2900,42 +2902,35 @@
   "dual_voice_po_review": true,
   "analysis_recommendation": {
     "action": "promote",
-    "rationale": "practice-mode milestone is PRODUCTION_READY: confidence_adjusted=0.93 (>=0.9), 0 quality gaps, 0 improvement items, QA PASS, health score 97, 480/480 tests pass, code audit 91/100, 0 critical findings. All 12 AC-FA6 practice-mode criteria code-verified. No structural issues, no circuit breaker, no env_limited exclusions needed."
+    "rationale": "PRODUCTION_READY verdict with confidence_adjusted 0.92 (>=0.9), 0 quality gaps, 0 improvement items, QA PASS at 100% criteria pass rate, health score 97. No regressions, no escalations, no structural decomposition issues. All promote conditions satisfied."
   },
   "analysis_result": {
     "phase": "analyzing",
-    "cycle": "11",
-    "timestamp": "2026-04-05T10:36:13Z",
+    "cycle": "1",
+    "timestamp": "2026-04-05T12:53:17Z",
     "confidence_trend": {
-      "current": 0.93,
+      "current": 0.92,
       "previous": null,
       "delta": null,
-      "direction": "unknown",
-      "consecutive_same_direction": 0,
+      "direction": "stable",
+      "consecutive_same_direction": 1,
       "flags": [
         "none"
       ],
-      "note": "confidence_history not present in cycle_context; trend cannot be computed from this phase's inputs. Prior milestone commit history (cycles 10-11) shows stable PRODUCTION_READY verdicts."
+      "note": "No confidence_history available (first analyzing pass for story spoiler-protection under milestone visual-polish-theming)."
     },
     "recommendation": "promote",
-    "recommendation_reasoning": "All PROMOTE conditions satisfied per Step 3: (1) PO verdict PRODUCTION_READY, (2) confidence_adjusted 0.93 >= 0.9, (3) zero critical quality gaps (quality_gaps array is empty), (4) no regressing trend signal, (5) zero validated this-milestone improvement items — so no deepen:improvements override applies. QA lens PASS, health 97, code audit 91/100, 480/480 tests passing with 12 AC-FA6 criteria covered across 3 new test files. The PO recommended_action was 'continue' but the evaluation package (PRODUCTION_READY + 0 gaps + 0 improvements + QA PASS) is the canonical milestone-complete signal; ANALYZING overrides to 'promote' to close the milestone rather than starting a new cycle with nothing to fix. No decomposition health issues: practice-mode is a feature-build on top of an existing foundation, no new shared infrastructure was needed, no schema debt, no silent degradation (0 skipped with infra/integration blockers; the 1 skipped item was not infrastructure-blocked).",
+    "recommendation_reasoning": "All promote conditions are met: (1) PO verdict PRODUCTION_READY, (2) confidence_adjusted = 0.92 >= 0.9, (3) zero critical (or any) quality gaps, (4) zero this-milestone improvement items — no deepen:improvements override needed, (5) trend not regressing, (6) QA verdict PASS with 100% criteria pass rate, (7) no escalations from qa_fix_results. Decomposition Health Check found no foundation gaps, integration gaps, schema debt, or silent degradation — no insert-foundation warranted. Health score 97/100 and a11y/design reviews clean. No factory questions unresolved. The story spoiler-protection under milestone visual-polish-theming is ready to promote.",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
       "schema_debt": [],
       "silent_degradation": [],
-      "restructure_scope": "0% — no structural changes required",
+      "restructure_scope": "0% — no restructure needed",
       "structural_issues_found": false
     },
     "root_cause_analysis": [],
-    "cross_cycle_patterns": [
-      {
-        "pattern": "Clean milestone completion with no gaps",
-        "frequency": 1,
-        "systemic_cause": "practice-mode scope was small, well-specified, and built on stable foundation (stats-streaks-persistence milestone shipped in cycle 10). Spec clarity + existing infrastructure + targeted AC-FA6 tests yielded zero-gap delivery.",
-        "recommended_action": "Continue current decomposition and test-integrity discipline for remaining milestones. No process changes needed."
-      }
-    ],
+    "cross_cycle_patterns": [],
     "change_spec_briefs": [],
     "escalations": [],
     "improvement_routing": {
@@ -3260,6 +3255,13 @@
       "decision": "Skipped decomposition health remediation",
       "reasoning": "Checks 1-4 all negative: no missing foundation infrastructure needed by pending milestones, no integration gaps, no schema debt from this cycle, no silent degradation (0 infra/integration-blocked skips). practice-mode reused existing card/game infrastructure. No insert-foundation needed.",
       "confidence": 0.9
+    },
+    {
+      "phase": "analyzing",
+      "cycle": "1",
+      "timestamp": "2026-04-05T12:53:17Z",
+      "decision": "Recommended promote",
+      "rationale": "Clean promote: PRODUCTION_READY + confidence_adjusted 0.92 + QA PASS + 0 gaps + 0 improvement items + no structural issues. No alternative actions viable under decision logic."
     }
   ],
   "change_specs_pending": [
@@ -3518,5 +3520,81 @@
     "gaps_escalated": []
   },
   "fix_tasks": [],
-  "quality_gaps": null
+  "quality_gaps": null,
+  "vision_check_results": {
+    "vision_alignment": {
+      "core_promise_delivery": {
+        "score": 0.95,
+        "evidence": "All 6 vision differentiators shipped: (1) progressive multi-type clue reveal via 6-round game-engine/CardFrame, (2) guess-or-pass per round via pass-mechanic, (3) CSS card frame assembling visually as clues reveal (CardFrame.tsx, 63:88 ratio), (4) two curated tiers Simple/Cryptic (365 daily cards each), (5) variable-depth lore blurbs on 930 cards (lore-blurb.mjs), (6) Wordle-style share with mana pip header (share-grid.mjs with colorIdentityEmoji). 447+ tests passing across the engine, UI, stats, share, practice, theming, spoiler protection.",
+        "gaps": []
+      },
+      "persona_fit": {
+        "score": 0.92,
+        "evidence": "Two-tier curation (Simple for casuals, Cryptic for enfranchised grinders) maps directly to the vision segments. Lore blurbs serve lapsed-player nostalgia. Streak tracking and guess distribution serve enfranchised players who compete on streaks. Mobile-first layout (iPhone SE 375px verified) matches daily-puzzle casual usage. Share text without path/query protects inbound visitors from spoilers — J-share journey rated 9.5.",
+        "drift_signals": []
+      },
+      "identity_consistency": {
+        "score": 0.93,
+        "evidence": "Product feels like a focused daily MTG puzzle: minimal home (TierSelection), single-column 480px mobile-first layout, no login, no ads, WotC fan-content disclaimer on T&Cs page. Auto dark/light theming honors OS preference (no toggle to learn). Vision's free-forever, non-commercial monetization is preserved. Heuristic results 10/10 pass in cycle 12 PO review.",
+        "inconsistencies": [
+          "Global improvement global-001: missing ESLint — consistency gap, not user-facing. Does not affect identity from user perspective; flagged as code-quality baseline."
+        ]
+      },
+      "overall_confidence": 0.93,
+      "trajectory": "converging",
+      "summary": "MTGordle has delivered on every v1 scope item and every vision differentiator across 6 completed feature areas (foundation-data-pipeline, core-game-loop, post-solve-experience, stats-streaks-persistence, practice-mode, visual-polish-theming). PO confidence sits at 0.91–0.92 with 10/10 heuristics passing in the latest milestone. The only open items are a code-quality baseline (ESLint) and a deployment credential blocker — neither touches the vision. The product as built is the product described in vision.json."
+    }
+  },
+  "confidence_history": [
+    {
+      "cycle": "12",
+      "confidence": 0.93,
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "trajectory": "converging"
+    }
+  ],
+  "ship_result": {
+    "success": true,
+    "version": "0.2.0",
+    "pr_number": null,
+    "pr_url": null,
+    "deploy_url": "https://mtgordle.vercel.app",
+    "deploy_timestamp": "2026-04-05T13:02:40Z",
+    "milestone": "visual-polish-theming",
+    "cycle": 12,
+    "note": "Single-branch strategy — shipped directly from main. No PR created. Production verified 200 OK.",
+    "changelog_entry": "## [0.2.0] - 2026-04-05\n\n### Added\n- Automatic dark mode support — the game now follows your system's light/dark preference with no manual toggle needed\n- Mobile-first responsive layout — the game column is centered on desktop and scales naturally on all screen sizes\n- Spoiler protection for shared links — inbound share URLs no longer reveal the answer before you've played\n- Practice mode — unlimited practice rounds using a separate card pool, with Play Again and Back to Home controls\n- Win percentage and streak tracking — daily and practice stats persist locally, with missed-day streak reset\n- Score distribution chart — personal bar chart showing your guess distribution across all sessions\n- Share your result — copy a spoiler-free emoji grid to share on social after solving\n- Lore blurb on post-solve — reveals card flavor text after each solve\n- Full autocomplete card search — type any card name and get fuzzy-matched suggestions from a 930-card curated pool\n\n### Changed\n- Desktop layout now caps at 480px wide and centers in the viewport for a focused card-game feel\n- Mana symbols and card attributes render inline — no external image dependencies\n\n### Fixed\n- Stats engine now migrates safely from legacy localStorage format without data loss\n- Post-solve share button no longer leaks a timeout reference on unmount"
+  },
+  "final_review_report": {
+    "production_ready": true,
+    "confidence": 0.88,
+    "polish_gaps": [
+      "On round 6 of 6, submitting a wrong guess briefly shows a \"Wrong — next clue revealed\" badge even though there are no more clues — the label is stale for the final round (should say \"Out of guesses\" or similar)",
+      "No manual theme toggle — dark/light follows prefers-color-scheme only. Most users won't notice, but power users sometimes want to override system preference",
+      "Rules text modal on partially-revealed cards shows \"Choose one —\" with empty space below, which reads as a missing element until you realize bullets are progressively revealed"
+    ],
+    "delight_moments": [
+      "Card backgrounds and borders tint to match the color identity clue (Mardu amber for B/R/W, forest green for G) — tiny detail that sells the Magic aesthetic",
+      "Autocomplete on card names is fast, forgiving, and surfaces both halves of split cards (e.g. \"Lightning Bolt // Lightning Bolt\", \"Emeritus of Conflict // Lightning Bolt\")",
+      "Win state reveals the actual printed card art full-resolution with rarity badge and era chip — feels like a reward, not a screen change",
+      "Guess-distribution stats block mirrors Wordle exactly, so the UX is instantly familiar",
+      "Green dot on the solved round in the 6-dot row gives instant at-a-glance feedback on how well you did"
+    ],
+    "rough_edges": [
+      "Pressing Enter on a typed query does not submit — you must click an autocomplete suggestion. This is a subtle interaction that a keyboard-first user would stub their toe on",
+      "The keyboard-highlighted autocomplete entry is not always the top result (third entry was pre-highlighted in one test), so arrow-free Enter would pick a surprising card"
+    ],
+    "overall_impression": "MTGordle nails the Wordle formula for Magic players. Core loop — tap a puzzle, parse the drip-fed clues, type a card name, get a satisfying win — is frictionless and feels native on both desktop and mobile. The progressive reveal (color → type → mana → text → art) is paced well enough that round-1 passes are sometimes possible for enfranchised players, while practice mode gives endless play. Dark theme is automatic and warm. Share copies cleanly with a button-state change as feedback. A few tiny copy/keyboard polish issues remain but none are load-bearing.",
+    "recommendation": "ship",
+    "human_feedback_incorporated": false,
+    "human_feedback_summary": "feedback.json contains only a stub test entry (text: \"test feedback\", classification: \"direction\") with no actionable product criticism — treated as not-yet-present",
+    "global_improvements_observed": [
+      {
+        "id": "global-001",
+        "still_present": true,
+        "customer_impact": "None — ESLint absence is a repo-quality concern invisible to end users; does not affect the play experience"
+      }
+    ],
+    "global_improvements_resolved": []
+  }
 }
