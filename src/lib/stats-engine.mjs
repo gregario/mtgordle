@@ -44,12 +44,16 @@ export function recordGameResult(stats, result) {
   const gamesPlayed = prev.gamesPlayed + 1;
   const gamesWon = prev.gamesWon + (result.solved ? 1 : 0);
 
-  // Streak logic
+  // Streak logic — reset on missed day (non-consecutive puzzle number) or loss
+  const missedDay = prev.lastPlayedPuzzle !== null &&
+    result.puzzleNumber !== prev.lastPlayedPuzzle + 1;
   let currentStreak;
-  if (result.solved) {
-    currentStreak = prev.currentStreak + 1;
-  } else {
+  if (!result.solved) {
     currentStreak = 0;
+  } else if (missedDay) {
+    currentStreak = 1; // restart streak from this win
+  } else {
+    currentStreak = prev.currentStreak + 1;
   }
   const maxStreak = Math.max(prev.maxStreak, currentStreak);
 
@@ -71,6 +75,17 @@ export function recordGameResult(stats, result) {
       guessDistribution,
     },
   };
+}
+
+/**
+ * Calculate win percentage for a tier. Returns 0 when no games played.
+ *
+ * @param {import('../types/card').TierStats} tierStats
+ * @returns {number} Integer 0-100
+ */
+export function getWinPercentage(tierStats) {
+  if (tierStats.gamesPlayed === 0) return 0;
+  return Math.round((tierStats.gamesWon / tierStats.gamesPlayed) * 100);
 }
 
 /**

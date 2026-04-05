@@ -7,6 +7,7 @@ export {
   getDefaultTierStats,
   getDefaultPlayerStats,
   recordGameResult,
+  getWinPercentage,
   isDuplicateGame,
   loadStats,
   saveStats,
