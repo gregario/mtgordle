@@ -310,6 +310,79 @@
       ],
       "tests_added": 12,
       "tests_passing": 12
+    },
+    {
+      "task": "post-solve-layout",
+      "acceptance_criteria": [
+        "AC-FA4-001",
+        "AC-FA4-002",
+        "AC-FA4-003",
+        "AC-FA4-004",
+        "AC-FA4-005"
+      ],
+      "files_changed": [
+        "src/components/PostSolve.tsx",
+        "src/components/GameBoard.tsx",
+        "tests/post-solve-layout.test.mjs",
+        "tests/gameboard-quality.test.mjs"
+      ],
+      "tests_added": 18,
+      "tests_passing": 18,
+      "notes": "Extracted PostSolve component from inline GameBoard post-solve view. Layout ordering: score (3rem, prominent) → share button (placeholder for share-grid-generation story) → card art (full Scryfall image, 300px max) → lore blurb (card.lore_blurb) → stats section (placeholder for stats-post-solve-integration story). All 5 data-testid markers present. GameBoard delegates to PostSolve via props when gameOver && outcome. Updated gameboard-quality test to reflect extraction (ACTION_COLORS now 2 refs in GameBoard instead of 3). 310/310 total tests passing. Build succeeds: 8 static routes."
+    },
+    {
+      "task": "share-grid-generation",
+      "acceptance_criteria": [
+        "AC-FA4-006",
+        "AC-FA4-007",
+        "AC-FA4-008",
+        "AC-FA4-009",
+        "AC-FA4-010",
+        "AC-FA4-011"
+      ],
+      "files_changed": [
+        "src/lib/share-grid.mjs",
+        "src/lib/share-grid.ts",
+        "src/components/PostSolve.tsx",
+        "src/components/GameBoard.tsx",
+        "tests/share-grid.test.mjs"
+      ],
+      "tests_added": 17,
+      "tests_passing": 17,
+      "notes": "Pure generateShareText() function in share-grid.mjs (Node-testable) with .ts re-export wrapper. Produces 4-line Wordle-style share text: header (MTGordle #N (Tier) score/6), mana pip emoji line via colorIdentityEmoji, action grid (⬜ pass, 🟥 wrong, 🟩 correct) stopping at winning round, configurable URL. Share button in PostSolve wired with clipboard copy + 'Copied!' feedback. 327 total tests passing."
+    },
+    {
+      "task": "copy-to-clipboard",
+      "acceptance_criteria": [
+        "AC-FA4-012",
+        "AC-FA4-013",
+        "AC-FA4-014"
+      ],
+      "files_changed": [
+        "src/components/PostSolve.tsx",
+        "tests/copy-to-clipboard.test.mjs"
+      ],
+      "tests_added": 13,
+      "tests_passing": 13,
+      "notes": "Wired BASE_URL from config.ts into PostSolve → generateShareText flow (AC-FA4-014). Added navigator.clipboard.writeText with fallback via textarea+execCommand for older browsers. Share button copies generated share text (AC-FA4-012) with 'Copied!' visual confirmation and 2s timeout reset (AC-FA4-013). 13 tests covering all 3 ACs plus clipboard fallback. 340 total tests passing."
+    },
+    {
+      "task": "lore-blurb-display",
+      "acceptance_criteria": [
+        "AC-FA7-001",
+        "AC-FA7-002",
+        "AC-FA7-003",
+        "AC-FA7-004"
+      ],
+      "files_changed": [
+        "src/lib/lore-blurb.mjs",
+        "src/lib/lore-blurb.ts",
+        "src/components/PostSolve.tsx",
+        "tests/lore-blurb.test.mjs"
+      ],
+      "tests_added": 21,
+      "tests_passing": 21,
+      "notes": "Pure lore-blurb.mjs module with isPlaceholderLore() (detects build-time placeholder pattern), formatLoreBlurb() (splits multi-paragraph blurbs on newlines, trims), getGenericLoreMessage() (type_line + set_name fallback). PostSolve now renders: placeholder cards get italic generic message (type · set), real lore gets paragraph-formatted display with proper spacing, short one-liners render inline. 21 tests covering all 4 ACs + data validation across all 930 cards. 361 total tests passing. Build succeeds: 8 static routes."
     }
   ],
   "skipped": [
@@ -780,6 +853,132 @@
       "affects": [
         "src/components/GameBoard.tsx"
       ]
+    },
+    {
+      "decision": "Search Before Building audit for post-solve-layout story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 1 EXTEND (GameBoard.tsx inline post-solve → extract to PostSolve.tsx), 2 BUILD (lore-blurb display, stats-section placeholder). Key reuse: existing inline post-solve HTML/styles, ACTION_COLORS pattern, getRoundActions() from game-engine, GameOutcome type.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx",
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "PostSolve as separate component with props interface, not inline in GameBoard",
+      "context": "Post-solve screen is a distinct UI state with 5+ sections. Inline code was already 60+ lines and growing.",
+      "alternatives_considered": [
+        "Keep inline in GameBoard — growing file already 322 lines, separate concern",
+        "Route-level PostSolve page — over-engineering for a state-driven transition within a single game session"
+      ],
+      "rationale": "Component extraction follows Brooks (conceptual integrity) and existing codebase pattern (CardFrame, GuessInput are separate components). PostSolve receives card, outcome, roundActions, labels via props. Future stories (share-grid-generation, lore-blurb-display, stats-post-solve-integration) extend PostSolve directly without touching GameBoard.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx",
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "Share button and stats section as placeholders (not functional)",
+      "context": "AC-FA4-002 requires share button present in layout; AC-FA4-005 requires stats section. Actual functionality is in separate stories (share-grid-generation, stats-post-solve-integration).",
+      "alternatives_considered": [
+        "Skip share/stats — would fail AC-FA4-002 and AC-FA4-005",
+        "Implement full share/stats now — scope creep beyond this story"
+      ],
+      "rationale": "Placeholder elements satisfy layout ordering requirements. data-testid markers ensure future stories can target these sections. Share button has styling but no onClick handler. Stats section shows \"Stats coming soon\" text.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for share-grid-generation story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 2 BUILD (share-grid.mjs, share-grid.ts), 1 EXTEND (PostSolve.tsx — wire share button), 1 EXTEND (GameBoard.tsx — pass puzzleNumber prop). Key reuse: colorIdentityEmoji() mapping from mana.ts (spec matches), RoundAction type, GameOutcome type, BASE_URL from config.ts, PostSolve placeholder share button.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/share-grid.mjs",
+        "src/lib/share-grid.ts",
+        "src/components/PostSolve.tsx",
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "share-grid.mjs with .ts wrapper — same dual-environment pattern as fuzzy-search",
+      "context": "Core share text logic needs to be testable with Node test runner AND importable by React components",
+      "alternatives_considered": [
+        "TypeScript only — tests would need ts-node or compilation step",
+        "Inline in PostSolve — untestable with node:test"
+      ],
+      "rationale": "Follows established codebase pattern (fuzzy-search.mjs + fuzzy-search.ts). Pure function with zero side effects. 17 tests cover all 6 ACs comprehensively.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/share-grid.mjs",
+        "src/lib/share-grid.ts"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for copy-to-clipboard story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 2 REUSE (AC-FA4-012 clipboard copy already in PostSolve, AC-FA4-013 copied state already in PostSolve), 1 EXTEND (AC-FA4-014 — BASE_URL exists in config.ts but not wired into PostSolve/generateShareText). Only change needed: import BASE_URL from config.ts and pass as baseUrl param.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx",
+        "tests/copy-to-clipboard.test.mjs"
+      ]
+    },
+    {
+      "decision": "Added clipboard fallback via textarea+execCommand for older browsers",
+      "context": "Spec notes recommend fallback for navigator.clipboard unavailability",
+      "alternatives_considered": [
+        "Clipboard API only — fails silently on older browsers",
+        "Third-party clipboard library — unnecessary dependency for one function"
+      ],
+      "rationale": "Textarea+execCommand is the standard boring-technology fallback. PostSolve now checks navigator.clipboard existence, falls back to textarea+execCommand, and handles both .catch() and complete API absence.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for lore-blurb-display story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 1 REUSE (AC-FA7-001 lore-blurb div already in PostSolve), 2 BUILD (lore-blurb.mjs formatting logic, placeholder detection), 1 EXTEND (PostSolve.tsx lore section → use formatting functions). Key reuse: existing data-testid=\"lore-blurb\" section, card.lore_blurb field, Card type.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/lore-blurb.mjs",
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Placeholder detection via string pattern match rather than separate flag field",
+      "context": "AC-FA7-004 requires detecting placeholder lore and showing generic message. Placeholder blurbs follow pattern: \"<Name> is a <Type> from the world of Magic: The Gathering.\"",
+      "alternatives_considered": [
+        "Add is_placeholder boolean to card data — requires pipeline rebuild and schema change",
+        "Check for flavor_text === null — not all cards without flavor text have placeholder lore"
+      ],
+      "rationale": "Simple string check for \"from the world of Magic: The Gathering\" is 100% accurate on the current dataset and requires no schema changes. If placeholder pattern ever changes, only isPlaceholderLore() needs updating.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/lore-blurb.mjs"
+      ]
+    },
+    {
+      "decision": "Generic lore message uses type_line + set_name (not reproducing placeholder pattern)",
+      "context": "AC-FA7-004 says \"e.g., card's type line and set info\" for generic message",
+      "alternatives_considered": [
+        "Just show type_line — loses set context",
+        "Show \"No lore available\" — uninformative, wastes an opportunity to teach"
+      ],
+      "rationale": "Format \"Instant · First printed in Alpha\" gives the player useful card context without reproducing the low-quality placeholder. Uses middle-dot separator for visual hierarchy.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/lore-blurb.mjs"
+      ]
     }
   ],
   "factory_questions": [
@@ -806,118 +1005,98 @@
   "evaluation_report": {
     "qa": {
       "verdict": "PASS",
-      "verdict_cycle": 6,
-      "milestone": "core-game-loop",
+      "verdict_cycle": 7,
+      "milestone": "post-solve-experience",
       "criteria_results": [
         {
-          "criterion": "AC-FA1-001",
+          "criterion": "AC-FA4-001",
           "verdict": "pass",
-          "evidence": "next.config.mjs has output:'export'; route files exist"
+          "evidence": "PostSolve.tsx: data-testid='score-display' with fontSize '3rem', fontWeight 800. Score value from outcome.scoreDisplay. Verified by 3 tests in post-solve-layout.test.mjs."
         },
         {
-          "criterion": "AC-FA1-002",
+          "criterion": "AC-FA4-002",
+          "verdict": "pass",
+          "evidence": "PostSolve.tsx: data-testid='share-button' rendered immediately after score-display in DOM order. 3 tests verify presence and positioning order."
+        },
+        {
+          "criterion": "AC-FA4-003",
+          "verdict": "pass",
+          "evidence": "PostSolve.tsx: data-testid='card-art' wraps <img src={card.image_uri} alt={card.name}>, maxWidth 300px. 3 tests verify element existence and ordering below share button."
+        },
+        {
+          "criterion": "AC-FA4-004",
+          "verdict": "pass",
+          "evidence": "PostSolve.tsx: data-testid='lore-blurb' rendered below card-art. 3 tests verify presence and ordering."
+        },
+        {
+          "criterion": "AC-FA4-005",
+          "verdict": "pass",
+          "evidence": "PostSolve.tsx: data-testid='stats-section' with borderTop styling, rendered below lore-blurb. 3 tests verify presence and ordering."
+        },
+        {
+          "criterion": "AC-FA4-006",
+          "verdict": "pass",
+          "evidence": "generateShareText() line 1: 'MTGordle #N (Tier) score/6'. 5 tests verify header format for different puzzle numbers, tiers, and scores."
+        },
+        {
+          "criterion": "AC-FA4-007",
+          "verdict": "pass",
+          "evidence": "colorIdentityToEmoji() maps W→⚪, U→🔵, B→⚫, R→🔴, G→🟢, colorless→◇. 8 tests verify all colour combinations and edge cases (empty, multi-colour)."
+        },
+        {
+          "criterion": "AC-FA4-008",
+          "verdict": "pass",
+          "evidence": "actionsToGrid(): pass→⬜, wrong guess→🟥, correct guess→🟩. 4 tests verify all three action types."
+        },
+        {
+          "criterion": "AC-FA4-009",
+          "verdict": "pass",
+          "evidence": "actionsToGrid() stops at the winning action — actions array length matches rounds played. 3 tests verify round-3 win produces 3-square grid, not 6."
+        },
+        {
+          "criterion": "AC-FA4-010",
+          "verdict": "pass",
+          "evidence": "Failed game passes all 6 actions to generateShareText() — produces 6-square grid. 3 tests verify full grid for X/6 outcome."
+        },
+        {
+          "criterion": "AC-FA4-011",
+          "verdict": "pass",
+          "evidence": "generateShareText() last line: stripProtocol(baseUrl). Configurable via baseUrl param with default 'https://mtgordle.vercel.app'. 4 tests verify default URL and custom URL override."
+        },
+        {
+          "criterion": "AC-FA4-012",
           "verdict": "env_limited",
-          "evidence": "Vercel CLI/token not available; code artifacts (vercel.json, static export config) verified"
+          "evidence": "PostSolve.tsx handleShare(): navigator.clipboard.writeText(shareText) with execCommand fallback. Code-verified. Tests mock clipboard API — live browser required to verify actual copy. 13 tests in copy-to-clipboard.test.mjs cover both paths."
         },
         {
-          "criterion": "AC-FA1-003",
+          "criterion": "AC-FA4-013",
           "verdict": "pass",
-          "evidence": "Route files: src/app/play/simple, /cryptic, /practice, /terms all present"
+          "evidence": "PostSolve.tsx: setCopied(true) on successful copy, setTimeout 2000ms → setCopied(false). Share button text: copied ? 'Copied!' : 'Share'. 3 tests verify state transitions."
         },
         {
-          "criterion": "AC-FA2-001",
+          "criterion": "AC-FA4-014",
           "verdict": "pass",
-          "evidence": "card-details.json (930 cards) and autocomplete-index.json (36,606 names) exist — prove build ran"
+          "evidence": "PostSolve.tsx imports BASE_URL from '@/config'. Passes as baseUrl to generateShareText(). 3 tests verify config.ts has BASE_URL constant and it flows into share text."
         },
         {
-          "criterion": "AC-FA2-002",
+          "criterion": "AC-FA7-001",
           "verdict": "pass",
-          "evidence": "All 17 required fields present on all 930 cards (verified by foundation.test.mjs)"
+          "evidence": "PostSolve.tsx: lore-blurb section renders between card-art and stats-section in DOM order. Calls isPlaceholderLore/formatLoreBlurb/getGenericLoreMessage from lore-blurb.mjs. 3 tests verify ordering and lore function import."
         },
         {
-          "criterion": "AC-FA2-003",
+          "criterion": "AC-FA7-002",
           "verdict": "pass",
-          "evidence": "216 cards have null/empty flavor_text; all pass required-fields test and retain all other clue fields"
+          "evidence": "formatLoreBlurb(): single-paragraph blurbs (no \\n) return single-element array. 4 tests verify short blurbs render as single <p>."
         },
         {
-          "criterion": "AC-FA2-004",
+          "criterion": "AC-FA7-003",
           "verdict": "pass",
-          "evidence": "autocomplete-index.json exists with 36,606 entries"
+          "evidence": "formatLoreBlurb(): splits on \\n, trims, filters empty lines — multi-paragraph blurbs return multiple-element array. 5 tests verify multi-paragraph splitting and margin spacing between paragraphs."
         },
         {
-          "criterion": "AC-FA2-005",
-          "verdict": "env_limited",
-          "evidence": "Build time not measured in unit tests; artifact existence proves pipeline completed"
-        },
-        {
-          "criterion": "AC-FA2-006",
+          "criterion": "AC-FA7-004",
           "verdict": "pass",
-          "evidence": "simple-daily: 365 cards ✓"
-        },
-        {
-          "criterion": "AC-FA2-007",
-          "verdict": "pass",
-          "evidence": "cryptic-daily: 365 cards ✓"
-        },
-        {
-          "criterion": "AC-FA2-008",
-          "verdict": "pass",
-          "evidence": "simple-practice: 100 cards, zero overlap with daily pools ✓"
-        },
-        {
-          "criterion": "AC-FA2-009",
-          "verdict": "pass",
-          "evidence": "cryptic-practice: 100 cards, zero overlap with daily pools ✓"
-        },
-        {
-          "criterion": "AC-FA2-010",
-          "verdict": "pass",
-          "evidence": "All required clue fields (mana_cost, color_identity, type_line, rarity, set_era, oracle_text_first_line, artist, image_uri) present on all 930 cards"
-        },
-        {
-          "criterion": "AC-FA2-011",
-          "verdict": "pass",
-          "evidence": "lore_blurb field present on all 930 cards (placeholder text)"
-        },
-        {
-          "criterion": "AC-FA2-012",
-          "verdict": "pass",
-          "evidence": "nicknames is always an array (empty at foundation) on all 930 cards"
-        },
-        {
-          "criterion": "AC-FA2-013",
-          "verdict": "pass",
-          "evidence": "0 duplicate oracle_ids and 0 duplicate names across all pools; daily/practice overlap is 0"
-        },
-        {
-          "criterion": "AC-FA2-014",
-          "verdict": "pass",
-          "evidence": "36,606 unique names (case-insensitive uniqueness verified); all are non-empty strings"
-        },
-        {
-          "criterion": "AC-FA2-015",
-          "verdict": "pass",
-          "evidence": "autocomplete-index.json < 1500KB uncompressed (gzip < 500KB)"
-        },
-        {
-          "criterion": "AC-FA2-016",
-          "verdict": "pass",
-          "evidence": "Index sorted (prefix search via binary search), Lightning Bolt findable, 5+ 'Lightning' cards present, all 930 curated cards in index"
-        },
-        {
-          "criterion": "AC-FIX-RARITY-001",
-          "verdict": "pass",
-          "evidence": "test PASSES: src/types/card.ts line 18 rarity union is 'common' | 'uncommon' | 'rare' | 'mythic' | 'special'. Fix commit e31dd52. Test: [AC-FIX-RARITY-001] src/types/card.ts rarity union includes 'special' ✔"
-        },
-        {
-          "criterion": "AC-FIX-RARITY-002",
-          "verdict": "pass",
-          "evidence": "test PASSES: All 930 card-details.json rarity values are in the Card.rarity type union (including 3 'special' cards e.g. Spitting Slug). Fix commit e31dd52. Test: [AC-FIX-RARITY-002] every card-details.json rarity value is in the Card.rarity type union ✔"
-        },
-        {
-          "criterion": "AC-FIX-RARITY-003",
-          "verdict": "pass",
-          "evidence": "Card.rarity type still contains all 4 original values (common/uncommon/rare/mythic). Type widening will be non-breaking."
+          "evidence": "isPlaceholderLore(): detects 'from the world of Magic: The Gathering' pattern. getGenericLoreMessage(): returns '{type_line} · First printed in {set_name}'. 9 tests verify detection accuracy across real + placeholder data and 930-card dataset."
         }
       ],
       "functional_correctness": {
@@ -925,16 +1104,17 @@
         "dead_elements": 0,
         "broken_links": 0,
         "pages_checked": 0,
-        "note": "No deployment URL — browser-based checks skipped. All checks are code/artifact-based."
+        "note": "No browser walk — deployment ENV_LIMITED (no VERCEL_TOKEN). All checks code/artifact-based. 361/361 tests pass."
       },
       "criteria_pass_rate": 1,
-      "env_limited_count": 2,
+      "env_limited_count": 1,
       "fail_count": 0,
-      "core_game_loop_criteria": [
+      "_prior_milestone_criteria_omitted": "core-game-loop criteria (AC-FA1-004 through AC-FIX-GB-006) verified in cycle 6 evaluation. All remain passing — 361/361 tests confirm no regression.",
+      "_prior_milestone_criteria_stub": [
         {
           "criterion": "AC-FA1-004",
           "verdict": "pass",
-          "evidence": "TierSelection component renders 'Simple #N' with EPOCH_DATE puzzle number"
+          "evidence": "Carried from cycle 6. No regression — 361/361 tests pass."
         },
         {
           "criterion": "AC-FA1-005",
@@ -1110,81 +1290,83 @@
       "code_quality_baseline": {
         "eslint_errors": 0,
         "eslint_warnings": 0,
-        "eslint_note": "No ESLint config (known global improvement). TypeScript strict: 0 errors.",
+        "eslint_note": "No ESLint config (known global improvement, tracked as global-001). TypeScript strict: 0 errors.",
         "duplication_pct": 1.5,
-        "duplication_note": "Improved from 2.5% — ACTION_COLORS duplicate removed. No remaining intra-file duplication in GameBoard.",
+        "duplication_note": "Stable at 1.5%. Post-solve-experience stories added pure modules (share-grid.mjs, lore-blurb.mjs) with no duplication. PostSolve.tsx ACTION_COLORS is module-level const (consistent with GameBoard pattern).",
         "circular_deps": 0,
         "dead_code_items": 0,
-        "files_over_300_lines": 1,
+        "files_over_300_lines": 0,
         "files_over_300_lines_detail": [
-          "src/components/GameBoard.tsx (322 lines) — grew from 312 due to useRef + useEffect cleanup (10 lines added, expected)"
+          "No files over 300 lines. GameBoard.tsx: 269 (down from 322 — post-solve code extracted to PostSolve.tsx). PostSolve.tsx: 195. CardFrame.tsx: 252. GuessInput.tsx: 243."
         ],
         "npm_audit": {
           "critical": 1,
           "high": 0,
           "moderate": 0,
           "low": 0,
-          "note": "Next.js version advisory. All CVEs target server-side features. Static export is unaffected."
+          "note": "Next.js version advisory — unchanged from cycle 6. All critical CVEs target server-side features. Static export is unaffected."
         },
         "degraded": false,
-        "degradation_vs_prev": "No degradation — metrics improved. Duplication 2.5% → 1.5% (ACTION_COLORS fix). No new large files. Production risk MEDIUM items resolved."
+        "degradation_vs_prev": "No degradation. files_over_300_lines: 1 → 0 (improvement: GameBoard.tsx shrunk by extracting PostSolve). Duplication stable at 1.5%. All other metrics unchanged."
       },
       "performance_baseline": {
         "lighthouse_scores": null,
-        "note": "No deployment URL — Lighthouse not run. Build verified: 8 static routes. Home: 95.9KB first-load JS. Play pages: 100KB (includes Fuse.js ~25KB)."
+        "note": "No deployment URL — Lighthouse not run. Build verified: 8 static routes. Post-solve page bundle similar to play pages (~100KB including Fuse.js)."
       },
       "code_quality_warning": false,
       "ai_code_audit": {
-        "score": 82,
+        "score": 88,
         "dimensions": {
           "architecture": {
-            "score": 87,
+            "score": 90,
             "findings": [
-              "Clean separation maintained: lib/ (pure game logic), components/ (React UI), types/ (type contracts). GameBoard delegates all business logic to game-engine functions.",
-              "GuessInput is well-encapsulated with clear props interface. fuzzy-search/.mjs/.ts dual-export pattern continues cleanly."
+              "PostSolve extracted from GameBoard — clean separation of concerns. share-grid.mjs and lore-blurb.mjs follow established .mjs/.ts dual-export pattern.",
+              "All post-solve logic is in pure functions testable with Node. PostSolve receives all state via props, no ambient coupling."
             ]
           },
           "consistency": {
-            "score": 83,
+            "score": 90,
             "findings": [
-              "Consistent camelCase/PascalCase naming. CSS custom properties used consistently throughout. Inline style approach consistent with established foundation pattern."
+              "Consistent with established codebase patterns: ACTION_COLORS module-level const in PostSolve mirrors GameBoard pattern. .mjs+.ts wrapper for share-grid and lore-blurb mirrors fuzzy-search. CSS custom properties throughout."
             ]
           },
           "robustness": {
-            "score": 92,
+            "score": 85,
             "findings": [
-              "GameBoard handles loading, error, and empty pool states. GuessInput has cancellation token for async init. fuzzy-search trims/limits query.",
-              "RESOLVED: Both setTimeout calls now cleaned up on unmount via useRef + useEffect. gameOverTimeoutRef and flashTimeoutRef null-guarded before clearTimeout."
+              "Clipboard fallback handles missing navigator.clipboard and .catch(). isPlaceholderLore null-guards empty/null blurbs.",
+              "LOW: setCopied setTimeout not stored in ref — minor unmount risk (2s window).",
+              "LOW: PostSolve img has no onError handler — acceptable for curated Scryfall URLs."
             ]
           },
           "production_risks": {
-            "score": 88,
+            "score": 87,
             "findings": [
-              "RESOLVED: ACTION_COLORS extracted to single module-level const.",
-              "RESOLVED: setTimeout cleanup implemented — no React unmount warnings.",
-              "LOW: fetch('/data/card-details.json') has no timeout — on slow connections, loading spinner shows indefinitely.",
-              "LOW: GameBoard.tsx at 322 lines (expected growth from cleanup code)."
+              "BASE_URL imported from config.ts (no hardcoding).",
+              "execCommand deprecated but no browser alternative for clipboard fallback — acceptable.",
+              "LOW: setCopied timeout not cleaned up on unmount.",
+              "LOW: img onError not handled in PostSolve."
             ]
           },
           "security": {
             "score": 95,
             "findings": [
-              "Static export — no server-side code. No user inputs written to DOM unsafely. Card names from validated JSON, not user input. No localStorage yet."
+              "Static export. Share text generated from structured data only (not user input). clipboard.writeText receives generated string. No user text in DOM."
             ]
           },
           "dead_hallucinated": {
-            "score": 90,
+            "score": 88,
             "findings": [
-              "useRef imported and used (gameOverTimeoutRef, flashTimeoutRef). src/lib/fuzzy-search.ts is an intentional thin re-export wrapper (documented). All exports consumed."
+              "isPlaceholderLore accepts cardName parameter but does not use it — detection is card-agnostic. Minor unused param, non-confusing.",
+              "All exports from share-grid.mjs and lore-blurb.mjs consumed by PostSolve and tests. .ts wrappers intentional (documented pattern)."
             ]
           },
           "tech_debt": {
-            "score": 87,
+            "score": 85,
             "findings": [
-              "Post-solve screen inline in GameBoard — intentional interim (documented: 'Post-solve layout story will refactor this into a proper component').",
-              "RESOLVED: ACTION_COLORS extracted to module-level const.",
-              "RESOLVED: setTimeout cleanup implemented.",
-              "No React error boundary around GameBoard's async fetch (unchanged, LOW)."
+              "stats-section is a placeholder ('Stats coming soon') — intentional and documented (stats-streaks-persistence is next milestone).",
+              "execCommand deprecated — no alternative; acceptable tech debt.",
+              "No ESLint config — global improvement item (tracked as global-001).",
+              "No React error boundary around GameBoard async fetch (unchanged, LOW)."
             ]
           }
         },
@@ -1193,26 +1375,26 @@
       "security_review": {
         "ran": false,
         "verdict": "SKIPPED",
-        "reason": "Static export — backend: false. No server-side code deployed.",
+        "reason": "diff_scope.backend == false — static Next.js export with no server-side routes",
         "carried_forward_from_cycle": 4
       },
       "a11y_review": {
         "ran": false,
         "verdict": "ENV_LIMITED",
-        "reason": "No deployment URL — browser-based a11y checks not possible. Code inspection shows: GuessInput uses ARIA combobox role with aria-expanded, aria-controls, aria-activedescendant, aria-label. Dropdown uses role=listbox with role=option items. Pass button has aria-label. GameBoard uses semantic headings."
+        "reason": "No deployment URL. Code inspection: PostSolve share button has visible text label ('Share'/'Copied!'). Card art img has alt={card.name}. PostSolve uses semantic h2. All interactive elements reachable via keyboard in code inspection."
       },
       "design_review": {
         "ran": false,
         "verdict": "ENV_LIMITED",
-        "reason": "No deployment URL — visual design review deferred. Code inspection: CSS custom properties used throughout for theme consistency. 480px centered column. Responsive spacing via CSS variables."
+        "reason": "No deployment URL. Code inspection: CSS custom properties for theme consistency. Share button uses --color-accent. Score display uses --color-correct/--color-wrong semantically. Card art at 300px max-width with border-radius. 380px max-width for lore blurb."
       },
       "fix_tasks": [],
-      "health_score": 92,
+      "health_score": 93,
       "health_score_breakdown": {
         "base": 100,
         "deductions": [
           {
-            "reason": "LOW: No ESLint config (global improvement, carried forward)",
+            "reason": "LOW: No ESLint config (global improvement, tracked)",
             "amount": -1
           },
           {
@@ -1224,63 +1406,63 @@
             "amount": -2
           },
           {
-            "reason": "LOW: GameBoard.tsx marginally over 300 lines (322, expected cleanup growth)",
+            "reason": "LOW: setCopied setTimeout not cleaned up on unmount",
             "amount": -1
           },
           {
-            "reason": "LOW: No fetch timeout on card-details.json load",
-            "amount": -1
-          },
-          {
-            "reason": "LOW: No React error boundary around async fetch",
+            "reason": "LOW: img onError not handled in PostSolve",
             "amount": -1
           }
         ],
-        "wtf_likelihood": "0.3/min — senior engineer finds clean, DRY code. No remaining duplicate consts or setTimeout leaks.",
+        "wtf_likelihood": "0.2/min — clean component boundaries, well-structured share and lore modules. Stats placeholder is self-explanatory.",
         "wtf_adjustment": 0,
-        "final_score": 92,
-        "note": "Cycle 6 re-evaluation. All 32 AC criteria pass (26 core-game-loop + 6 fix-gameboard-quality, code-verified). 292/292 tests pass. Build succeeds. MEDIUM deductions eliminated: setTimeout cleanup and ACTION_COLORS duplication both resolved. Health 89 → 92."
+        "final_score": 93,
+        "note": "Cycle 7 feature-build. 18 post-solve-experience criteria all pass (code-verified). 361/361 tests pass. Build succeeds. files_over_300_lines: 1→0 (improvement). Health 92→93. Minor items: setCopied unmount (LOW), img onError (LOW)."
       }
     },
     "design": {
-      "note": "Design review skipped — no deployment URL available for visual inspection. Foundation milestone is data/infrastructure only.",
+      "note": "Design review ENV_LIMITED — no deployment URL available. Code inspection verifies CSS custom properties, semantic color usage (correct/wrong), proper card art sizing.",
       "design_review": null,
       "a11y_review": null
     },
     "po": {
       "journey_quality": [
         {
-          "journey": "Daily game loop (Simple tier)",
+          "journey": "Win game → post-solve screen",
           "steps": [
-            "Home screen → select Simple #N",
-            "Game loads daily card → Round 1 shows mana pips + color identity",
-            "Player types card name → fuzzy autocomplete shows matches",
-            "Player guesses → correct/wrong feedback flash → round advances",
-            "Player can pass (rounds 1-5) → 'Pass' button visible",
-            "After round 6 or correct guess → post-solve screen with score and card reveal"
+            "Guess correct → 1.2s feedback flash → post-solve screen transition",
+            "Score displayed prominently (e.g. '3/6') in green at top",
+            "Share button immediately below score → copies Wordle-style share text with emoji grid",
+            "Card art (full Scryfall image) displayed below share button",
+            "Lore blurb: real flavor text formatted (multi-paragraph supported) or generic type·set fallback for placeholder",
+            "Stats section placeholder below lore"
           ],
           "quality": "pass",
-          "notes": "Full loop implemented and tested. 280 tests verify every AC."
+          "notes": "Complete post-solve experience implemented. 69 tests across 4 test files cover all ACs."
+        },
+        {
+          "journey": "Lose game (X/6) → post-solve screen",
+          "steps": [
+            "Exhaust 6 rounds → post-solve screen",
+            "Score displays 'X/6' in red",
+            "Share grid shows all 6 squares (no early stop)",
+            "Card reveal, lore, stats — all sections present"
+          ],
+          "quality": "pass",
+          "notes": "Failure path tested by 3 share-grid tests (AC-FA4-010) and 3 post-solve-layout tests."
         }
       ],
       "screen_quality": [
         {
-          "screen": "Home / Tier Selection",
-          "assessment": "Simple #N, Cryptic #N, Practice options clearly presented with puzzle numbers. Footer T&Cs link present.",
-          "information_hierarchy": "pass",
-          "visual_balance": "not-verified (no deployment URL)",
-          "density": "appropriate"
-        },
-        {
-          "screen": "Game Board (play/simple, play/cryptic, play/practice)",
-          "assessment": "Card frame with progressive reveal, round indicator with action dots, guess input with fuzzy autocomplete, pass button. All mechanics functional.",
-          "information_hierarchy": "pass",
-          "visual_balance": "not-verified (no deployment URL)",
-          "density": "appropriate"
-        },
-        {
           "screen": "Post-Solve Screen",
-          "assessment": "Score display (N/6 or X/6), card name reveal, card art image, round history dots. Minimal but complete for the milestone. Share functionality and stats are deferred to post-solve-experience and stats-streaks-persistence milestones.",
+          "assessment": "Complete post-solve experience: score (3rem prominent), share button, card art, lore blurb, stats placeholder. Section ordering matches spec. Score color semantic (green=win, red=lose). Share text is Wordle-style with emoji grid.",
+          "information_hierarchy": "pass",
+          "visual_balance": "not-verified (no deployment URL)",
+          "density": "appropriate"
+        },
+        {
+          "screen": "Home / Tier Selection (carried — no regression)",
+          "assessment": "Unchanged from core-game-loop milestone. All sections pass.",
           "information_hierarchy": "pass",
           "visual_balance": "not-verified (no deployment URL)",
           "density": "appropriate"
@@ -1294,60 +1476,68 @@
           {
             "heuristic": "Completeness",
             "verdict": "pass",
-            "evidence": "All 26 core-game-loop ACs implemented. 280/280 tests pass. Build succeeds."
+            "evidence": "All 18 post-solve-experience ACs implemented (14 FA4 + 4 FA7). 361/361 tests pass. Build succeeds."
           },
           {
-            "heuristic": "Game Mechanics Correctness",
+            "heuristic": "Share Experience Quality",
             "verdict": "pass",
-            "evidence": "6-round clue progression, pass mechanic, fuzzy autocomplete, win/lose detection all verified by dedicated test suites."
+            "evidence": "Wordle-style share format: header line, mana pip emoji line, emoji grid (⬜🟥🟩), URL. Stops at winning round. All 17 share-grid tests cover edge cases."
           },
           {
-            "heuristic": "Game Feel",
+            "heuristic": "Lore Depth",
             "verdict": "pass",
-            "evidence": "Progressive reveal (mana → type → rarity → rules → flavor → art) creates escalating information. 1.2s feedback flash before post-solve transition. Pass mechanic gives strategic choice."
+            "evidence": "Variable depth: placeholder detection routes to generic 'type · set' message; real lore renders paragraph-formatted. Multi-paragraph support via newline splitting."
           },
           {
             "heuristic": "Scope Discipline",
             "verdict": "pass",
-            "evidence": "Post-solve experience (sharing, detailed stats) correctly deferred to next milestones. Implementation documents 'post-solve layout story will refactor' inline."
+            "evidence": "Stats section correctly deferred ('Stats coming soon'). stats-streaks-persistence is the next milestone. Implementation self-documents the boundary."
           },
           {
             "heuristic": "Reversibility",
             "verdict": "pass",
-            "evidence": "Pure functions in game-engine.ts, clean component boundaries. Inline post-solve view easily extractable to a component."
+            "evidence": "PostSolve is a separate component with clear props interface. share-grid.mjs and lore-blurb.mjs are pure modules. No tight coupling."
           }
         ]
       },
       "verdict": "PRODUCTION_READY",
-      "milestone": "core-game-loop",
-      "confidence": 0.91,
-      "confidence_adjusted": 0.93,
+      "milestone": "post-solve-experience",
+      "confidence": 0.92,
+      "confidence_adjusted": 0.94,
       "env_limited_impact": {
         "excluded_criteria": [
-          "AC-FA1-002",
-          "AC-FA2-005"
+          "AC-FA4-012"
         ],
         "excluded_checks": [
           "Lighthouse performance",
           "a11y automated scan",
-          "visual design review"
+          "visual design review",
+          "live clipboard copy verification"
         ],
-        "rationale": "No deployment URL. Browser-based checks deferred. Code-verified a11y shows ARIA combobox on GuessInput, aria-label on Pass button."
+        "rationale": "No deployment URL. AC-FA4-012 clipboard API requires browser context — code path verified, mock tests pass. ENV_LIMITED does not affect confidence_adjusted (code structure confirmed)."
       },
       "recommended_action": "continue",
       "improvement_items": [
         {
-          "id": "imp-no-share-button",
-          "description": "Post-solve screen has no share functionality. For a Wordle-style game, sharing your score is a core engagement loop.",
-          "evidence": "GameBoard.tsx post-solve section — no share button or clipboard copy",
-          "scope": "future",
-          "milestone_target": "post-solve-experience",
+          "id": "imp-stats-placeholder",
+          "description": "Stats section shows 'Stats coming soon' placeholder. Real stats (win rate, streak) are a key engagement hook for return players.",
+          "evidence": "PostSolve.tsx data-testid='stats-section' — text 'Stats coming soon'",
+          "scope": "future-milestone",
+          "milestone_target": "stats-streaks-persistence",
           "severity": "medium",
-          "grounding": "Core user journey: share grid is a spec requirement in post-solve-experience milestone."
+          "grounding": "Vision: stats-streaks-persistence milestone is next. Stats section is correctly placeholdered until then."
+        },
+        {
+          "id": "imp-settimeout-copied-leak",
+          "description": "setCopied setTimeout not stored in ref — minor unmount risk if user navigates away within 2s after copying.",
+          "evidence": "PostSolve.tsx handleShare() — setTimeout 2000ms not stored in useRef",
+          "scope": "this-milestone",
+          "severity": "low",
+          "grounding": "React best practice: timeouts should be cleaned up on unmount to prevent setState-on-unmounted-component warnings."
         },
         {
           "id": "imp-no-eslint",
-          "description": "No ESLint configuration. Global improvement item (already in global_improvements.json).",
+          "description": "No ESLint configuration. Global improvement item (already in global_improvements.json as global-001).",
           "evidence": "package.json — no eslint devDependency",
           "scope": "global",
           "severity": "low",
@@ -1356,49 +1546,41 @@
       ],
       "resolved_items": [
         {
-          "id": "imp-action-colors-duplication",
-          "resolved_in_cycle": 6,
-          "resolution": "Extracted ACTION_COLORS to module-level const at top of GameBoard.tsx. Both usages reference single declaration. AC-FIX-GB-001/002 verified by tests."
-        },
-        {
-          "id": "imp-settimeout-cleanup",
-          "resolved_in_cycle": 6,
-          "resolution": "Added gameOverTimeoutRef + flashTimeoutRef (useRef). useEffect cleanup calls clearTimeout on both refs on unmount. AC-FIX-GB-003/004/005 verified by tests."
+          "id": "imp-no-share-button",
+          "resolved_in_cycle": 7,
+          "resolution": "Share button implemented in PostSolve.tsx. generateShareText() produces Wordle-style share text. navigator.clipboard.writeText + execCommand fallback. 'Copied!' visual confirmation. AC-FA4-006 through AC-FA4-014 verified by 30 tests."
         }
       ]
     },
-    "health_score": 92,
+    "health_score": 93,
     "health_score_breakdown": {
       "base": 100,
       "deductions": [
         {
-          "reason": "LOW: No ESLint config",
+          "reason": "LOW: No ESLint config (global-001, unchanged)",
           "amount": -1
         },
         {
-          "reason": "LOW: npm audit CRITICAL advisory (inapplicable for static export)",
+          "reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable for static export)",
           "amount": -2
         },
         {
-          "reason": "ENV_LIMITED: No deployment URL",
+          "reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review skipped",
           "amount": -2
         },
         {
-          "reason": "LOW: GameBoard marginally over 300 lines (322, expected cleanup growth)",
+          "reason": "LOW: setCopied setTimeout not cleaned up on unmount",
           "amount": -1
         },
         {
-          "reason": "LOW: No fetch timeout on card-details.json",
-          "amount": -1
-        },
-        {
-          "reason": "LOW: No React error boundary around async fetch",
+          "reason": "LOW: img onError not handled in PostSolve",
           "amount": -1
         }
       ],
-      "wtf_likelihood": "0.3/min",
+      "wtf_likelihood": "0.2/min — clean component boundaries, obvious placeholder, intuitive share flow.",
       "wtf_adjustment": 0,
-      "note": "Cycle 6 re-evaluation. 292/292 tests. 32 ACs pass (26 core-game-loop + 6 fix-gameboard-quality). Health 92 (+3 from cycle 5 89). MEDIUM deductions eliminated: setTimeout cleanup + ACTION_COLORS duplication both resolved. ENV_LIMITED penalty unchanged."
+      "final_score": 93,
+      "note": "Cycle 7 feature-build. 18 post-solve-experience ACs pass. 361/361 tests pass. files_over_300_lines: 1→0. Health 92→93. Prior MEDIUM items resolved (setTimeout, ACTION_COLORS from cycle 6). New minor items: setCopied unmount (LOW), img onError (LOW)."
     },
     "re_walk_requests": []
   },
@@ -1590,18 +1772,27 @@
         "url": "https://mtgordle.vercel.app",
         "timestamp": "2026-04-04T23:04:07.205Z",
         "cycle": 1
+      },
+      {
+        "version": null,
+        "previous": null,
+        "url": "https://mtgordle.vercel.app",
+        "timestamp": "2026-04-04T23:54:27.524Z",
+        "cycle": 1
       }
     ]
   },
   "story_result": {
-    "story_id": "fix-1775343428434-0",
+    "story_id": "lore-blurb-display",
     "outcome": "pass",
     "files_changed": [
-      "src/components/GameBoard.tsx",
-      "tests/gameboard-quality.test.mjs"
+      "src/lib/lore-blurb.mjs",
+      "src/lib/lore-blurb.ts",
+      "src/components/PostSolve.tsx",
+      "tests/lore-blurb.test.mjs"
     ],
-    "tests_added": 12,
-    "tests_passing": 12,
+    "tests_added": 21,
+    "tests_passing": 21,
     "env_limitations": [],
     "symptom": null,
     "diagnosis": null,
@@ -1676,8 +1867,8 @@
     "slot_acquired": true,
     "connection_string": "https://joxusnbbsoqkoocwztmz.supabase.co"
   },
-  "_current_milestone": "core-game-loop",
-  "_current_story": "fix-1775343428434-0",
+  "_current_milestone": "post-solve-experience",
+  "_current_story": "lore-blurb-display",
   "_foundation_phase_complete": true,
   "diff_scope": {
     "frontend": true,
@@ -1687,105 +1878,75 @@
     "docs": false,
     "prompts": false,
     "changed_files": [
+      "src/components/PostSolve.tsx",
       "src/components/GameBoard.tsx",
+      "src/lib/share-grid.mjs",
+      "src/lib/share-grid.ts",
+      "src/lib/lore-blurb.mjs",
+      "src/lib/lore-blurb.ts",
+      "tests/post-solve-layout.test.mjs",
+      "tests/share-grid.test.mjs",
+      "tests/copy-to-clipboard.test.mjs",
+      "tests/lore-blurb.test.mjs",
       "tests/gameboard-quality.test.mjs"
     ],
-    "note": "Cycle 6: Building phase applied fix-gameboard-quality change spec (extracted ACTION_COLORS to module-level const, added useRef+setTimeout cleanup). 2 files changed: 1 frontend component + 1 test file."
+    "note": "Cycle 7: post-solve-experience milestone evaluation. 4 stories completed: post-solve-layout, share-grid-generation, copy-to-clipboard, lore-blurb-display. 11 files changed (4 source, 2 .ts wrappers, 5 test files). All frontend."
   },
   "evaluation_tier": "full",
-  "cycle_type": "re-evaluation",
-  "tier_rationale": "Previous phase was building applying change specs generated by cycle 5 analyzing phase (deepen:improvements decision). Per cycle type rules: previous phase was analyzing → building with change specs → re-evaluation. Full tier applies: all three sub-phases run. Changed files are 2 (GameBoard.tsx + gameboard-quality.test.mjs), both expected from the fix spec.",
+  "cycle_type": "feature-build",
+  "tier_rationale": "Previous milestone (core-game-loop) was promoted by analyzing phase. Current milestone is post-solve-experience — first evaluation of this milestone with 4 new feature stories. Per cycle type rules: feature-build (new features added for a new milestone). Full tier applies: all three sub-phases run.",
   "test_integrity_report": {
     "spec_coverage_pct": 100,
     "po_check_coverage_pct": 100,
-    "total_criteria": 57,
+    "total_criteria": 18,
     "total_po_checks": 0,
-    "total_tests": 292,
+    "total_tests": 361,
     "orphaned_count": 0,
     "orphaned_removed": [],
     "orphaned_renamed": [],
     "stale_regenerated_count": 0,
-    "newly_generated_count": 6,
+    "newly_generated_count": 0,
     "test_suite_pass": true,
     "verdict": "PASS",
     "coverage_complete": true,
-    "_cycle6_recheck": "292/292 pass (live run). fix-gameboard-quality story added 12 tests in tests/gameboard-quality.test.mjs covering AC-FIX-GB-001 through AC-FIX-GB-006. All prior criteria still covered by unchanged test files.",
+    "_cycle7_note": "361/361 pass (live run). post-solve-experience milestone: 18 criteria across 4 stories. All have matching tests. AC-FA4-001–005 in post-solve-layout.test.mjs; AC-FA4-006–011 in share-grid.test.mjs; AC-FA4-012–014 in copy-to-clipboard.test.mjs; AC-FA7-001–004 in lore-blurb.test.mjs. All prior 292 core-game-loop tests also pass (regression-clean).",
     "feature_not_implemented": [],
     "criteria_covered": {
-      "tier-selection": [
-        "AC-FA1-004",
-        "AC-FA1-005",
-        "AC-FA1-006",
-        "AC-FA1-007"
+      "post-solve-layout": [
+        "AC-FA4-001",
+        "AC-FA4-002",
+        "AC-FA4-003",
+        "AC-FA4-004",
+        "AC-FA4-005"
       ],
-      "clue-progression-engine": [
-        "AC-FA1-008",
-        "AC-FA1-009",
-        "AC-FA1-010",
-        "AC-FA1-011",
-        "AC-FA1-012",
-        "AC-FA1-013",
-        "AC-FA1-014",
-        "AC-FA1-015",
-        "AC-FA1-016"
+      "share-grid-generation": [
+        "AC-FA4-006",
+        "AC-FA4-007",
+        "AC-FA4-008",
+        "AC-FA4-009",
+        "AC-FA4-010",
+        "AC-FA4-011"
       ],
-      "fuzzy-autocomplete": [
-        "AC-FA3-001",
-        "AC-FA3-002",
-        "AC-FA3-003",
-        "AC-FA3-004",
-        "AC-FA3-005",
-        "AC-FA3-006"
+      "copy-to-clipboard": [
+        "AC-FA4-012",
+        "AC-FA4-013",
+        "AC-FA4-014"
       ],
-      "pass-mechanic": [
-        "AC-FA1-017",
-        "AC-FA1-018",
-        "AC-FA1-019",
-        "AC-FA1-020",
-        "AC-FA1-021"
-      ],
-      "win-lose-detection": [
-        "AC-FA1-022",
-        "AC-FA1-023",
-        "AC-FA1-024",
-        "AC-FA1-025",
-        "AC-FA1-026"
-      ],
-      "mana-symbol-scaffold": [
-        "AC-FA8-005",
-        "AC-FA8-006",
-        "AC-FA8-007"
-      ],
-      "fix-gameboard-quality": [
-        "AC-FIX-GB-001",
-        "AC-FIX-GB-002",
-        "AC-FIX-GB-003",
-        "AC-FIX-GB-004",
-        "AC-FIX-GB-005",
-        "AC-FIX-GB-006"
-      ],
-      "foundation-carried": [
-        "AC-FA1-001",
-        "AC-FA1-003",
-        "AC-FA2-001 through AC-FA2-016",
-        "AC-FIX-RARITY-001",
-        "AC-FIX-RARITY-002",
-        "AC-FIX-RARITY-003"
+      "lore-blurb-display": [
+        "AC-FA7-001",
+        "AC-FA7-002",
+        "AC-FA7-003",
+        "AC-FA7-004"
       ]
     },
     "env_limited": [
       {
-        "criterion": "AC-FA1-002",
-        "reason": "Vercel deployment requires VERCEL_TOKEN — no CLI auth or token available in this environment",
-        "code_evidence": "vercel.json exists, next.config.mjs has output:'export'"
-      },
-      {
-        "criterion": "AC-FA2-005",
-        "reason": "Build time < 60s cannot be verified by unit tests — requires running 'npm run build:data'",
-        "code_evidence": "scripts/build-card-data.mjs exists; artifact card-details.json (930 cards) proves pipeline ran"
+        "criterion": "AC-FA4-012",
+        "reason": "navigator.clipboard.writeText requires a real browser context — tests mock it with node:test. Fallback path (textarea+execCommand) also code-verified.",
+        "code_evidence": "tests/copy-to-clipboard.test.mjs covers all 3 clipboard ACs; PostSolve.tsx has explicit navigator.clipboard branch + execCommand fallback"
       }
     ],
-    "notes": "Cycle 6 re-evaluation. 292/292 tests pass. 6 new fix-gameboard-quality criteria (AC-FIX-GB-001 through AC-FIX-GB-006) added and covered by tests/gameboard-quality.test.mjs. All 51 prior criteria still covered. No orphaned tests. No stale tests. Build succeeds."
+    "notes": "Cycle 7 feature-build. 361/361 tests pass (live run). 18 post-solve-experience criteria all covered. 4 new test files added this milestone. No orphaned tests. No stale tests. Build succeeds: 8 static routes."
   },
   "code_review_report": {
     "code_quality_baseline": {
@@ -1793,74 +1954,77 @@
       "eslint_warnings": 0,
       "eslint_note": "No ESLint config — linting not configured. TypeScript strict mode: 0 errors. (global improvement item, unchanged)",
       "duplication_pct": 1.5,
-      "duplication_note": "Improved from 2.1% — ACTION_COLORS duplicate object literal removed. Remaining: minor test/source overlap from tier-selection test.",
+      "duplication_note": "Stable at 1.5% — no regressions from post-solve-experience stories. Pure modules (share-grid.mjs, lore-blurb.mjs) add no duplication. Clipboard fallback in PostSolve is a single inlined function, not a duplicate pattern.",
       "circular_deps": 0,
       "dead_code_items": 0,
-      "files_over_300_lines": 1,
+      "files_over_300_lines": 0,
       "files_over_300_lines_detail": [
-        "src/components/GameBoard.tsx (322 lines) — grew from 312 due to useRef declarations + useEffect cleanup (10 lines, expected for this fix)"
+        "No files over 300 lines — GameBoard.tsx shrunk from 322→269 as post-solve code extracted to PostSolve.tsx (195 lines). Largest: GameBoard.tsx 269, CardFrame.tsx 252, GuessInput.tsx 243."
       ],
       "npm_audit": {
         "critical": 1,
         "high": 0,
         "moderate": 0,
         "low": 0,
-        "note": "Next.js version advisory. All critical CVEs target Next.js server-side features (Server Actions, Middleware, Image Optimizer, SSR). Static export with images.unoptimized:true does not deploy any server-side code. Risk is INFORMATIONAL for this deployment model."
+        "note": "Next.js version advisory — unchanged. All critical CVEs target server-side features (Server Actions, Middleware, Image Optimizer, SSR). Static export is unaffected. Risk INFORMATIONAL."
       },
       "degraded": false,
-      "degradation_vs_prev": "No degradation — metrics improved: duplication 2.1% → 1.5% (ACTION_COLORS fix), production risks improved (setTimeout leak resolved). GameBoard line count grew 312 → 322 due to cleanup code (expected, not a regression)."
+      "degradation_vs_prev": "No degradation. Files over 300 lines: 1 → 0 (GameBoard refactored). Duplication stable at 1.5%. All other metrics unchanged."
     },
     "ai_code_audit": {
-      "score": 90,
+      "score": 88,
       "dimensions": {
         "architecture": {
           "score": 90,
           "findings": [
-            "Clean separation maintained: lib/ (pure logic), components/ (React), types/ (types), config.ts (constants). No business logic in UI components.",
-            "ACTION_COLORS extracted to module-level const is a clean DRY improvement — co-located with imports, before the component function."
+            "Clean separation maintained and improved: PostSolve extracted from GameBoard, further reducing GameBoard's concerns. share-grid.mjs and lore-blurb.mjs continue the .mjs/.ts dual-export pattern for Node testability.",
+            "generateShareText() is a pure function with zero side effects — correct placement in lib/. isPlaceholderLore/formatLoreBlurb/getGenericLoreMessage are all pure — correct placement.",
+            "PostSolve receives all state via props from GameBoard — no ambient coupling."
           ]
         },
         "consistency": {
-          "score": 85,
+          "score": 90,
           "findings": [
-            "Consistent camelCase/PascalCase naming. MODULE_LEVEL_CONST follows standard convention. useRef pattern consistent with React best practices."
+            "Consistent with established patterns: .mjs pure logic + .ts re-export wrapper (same as fuzzy-search, share-grid). ACTION_COLORS defined at module-level in PostSolve consistent with GameBoard pattern. CSS custom properties used throughout."
           ]
         },
         "robustness": {
-          "score": 92,
+          "score": 85,
           "findings": [
-            "setTimeout cleanup correctly implemented: both timeout refs (gameOverTimeoutRef, flashTimeoutRef) initialized to null, useEffect cleanup guards with null checks before clearTimeout.",
-            "Empty dependency array on cleanup effect is correct — runs only on unmount. No accidental re-registration.",
-            "GameBoard handles loading, error, and empty pool states unchanged."
+            "Clipboard fallback handles missing navigator.clipboard API and .catch(). execCommand try/catch present.",
+            "isPlaceholderLore null-guards: `if (!blurb || blurb.trim().length === 0) return true`.",
+            "LOW: PostSolve <img> has alt={card.name} (good) but no onError handler — broken image shows empty space. Low risk for curated dataset with known valid Scryfall URLs.",
+            "LOW: setCopied timeout in PostSolve is not stored in a ref — minor unmount risk if user navigates away within 2s (not cleaned up)."
           ]
         },
         "production_risks": {
-          "score": 88,
+          "score": 87,
           "findings": [
-            "RESOLVED: ACTION_COLORS duplicate removed — single module-level const.",
-            "RESOLVED: setTimeout calls now store IDs in useRef, cleaned up on unmount. React unmount warnings eliminated.",
-            "LOW: GameBoard.tsx at 322 lines (marginally over 300 — expected growth from cleanup code).",
-            "LOW: fetch('/data/card-details.json') has no timeout — on slow connections, loading spinner shows indefinitely. (unchanged, LOW risk)"
+            "No hardcoded URLs — BASE_URL imported from config.ts (AC-FA4-014).",
+            "document.execCommand('copy') is deprecated but still the standard browser fallback with no alternative. Acceptable use.",
+            "LOW: setCopied setTimeout not cleaned up on unmount (2s window — low practical risk).",
+            "LOW: img onError not handled in PostSolve (Scryfall URLs are curated and reliable)."
           ]
         },
         "security": {
           "score": 95,
           "findings": [
-            "Static export — no server-side code. No user inputs written to DOM unsafely. No localStorage yet. npm audit CRITICAL is inapplicable for static deployment."
+            "Static export — no server-side code. Share text generated from structured card data (not user input). No user text written to DOM. clipboard.writeText receives generated string only. npm audit CRITICAL inapplicable."
           ]
         },
         "dead_hallucinated": {
-          "score": 90,
+          "score": 88,
           "findings": [
-            "useRef imported and used (gameOverTimeoutRef, flashTimeoutRef). No dead imports. src/lib/fuzzy-search.ts remains an intentional thin re-export wrapper (documented)."
+            "isPlaceholderLore(blurb, cardName) accepts cardName parameter but does not use it — the detection pattern is card-agnostic. Minor dead parameter. Low risk, not confusing in context.",
+            "All exports from share-grid.mjs and lore-blurb.mjs are consumed by PostSolve and tests. share-grid.ts and lore-blurb.ts are intentional thin wrappers (documented pattern)."
           ]
         },
         "tech_debt": {
-          "score": 87,
+          "score": 85,
           "findings": [
-            "ACTION_COLORS duplication resolved.",
-            "setTimeout cleanup resolved.",
-            "No ESLint config — global improvement item (unchanged).",
+            "stats-section is a placeholder ('Stats coming soon') — intentional and documented (stats-streaks-persistence is the next milestone).",
+            "execCommand deprecated fallback — no alternative; acceptable tech debt.",
+            "No ESLint config — global improvement item (unchanged, tracked).",
             "No React error boundary around GameBoard async fetch (unchanged, LOW)."
           ]
         }
@@ -1874,10 +2038,14 @@
       "carried_forward_from_cycle": 4
     },
     "changed_files": [
+      "src/components/PostSolve.tsx",
       "src/components/GameBoard.tsx",
-      "tests/gameboard-quality.test.mjs"
+      "src/lib/share-grid.mjs",
+      "src/lib/share-grid.ts",
+      "src/lib/lore-blurb.mjs",
+      "src/lib/lore-blurb.ts"
     ],
-    "evaluator_observations": "Cycle 6 re-evaluation. Both improvement items from cycle 5 analyzing phase (imp-action-colors-duplication, imp-settimeout-cleanup) resolved. Architecture 90, Robustness 92, Production Risks 88, Tech Debt 87. No critical findings. Code quality improved: duplication 2.1% → 1.5%, production risks resolved. Score 90/100 (up from 85 in cycle 5)."
+    "evaluator_observations": "Cycle 7 feature-build — post-solve-experience milestone. 4 stories: post-solve-layout, share-grid-generation, copy-to-clipboard, lore-blurb-display. Architecture continues to improve: GameBoard shrunk (269 lines, down from 322), PostSolve extracted cleanly (195 lines), two pure logic modules added. Score 88/100. 0 critical findings. files_over_300_lines: 1 → 0 (improvement). Minor items: setCopied timeout not cleaned up (2s unmount risk, LOW), unused cardName param in isPlaceholderLore (LOW)."
   },
   "evaluator_observations": [
     {
@@ -1988,28 +2156,50 @@
       "reasoning": "Prior evaluation_report.po exists for core-game-loop (cycle 4). Previous confidence 0.87 ≥ 0.8. active_spec not updated by analyzing phase. None of the three dual-voice eligibility conditions are met.",
       "alternatives_considered": [],
       "confidence": 1
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "7",
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "milestone": "post-solve-experience",
+      "decision": "Evaluation complete. Verdict: QA PASS + PO PRODUCTION_READY. All gates pass. Routing to analyzing.",
+      "reasoning": "Cycle 7 feature-build — post-solve-experience milestone. 4 stories completed: post-solve-layout, share-grid-generation, copy-to-clipboard, lore-blurb-display. Sub-Phase 0 (Test Integrity): PASS — 361/361 tests pass (live run). 18 post-solve-experience criteria covered across 4 test files. No orphans. No stale. Sub-Phase 1 (QA Gate): PASS — 18 ACs pass, health 93, 0 critical findings. AI code audit 88/100. files_over_300_lines: 1→0 (improvement). Sub-Phase 2 (PO Review): PRODUCTION_READY — confidence 0.92 (adjusted 0.94). Dual-voice enabled (first full evaluation of post-solve-experience feature area). imp-no-share-button from core-game-loop PO resolved. One LOW this-milestone item (imp-settimeout-copied-leak). Routing to analyzing for milestone promotion decision.",
+      "alternatives_considered": [
+        "Skip PO Review (carry forward core-game-loop verdict) — rejected: this is the first evaluation of post-solve-experience milestone, not a qa-fix. Full tier required.",
+        "Route to milestone-fix for imp-settimeout-copied-leak — rejected: LOW severity, no test failure, not a broken AC. Quality improvement, not a blocking bug."
+      ],
+      "confidence": 0.98
+    },
+    {
+      "phase": "evaluation-orchestrator",
+      "cycle": "7",
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "decision": "Dual-voice PO Review enabled for post-solve-experience.",
+      "reasoning": "This is the first full evaluation for post-solve-experience feature area — no prior evaluation_report.po exists for this milestone. Dual-voice eligibility condition 1 met.",
+      "alternatives_considered": [],
+      "confidence": 1
     }
   ],
   "next_phase": "analyzing",
-  "next_phase_rationale": "Cycle 6 re-evaluation (core-game-loop milestone): all gates pass. fix-gameboard-quality change spec implemented. Test Integrity PASS (292/292 live run, 6 new AC-FIX-GB criteria covered). QA Gate PASS (32 ACs pass, health 92, 0 failures). PO Review PRODUCTION_READY (confidence_adjusted 0.93 ≥ 0.9 PROMOTE threshold — both this-milestone improvement items resolved). Routing to analyzing for milestone promotion decision.",
+  "next_phase_rationale": "Cycle 7 feature-build (post-solve-experience milestone): all gates pass. Sub-Phase 0 (Test Integrity): PASS — 361/361 tests pass. 18 post-solve-experience criteria covered by 4 test files. No orphans, no stale tests. Sub-Phase 1 (QA Gate): PASS — 18 ACs pass (code-verified). Health 93. 0 failures. 0 critical findings. Sub-Phase 2 (PO Review): PRODUCTION_READY — confidence 0.92 (adjusted 0.94). imp-no-share-button resolved. Routing to analyzing for milestone promotion decision.",
   "review_readiness_dashboard": {
     "test_integrity": {
       "passed": true,
       "timestamp": "2026-04-05T00:00:00.000Z",
-      "milestone": "core-game-loop",
-      "note": "Cycle 6 re-evaluation: 292/292 tests pass (live run). 6 new AC-FIX-GB criteria added and covered by tests/gameboard-quality.test.mjs. No orphans. No stale tests."
+      "milestone": "post-solve-experience",
+      "note": "Cycle 7 feature-build: 361/361 tests pass (live run). 18 post-solve-experience criteria covered across 4 test files. No orphans. No stale tests. 292 core-game-loop tests all still pass (regression-clean)."
     },
     "qa_gate": {
       "passed": true,
       "timestamp": "2026-04-05T00:00:00.000Z",
-      "milestone": "core-game-loop",
-      "note": "Cycle 6 re-evaluation: 32 ACs pass (26 core-game-loop + 6 fix-gameboard-quality, code-verified). Health 92. 0 failures. Both prior MEDIUM issues resolved."
+      "milestone": "post-solve-experience",
+      "note": "Cycle 7 feature-build: 18 ACs pass (AC-FA4-001 through AC-FA4-014 + AC-FA7-001 through AC-FA7-004, code-verified). Health 93. 0 failures. 0 critical findings."
     },
     "ai_code_audit": {
       "passed": true,
       "timestamp": "2026-04-05T00:00:00.000Z",
-      "score": 90,
-      "note": "Cycle 6 full run: 90/100. Architecture 90, Robustness 92, Production risks 88, Security 95, Consistency 85, Dead/hallucinated 90, Tech debt 87. 0 critical findings. Improved from 82 (cycle 4) by resolving MEDIUM items."
+      "score": 88,
+      "note": "Cycle 7 full run: 88/100. Architecture 90, Consistency 90, Robustness 85, Production risks 87, Security 95, Dead/hallucinated 88, Tech debt 85. 0 critical findings. Minor: setCopied unmount, unused cardName param."
     },
     "security_review": {
       "passed": true,
@@ -2019,121 +2209,67 @@
     "a11y_review": {
       "passed": true,
       "timestamp": "2026-04-05T00:00:00.000Z",
-      "note": "ENV_LIMITED — no deployment URL. Code inspection: ARIA combobox on GuessInput, aria-label on Pass button, semantic headings in GameBoard. No WCAG A violations found in code review."
+      "note": "ENV_LIMITED — no deployment URL. Code inspection: PostSolve share button has visible text label, card art has alt={card.name}, semantic h2 heading. No WCAG A violations found in code review."
     },
     "design_review": {
       "passed": true,
       "timestamp": "2026-04-05T00:00:00.000Z",
-      "note": "ENV_LIMITED — no deployment URL. Code inspection: CSS custom properties used consistently, 480px centered layout, responsive spacing."
+      "note": "ENV_LIMITED — no deployment URL. Code inspection: CSS custom properties, semantic score colors (correct/wrong), card art 300px max-width, lore blurb 380px max-width."
     },
     "po_review": {
       "passed": true,
       "timestamp": "2026-04-05T00:00:00.000Z",
-      "milestone": "core-game-loop",
-      "note": "PRODUCTION_READY — confidence 0.91 (adjusted 0.93). Cycle 6: both this-milestone improvement items resolved (imp-action-colors-duplication, imp-settimeout-cleanup). No remaining this-milestone gaps. confidence_adjusted 0.93 ≥ 0.9 PROMOTE threshold."
+      "milestone": "post-solve-experience",
+      "note": "PRODUCTION_READY — confidence 0.92 (adjusted 0.94). imp-no-share-button resolved. Remaining items: imp-stats-placeholder (future-milestone, expected), imp-settimeout-copied-leak (LOW this-milestone), imp-no-eslint (global)."
     }
   },
   "dual_voice_po_review": false,
   "analysis_recommendation": {
-    "action": "deepen:improvements",
-    "rationale": "PO verdict is PRODUCTION_READY but confidence_adjusted 0.87 is below 0.9 PROMOTE threshold. Two validated this-milestone improvement items remain (imp-action-colors-duplication, imp-settimeout-cleanup), both concentrated in GameBoard.tsx. These are minor code quality fixes that should converge in one cycle. No structural issues, no regressions. Deepen to address improvements before promotion."
+    "action": "promote",
+    "rationale": "All PROMOTE conditions met for core-game-loop milestone. PO verdict PRODUCTION_READY, confidence_adjusted 0.93 (>= 0.9 threshold), zero quality gaps, both prior improvement items resolved (ACTION_COLORS extraction + setTimeout cleanup verified by 6 new ACs), health score improved 89→92, 292/292 tests passing. No remaining this-milestone improvement items. Remaining improvement items are future-scope (share button → post-solve-experience) and global (ESLint → already in global_improvements.json)."
   },
   "analysis_result": {
     "phase": "analyzing",
-    "cycle": "5",
-    "timestamp": "2026-04-04T00:00:00.000Z",
+    "cycle": 6,
+    "timestamp": "2026-04-05T00:00:00.000Z",
     "confidence_trend": {
-      "current": 0.87,
-      "previous": 0.9,
-      "delta": -0.03,
-      "direction": "regressing",
+      "current": 0.93,
+      "previous": 0.87,
+      "delta": 0.06,
+      "direction": "improving",
       "consecutive_same_direction": 1,
       "flags": [
         "none"
       ],
-      "note": "Previous confidence (0.90) was for foundation-data-pipeline milestone. Current (0.87) is the first evaluation of core-game-loop — different milestones, so delta is cross-milestone, not a true regression signal. First cycle for this milestone."
+      "note": "No confidence_history key available. Previous confidence (0.87) taken from cycle 5 analysis_result reasoning. Delta +0.06 is healthy improvement from deepen:improvements cycle resolving both code quality items."
     },
-    "recommendation": "deepen:improvements",
-    "recommendation_reasoning": "PROMOTE conditions NOT fully met. (1) PO verdict: PRODUCTION_READY — satisfied. (2) confidence_adjusted: 0.87 — BELOW 0.9 threshold. (3) Zero critical quality gaps — satisfied. (4) Confidence trend: first evaluation of core-game-loop milestone, no regression within milestone. (5) Two validated this-milestone improvement items remain: imp-action-colors-duplication (low, DRY violation) and imp-settimeout-cleanup (medium, React unmount leak). Both are in GameBoard.tsx and are straightforward implementation_bug fixes. (6) Global item (imp-no-eslint) already in global_improvements.json. (7) Future item (imp-no-share-button) correctly scoped to post-solve-experience milestone — dropped. (8) Decomposition health: no structural issues. (9) No escalations. Recommendation: deepen:improvements to fix the two code quality items in GameBoard.tsx. Expected to converge in one cycle — both are mechanical fixes with clear before/after states.",
+    "recommendation": "promote",
+    "recommendation_reasoning": "All five PROMOTE conditions are satisfied: (1) PO verdict is PRODUCTION_READY. (2) confidence_adjusted is 0.93, exceeding the 0.9 threshold — the +0.06 improvement from cycle 5's 0.87 is attributable to resolving the two improvement items (ACTION_COLORS duplication, setTimeout cleanup) that were dragging code quality scores. (3) Zero quality gaps — no items in fix_tasks, no critical findings in AI code audit. (4) Confidence trend is improving, not regressing. (5) No remaining this-milestone improvement items — both imp-action-colors-duplication and imp-settimeout-cleanup appear in resolved_items with cycle 6 verification. The two remaining improvement_items are out of scope: imp-no-share-button is future-milestone (post-solve-experience), and imp-no-eslint is global (already persisted as global-001). Health score rose from 89 to 92 with MEDIUM deductions eliminated. 292/292 tests pass across 57 criteria. The deepen:improvements cycle (cycle 5→6) converged in one iteration as predicted.",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
       "schema_debt": [],
       "silent_degradation": [],
-      "restructure_scope": "0% — no restructuring needed",
+      "restructure_scope": "0% — no restructure needed",
       "structural_issues_found": false
     },
-    "root_cause_analysis": [
-      {
-        "gap_id": "imp-action-colors-duplication",
-        "gap_description": "ACTION_COLORS object defined twice in GameBoard.tsx (lines 179 and 234). Should be extracted to a module-level const.",
-        "root_cause": "implementation_bug",
-        "classification_confidence": 0.95,
-        "evidence": "DRY violation — identical object literal duplicated within the same file. No spec ambiguity or missing context; this is a simple oversight during incremental development (pass-mechanic and win-lose-detection stories both added action rendering, each defining its own copy).",
-        "related_factory_decision": null,
-        "related_factory_question": null,
-        "qa_coverage_gap": true
-      },
-      {
-        "gap_id": "imp-settimeout-cleanup",
-        "gap_description": "Two setTimeout calls in GameBoard (game-over delay, feedback flash clear) are not cleaned up on unmount. React will warn about state updates on unmounted components.",
-        "root_cause": "implementation_bug",
-        "classification_confidence": 0.95,
-        "evidence": "Standard React pattern (useEffect cleanup or useRef for timeout IDs) was not applied. Factory decision explicitly chose 1.2s delay for feedback flash visibility but did not implement cleanup. No spec ambiguity — this is a well-known React best practice that should have been followed.",
-        "related_factory_decision": "Post-solve transition via gameOver state with 1.2s delay for feedback flash visibility",
-        "related_factory_question": null,
-        "qa_coverage_gap": true
-      }
-    ],
+    "root_cause_analysis": [],
     "cross_cycle_patterns": [
       {
-        "pattern": "Builder implements ahead of milestone scope when foundation is strong",
-        "frequency": 1,
-        "systemic_cause": "Foundation phase produced solid infrastructure (types, components, data pipeline) enabling the builder to advance into core-game-loop stories (tier-selection, clue-progression-engine, fuzzy-autocomplete) during foundation milestone",
-        "recommended_action": "Recognize pre-built stories when evaluating core-game-loop milestone to avoid redundant work. The implemented[] array already tracks these."
+        "pattern": "deepen:improvements cycles converge quickly for mechanical code quality fixes",
+        "frequency": 2,
+        "systemic_cause": "The QA code audit identifies code quality issues (robustness, production_risks dimensions) but does not promote them to fix_tasks. The PO improvement_items pipeline catches them instead, requiring an extra deepen cycle.",
+        "recommended_action": "Consider calibrating the QA-to-fix-task threshold for code quality items flagged by the AI code audit at MEDIUM severity or above. This would allow them to be fixed in the QA-fix phase rather than requiring a full deepen:improvements cycle. Not blocking — the current pipeline works, just adds one cycle of latency."
       }
     ],
-    "change_spec_briefs": [
-      {
-        "gap_id": "imp-action-colors-duplication",
-        "root_cause": "implementation_bug",
-        "priority": "low",
-        "affected_screens": [
-          "Game Board"
-        ],
-        "affected_journeys": [
-          "Daily game loop (Simple tier)",
-          "Daily game loop (Cryptic tier)"
-        ],
-        "what_good_looks_like": "ACTION_COLORS defined once as a module-level const at the top of GameBoard.tsx (or extracted to a shared constants file). Both usages reference the single const.",
-        "requires_design_mode": false,
-        "approach_hint": "Extract ACTION_COLORS to a const at module scope in GameBoard.tsx. Remove the duplicate definition. Both getRoundActions rendering and post-solve history dots should reference the same const.",
-        "do_not_repeat": []
-      },
-      {
-        "gap_id": "imp-settimeout-cleanup",
-        "root_cause": "implementation_bug",
-        "priority": "medium",
-        "affected_screens": [
-          "Game Board"
-        ],
-        "affected_journeys": [
-          "Daily game loop (Simple tier)",
-          "Daily game loop (Cryptic tier)"
-        ],
-        "what_good_looks_like": "All setTimeout calls in GameBoard have corresponding cleanup via useRef to store timeout IDs and clearTimeout in useEffect cleanup functions. No React warnings about state updates on unmounted components when navigating away mid-game.",
-        "requires_design_mode": false,
-        "approach_hint": "Use useRef to store timeout IDs from setTimeout. Add useEffect cleanup that calls clearTimeout on both the game-over delay and feedback flash timeout refs. Test: verify no React warnings when component unmounts during active timeouts.",
-        "do_not_repeat": []
-      }
-    ],
+    "change_spec_briefs": [],
     "escalations": [],
     "improvement_routing": {
-      "this_milestone_count": 2,
+      "this_milestone_count": 0,
       "global_persisted_count": 0,
       "future_dropped_count": 1,
       "convergence_guardrail_triggered": false,
-      "deepen_improvements_cycle_count": 0
+      "deepen_improvements_cycle_count": 1
     }
   },
   "phase_decisions": [
@@ -2226,6 +2362,45 @@
       "timestamp": "2026-04-04T00:00:00.000Z",
       "decision": "Both improvement items classified as implementation_bug with QA coverage gap noted",
       "reasoning": "ACTION_COLORS duplication and setTimeout cleanup are standard code quality patterns (DRY, React cleanup) that should have been caught during QA. The AI code audit DID flag both (robustness 80, production_risks 76) but they were not promoted to fix_tasks. This suggests the QA-to-fix pipeline threshold for code quality items may need calibration — but that's a systemic observation, not blocking for this cycle."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 6,
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "decision": "No circuit breaker detected — normal post-milestone analysis for core-game-loop re-evaluation",
+      "reasoning": "No _circuit_breaker flag in cycle_context.json. Proceeding with standard PROMOTE evaluation."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 6,
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "decision": "Promote core-game-loop milestone",
+      "reasoning": "All PROMOTE conditions satisfied: PO PRODUCTION_READY, confidence_adjusted 0.93 >= 0.9, zero quality gaps, improving trend (+0.06 from cycle 5), zero remaining this-milestone improvement items (both resolved in cycle 6). The deepen:improvements cycle converged in one iteration — ACTION_COLORS and setTimeout cleanup are verified by 6 new ACs (AC-FIX-GB-001 through AC-FIX-GB-006) and 292/292 tests pass.",
+      "alternatives_considered": [
+        "Deepen further — rejected: no remaining quality gaps or improvement items to address. Confidence at 0.93 exceeds threshold.",
+        "Notify-human about ENV_LIMITED checks (Lighthouse, a11y, design review) — rejected: these are excluded from confidence_adjusted by design. Code-based a11y inspection shows proper ARIA attributes. ENV_LIMITED penalty is structural (no deploy URL), not a quality concern."
+      ]
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 6,
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "decision": "imp-no-share-button dropped as future-milestone scope",
+      "reasoning": "Share functionality belongs to post-solve-experience milestone. Will be discovered when that milestone runs. Already dropped in cycle 5 — same decision holds."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 6,
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "decision": "imp-no-eslint already persisted as global-001 — no duplicate write needed",
+      "reasoning": "global_improvements.json already contains global-001. No new global items discovered."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 6,
+      "timestamp": "2026-04-05T00:00:00.000Z",
+      "decision": "Systemic observation: QA-to-fix pipeline threshold may need calibration for code quality items",
+      "reasoning": "Both improvement items in cycle 5 were implementation_bug classified with QA coverage gap noted. The AI code audit flagged both at MEDIUM severity but they were not promoted to fix_tasks — requiring a deepen:improvements cycle instead. This pattern occurred once (foundation rarity fix) and once (gameboard quality). Two occurrences across 6 cycles is not yet a strong pattern, but worth monitoring. If it recurs in the next milestone, a systemic fix to the QA threshold is warranted."
     }
   ],
   "change_specs_pending": [
