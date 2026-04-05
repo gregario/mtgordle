@@ -464,6 +464,25 @@
       "tests_added": 14,
       "tests_passing": 14,
       "notes": "Replaced stats-section placeholder with live stats panel: 4 stat tiles (Played, Win%, Current, Max) + ScoreDistributionChart with today score highlighted (1..6 wins as numeric string, losses as \"X\"). On mount, PostSolve loads PlayerStats from localStorage, records the completed game via recordGameResult (guarded by isDuplicateGame for daily mode; practice is a silent no-op at the engine level), and persists via saveStats. Accepts new tier: GameTier prop so stats are scoped to the active pool. 441 total tests passing (14 new). Build succeeds: 8 static routes, 102 kB first-load JS on play pages."
+    },
+    {
+      "task": "fix-1775382071585-0",
+      "acceptance_criteria": [
+        "AC-FIX-STATS-SV-001",
+        "AC-FIX-STATS-SV-002",
+        "AC-FIX-STATS-SV-003",
+        "AC-FIX-STATS-SV-004",
+        "AC-FIX-STATS-SV-005",
+        "AC-FIX-STATS-SV-006"
+      ],
+      "files_changed": [
+        "src/lib/stats-engine.mjs",
+        "src/lib/stats-engine.ts",
+        "src/types/card.ts",
+        "tests/stats-engine.test.mjs"
+      ],
+      "tests_added": 6,
+      "tests_passing": 447
     }
   ],
   "skipped": [
@@ -1271,6 +1290,60 @@
       "confidence": "medium",
       "affects": [
         "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Added STATS_SCHEMA_VERSION constant ('1.0') alongside _schema_version field on PlayerStats",
+      "context": "Fix story requires safe-migration schema versioning for localStorage stats blob",
+      "alternatives_considered": [
+        "Hardcode string '1.0' in two places (getDefaultPlayerStats + loadStats check) — drift risk",
+        "Store version inside each tier — couples version bumps to per-tier schema changes, noisier"
+      ],
+      "rationale": "Single exported constant keeps the current version as one source of truth consumed by both the default factory and the loadStats guard. Top-level placement means legacy tier-key iteration (Object.keys/entries on tiers) would already skip it, but all consumers address tiers explicitly via stats[tier] so there is no collision risk.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs",
+        "src/lib/stats-engine.ts",
+        "src/types/card.ts"
+      ]
+    },
+    {
+      "decision": "loadStats treats missing OR mismatched _schema_version identically: return getDefaultPlayerStats()",
+      "context": "AC-FIX-STATS-SV-003 + AC-FIX-STATS-SV-004 require safe fallback for both legacy (missing) and unknown/future versions",
+      "alternatives_considered": [
+        "Attempt in-place migration for known legacy shapes — no legacy migration logic exists yet and no bump has happened",
+        "Throw on version mismatch — breaks UX, first-load wipes should be silent"
+      ],
+      "rationale": "Both cases are \"we cannot trust this blob\" so both drop to defaults. Symmetry keeps loadStats trivially auditable: one equality check. When a real migration is needed (2.0), this becomes the single insertion point for a switch.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs"
+      ]
+    },
+    {
+      "decision": "PlayerStats._schema_version typed as optional string (not literal '1.0')",
+      "context": "Persisted blobs across versions may carry arbitrary version strings; a literal would force type assertions at every boundary",
+      "alternatives_considered": [
+        "_schema_version: '1.0' literal — forces casts when reading unknown JSON",
+        "Required field — breaks the existing optional-consumer contract (PostSolve builds PlayerStats from getDefault and tier writes; value will always be present at runtime but the type should reflect that older blobs may lack it)"
+      ],
+      "rationale": "Optional string matches the loadStats contract: the field may be absent (legacy) or any string (future). The fallback path guarantees anything that survives loadStats is version-stamped, so callers do not need to defend against absence.",
+      "confidence": "high",
+      "affects": [
+        "src/types/card.ts"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for fix-1775382071585-0 (schema-version fix)",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 1 EXTEND (stats-engine.mjs — add constant, field on default, version check in loadStats), 1 EXTEND (card.ts — add optional _schema_version field), 1 EXTEND (stats-engine.ts — re-export new constant), 1 EXTEND (stats-engine.test.mjs — add 6 schema-version tests). 0 BUILD, 0 REUSE, no new modules. Existing dual-export pattern, existing recordGameResult spread semantics preserve the new field automatically.",
+      "confidence": "high",
+      "affects": [
+        "src/lib/stats-engine.mjs",
+        "src/lib/stats-engine.ts",
+        "src/types/card.ts",
+        "tests/stats-engine.test.mjs"
       ]
     }
   ],
@@ -2130,18 +2203,17 @@
     ]
   },
   "story_result": {
-    "story_id": "stats-post-solve-integration",
+    "story_id": "fix-1775382071585-0",
     "outcome": "pass",
     "files_changed": [
-      "src/components/PostSolve.tsx",
-      "src/components/GameBoard.tsx",
-      "tests/stats-post-solve-integration.test.mjs"
+      "src/lib/stats-engine.mjs",
+      "src/lib/stats-engine.ts",
+      "src/types/card.ts",
+      "tests/stats-engine.test.mjs"
     ],
-    "tests_added": 14,
-    "tests_passing": 14,
-    "env_limitations": [
-      "Structural tests only — node:test harness has no React runtime, so assertions inspect JSX source rather than rendered output. Consistent with post-solve-layout.test.mjs and score-distribution.test.mjs."
-    ]
+    "tests_added": 6,
+    "tests_passing": 447,
+    "env_limitations": []
   },
   "qa_fix_results": {
     "phase": "milestone-fix",
@@ -2210,7 +2282,7 @@
     "connection_string": "https://joxusnbbsoqkoocwztmz.supabase.co"
   },
   "_current_milestone": "stats-streaks-persistence",
-  "_current_story": "stats-post-solve-integration",
+  "_current_story": "fix-1775382071585-0",
   "_foundation_phase_complete": true,
   "diff_scope": {
     "frontend": true,
