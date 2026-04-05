@@ -53,3 +53,4 @@ vision.json
 
 # public/data IS committed (generated static card data)
 # !public/data/
+.gstack/

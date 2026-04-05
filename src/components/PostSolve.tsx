@@ -14,6 +14,7 @@ import {
   isDuplicateGame,
   getDefaultPlayerStats,
   getWinPercentage,
+  saveLastGameResult,
 } from '@/lib/stats-engine';
 import ScoreDistributionChart from '@/components/ScoreDistributionChart';
 
@@ -79,8 +80,17 @@ export default function PostSolve({
         saveStats(next, storage);
       }
     }
+    // Save last game result for daily mode so revisits show the completed state
+    if (mode === 'daily') {
+      saveLastGameResult(tier, {
+        puzzleNumber,
+        outcome,
+        roundActions,
+        cardOracleId: card.oracle_id,
+      }, storage);
+    }
     setStats(next);
-  }, [tier, mode, puzzleNumber, outcome.won, roundActions]);
+  }, [tier, mode, puzzleNumber, outcome.won, roundActions, outcome, card.oracle_id]);
 
   const tierStats = stats[tier];
   const highlightScore = outcome.won && outcome.score !== null ? String(outcome.score) : 'X';

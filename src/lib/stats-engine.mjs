@@ -133,3 +133,48 @@ export function loadStats(storage) {
 export function saveStats(stats, storage) {
   storage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
 }
+
+// ── Last-game-result storage (for restoring PostSolve on revisit) ────────
+
+export const LAST_GAME_STORAGE_KEY = 'mtgordle-last-game';
+
+/**
+ * Save the most recent completed game per tier so revisits show the
+ * completed state instead of starting a new puzzle.
+ *
+ * @param {string} tier — 'simple' | 'cryptic'
+ * @param {object} result — { puzzleNumber, outcome, roundActions, cardOracleId }
+ * @param {Pick<Storage, 'getItem' | 'setItem'>} storage
+ */
+export function saveLastGameResult(tier, result, storage) {
+  let all = {};
+  try {
+    const raw = storage.getItem(LAST_GAME_STORAGE_KEY);
+    if (raw) all = JSON.parse(raw) || {};
+  } catch {}
+  all[tier] = result;
+  storage.setItem(LAST_GAME_STORAGE_KEY, JSON.stringify(all));
+}
+
+/**
+ * Load the last completed game for a tier. Returns null if none or if the
+ * stored puzzle doesn't match today's puzzle.
+ *
+ * @param {string} tier
+ * @param {number} currentPuzzleNumber
+ * @param {Pick<Storage, 'getItem'>} storage
+ * @returns {object | null}
+ */
+export function loadLastGameResult(tier, currentPuzzleNumber, storage) {
+  try {
+    const raw = storage.getItem(LAST_GAME_STORAGE_KEY);
+    if (!raw) return null;
+    const all = JSON.parse(raw);
+    const entry = all?.[tier];
+    if (!entry) return null;
+    if (entry.puzzleNumber !== currentPuzzleNumber) return null;
+    return entry;
+  } catch {
+    return null;
+  }
+}

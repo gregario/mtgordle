@@ -17,6 +17,7 @@ import CardFrame from '@/components/CardFrame';
 import GuessInput from '@/components/GuessInput';
 import PostSolve from '@/components/PostSolve';
 import { validateGuess } from '@/lib/guess-validator.mjs';
+import { loadLastGameResult } from '@/lib/stats-engine';
 
 const ACTION_COLORS = { gray: '#9ca3af', red: 'var(--color-wrong)', green: 'var(--color-correct)' } as const;
 
@@ -69,6 +70,20 @@ export default function GameBoard({ tier, mode }: GameBoardProps) {
           const cIdx = getCardIndex(pNum);
           setPuzzleNumber(pNum);
           selectedCard = filtered[cIdx % filtered.length];
+
+          // Restore completed state if this puzzle was already played today
+          if (typeof window !== 'undefined') {
+            const prior = loadLastGameResult(tier, pNum, window.localStorage);
+            if (prior && prior.cardOracleId === selectedCard.oracle_id) {
+              setCard(selectedCard);
+              setRoundActions(prior.roundActions);
+              setOutcome(prior.outcome);
+              setSolved(prior.outcome.won);
+              setGameOver(true);
+              setLoading(false);
+              return;
+            }
+          }
         } else {
           // Practice: random card
           const randomIdx = Math.floor(Math.random() * filtered.length);
