@@ -483,6 +483,51 @@
       ],
       "tests_added": 6,
       "tests_passing": 447
+    },
+    {
+      "task": "practice-card-pool",
+      "acceptance_criteria": [
+        "AC-FA6-001",
+        "AC-FA6-002",
+        "AC-FA6-003"
+      ],
+      "files_changed": [
+        "tests/practice-card-pool.test.mjs"
+      ],
+      "tests_added": 7,
+      "tests_passing": 7
+    },
+    {
+      "task": "practice-mode-flow",
+      "acceptance_criteria": [
+        "AC-FA6-004",
+        "AC-FA6-005",
+        "AC-FA6-006",
+        "AC-FA6-007",
+        "AC-FA6-008"
+      ],
+      "files_changed": [
+        "src/components/GameBoard.tsx",
+        "src/components/PostSolve.tsx",
+        "tests/practice-mode-flow.test.mjs"
+      ],
+      "tests_added": 16,
+      "tests_passing": 16
+    },
+    {
+      "task": "practice-mode-ui",
+      "acceptance_criteria": [
+        "AC-FA6-009",
+        "AC-FA6-010",
+        "AC-FA6-011",
+        "AC-FA6-012"
+      ],
+      "files_changed": [
+        "src/components/PostSolve.tsx",
+        "tests/practice-mode-ui.test.mjs"
+      ],
+      "tests_added": 10,
+      "tests_passing": 10
     }
   ],
   "skipped": [
@@ -1345,6 +1390,94 @@
         "src/types/card.ts",
         "tests/stats-engine.test.mjs"
       ]
+    },
+    {
+      "decision": "practice-card-pool story already fully implemented during foundation phase \u2014 added AC-FA6-labeled tests for story-level traceability",
+      "context": "Story dispatched for practice-card-pool with 3 ACs (AC-FA6-001/002/003). The foundation phase had already built the 100 simple-practice + 100 cryptic-practice entries in public/data/card-details.json with zero overlap against daily pools. Existing foundation.test.mjs covered this under AC-FA2-008/009/013 labels, but no AC-FA6 traceability existed.",
+      "alternatives_considered": [
+        "No new code/tests \u2014 rely on AC-FA2-008/009/013 in foundation.test.mjs (loses AC-FA6 traceability for the story-level evaluator)",
+        "Rebuild practice pool data from scratch (wasteful, identical output)"
+      ],
+      "rationale": "Search Before Building audit: all 3 ACs are REUSE against existing data + foundation tests. Added tests/practice-card-pool.test.mjs with 7 AC-FA6-labeled tests asserting pool size (100 each), pool disjointness against the corresponding daily pool (not just global uniqueness), and presence + required-field structure in card-details.json. This gives the story-level PO Review explicit AC traceability without duplicating data or rebuilding anything. Zero production code changed.",
+      "confidence": "high",
+      "affects": [
+        "tests/practice-card-pool.test.mjs",
+        "public/data/card-details.json"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for practice-card-pool story",
+      "context": "Pre-implementation code reuse analysis",
+      "alternatives_considered": [],
+      "rationale": "Found: 0 BUILD, 1 REUSE (public/data/card-details.json already contains 100 simple-practice + 100 cryptic-practice cards with zero overlap against daily pools, built during foundation phase), 0 EXTEND, 0 REFACTOR. Added 7 AC-FA6-labeled tests as the only new artifact \u2014 no production code changes.",
+      "confidence": "high",
+      "affects": [
+        "public/data/card-details.json",
+        "tests/practice-card-pool.test.mjs"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for practice-mode-flow story",
+      "context": "Pre-implementation code reuse analysis for AC-FA6-004 through AC-FA6-008",
+      "alternatives_considered": [],
+      "rationale": "Found: 1 BUILD (Play Again button + reset handler), 0 EXTEND, 4 REUSE (random card selection, 6-round mechanic, tier/practice labeling, and GameBoard shared across modes were all already implemented). Only new production code: handlePlayAgain/resetKey in GameBoard and the play-again-button in PostSolve, guarded by mode==='practice'. New tests under tests/practice-mode-flow.test.mjs add AC-FA6-004..008 traceability.",
+      "confidence": "high",
+      "affects": [
+        "src/components/GameBoard.tsx",
+        "src/components/PostSolve.tsx",
+        "tests/practice-mode-flow.test.mjs"
+      ]
+    },
+    {
+      "decision": "Reset via resetKey state + single useEffect rather than unmount/remount",
+      "context": "Needed to let the player start a new practice game without leaving the page (AC-FA6-006, AC-FA6-008)",
+      "alternatives_considered": [
+        "Bump a `key` prop on GameBoard from the page to force remount (requires plumbing state up to the practice page, making the page client-side)",
+        "window.location.reload() (full page reload \u2014 jarring, wipes stats load)",
+        "Duplicate load logic into a separate resetAndLoad function (duplication)"
+      ],
+      "rationale": "Adding a resetKey number to the existing load useEffect's dep array cleanly re-runs card selection while keeping the component mounted. handlePlayAgain clears all per-game state in one place; resetKey increments trigger the fetch. Keeps the practice page server-rendered (no client boundary change) and avoids duplicating the fetch logic.",
+      "confidence": "high",
+      "affects": [
+        "src/components/GameBoard.tsx"
+      ]
+    },
+    {
+      "decision": "Search Before Building audit for practice-mode-ui story",
+      "context": "Pre-implementation code reuse analysis for AC-FA6-009..012",
+      "alternatives_considered": [],
+      "rationale": "Found: 2 REUSE (AC-FA6-010 recordGameResult already no-ops for practice via stats-engine.mjs; AC-FA6-011 card-art + lore-blurb already rendered unconditionally in PostSolve), 1 EXTEND (AC-FA6-009 gate share-button on mode !== 'practice'), 1 BUILD (AC-FA6-012 add Back to Home anchor). Only PostSolve.tsx touched on the production side; new test file adds AC-FA6-009..012 traceability.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx",
+        "tests/practice-mode-ui.test.mjs"
+      ]
+    },
+    {
+      "decision": "Back to Home rendered as plain <a href=\"/\"> anchor, not next/link",
+      "context": "AC-FA6-012 needs a navigation affordance to return to tier selection from practice post-solve",
+      "alternatives_considered": [
+        "next/link Link component \u2014 adds an import, but this PostSolve file does not currently use next/link and the target is a top-level route with no prefetch benefit mid-session",
+        "router.push via useRouter \u2014 requires client-side router hook and a button wrapper for what is semantically a navigation link"
+      ],
+      "rationale": "A plain anchor is the boring, accessible default (McKinley). The home route is a full-page tier selection; client-side prefetch mid-game has no value since the player is leaving the game flow. Anchor matches how /terms is linked elsewhere in the app.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
+    },
+    {
+      "decision": "Share button wrapped in {mode !== 'practice' && ...} rather than rendered+disabled",
+      "context": "AC-FA6-009 says share button is NOT SHOWN on practice post-solve",
+      "alternatives_considered": [
+        "Render share button disabled on practice \u2014 violates 'NOT shown' literal reading; also clutters the post-solve layout with a dead control",
+        "Conditionally swap Share for Play Again based on mode \u2014 Play Again already exists via onPlayAgain prop; coupling two orthogonal concerns in one conditional is harder to change"
+      ],
+      "rationale": "Early-return-style conditional render is the simplest expression of the spec. Practice players see Play Again + Back to Home; daily players see Share. No wasted DOM.",
+      "confidence": "high",
+      "affects": [
+        "src/components/PostSolve.tsx"
+      ]
     }
   ],
   "factory_questions": [
@@ -1582,7 +1715,7 @@
         "pages_checked": 0,
         "note": "No browser walk \u2014 deployment ENV_LIMITED (no VERCEL_TOKEN). All checks code/artifact-based. 441/441 tests pass. Build succeeds: 8 static routes, 102kB first-load JS."
       },
-      "criteria_pass_rate": 1.0,
+      "criteria_pass_rate": 1,
       "env_limited_count": 1,
       "fail_count": 0,
       "_prior_milestone_criteria_omitted": "Foundation, core-game-loop, and post-solve-experience criteria verified in prior cycles. All remain passing \u2014 441/441 tests confirm no regression.",
@@ -2188,17 +2321,17 @@
     ]
   },
   "story_result": {
-    "story_id": "fix-1775382071585-0",
+    "story_id": "practice-mode-ui",
     "outcome": "pass",
     "files_changed": [
-      "src/lib/stats-engine.mjs",
-      "src/lib/stats-engine.ts",
-      "src/types/card.ts",
-      "tests/stats-engine.test.mjs"
+      "src/components/PostSolve.tsx",
+      "tests/practice-mode-ui.test.mjs"
     ],
-    "tests_added": 6,
-    "tests_passing": 447,
-    "env_limitations": []
+    "tests_added": 10,
+    "tests_passing": 10,
+    "env_limitations": [
+      "Component tests use static source-analysis (regex/structural) rather than a DOM runtime; matches existing practice-mode-flow/post-solve-layout test patterns since no React test renderer is configured."
+    ]
   },
   "qa_fix_results": {
     "phase": "milestone-fix",
@@ -2266,8 +2399,8 @@
     "slot_acquired": true,
     "connection_string": "https://joxusnbbsoqkoocwztmz.supabase.co"
   },
-  "_current_milestone": "stats-streaks-persistence",
-  "_current_story": "fix-1775382071585-0",
+  "_current_milestone": "practice-mode",
+  "_current_story": "practice-mode-ui",
   "_foundation_phase_complete": true,
   "diff_scope": {
     "frontend": true,
@@ -2604,7 +2737,7 @@
       "decision": "Dual-voice PO Review enabled for cycle 10 re-evaluation.",
       "reasoning": "active_spec was updated by the analyzing phase (change spec added AC-FIX-STATS-SV-001..006 criteria). Third dual-voice eligibility condition met: \"the active_spec was updated by the analyzing phase (re-evaluation after spec changes)\".",
       "alternatives_considered": [],
-      "confidence": 1.0
+      "confidence": 1
     }
   ],
   "next_phase": "analyzing",
@@ -2652,84 +2785,44 @@
   },
   "dual_voice_po_review": true,
   "analysis_recommendation": {
-    "action": "deepen:improvements",
-    "rationale": "stats-streaks-persistence milestone cycle 9: PO PRODUCTION_READY and confidence_adjusted 0.93 >= 0.9, BUT one validated this-milestone improvement item exists (imp-stats-schema-version, LOW). Per phase contract Step 2.7, deepen:improvements is required when validated this-milestone items exist. Grounded in milestones.json localstorage-stats-engine.notes: 'Include a schema version field for future migrations.' Single-file mechanical fix (stats-engine.mjs/ts) expected to converge in one iteration, following the established pattern of prior deepen:improvements cycles (rarity, GameBoard, PostSolve \u2014 all 1-iteration convergence)."
+    "action": "promote",
+    "rationale": "stats-streaks-persistence milestone cycle 10 (re-evaluation): PO verdict PRODUCTION_READY, confidence_adjusted 0.95 (>= 0.9), QA PASS (100% criteria pass rate), 6/6 Library heuristics pass, 0 quality gaps, 0 remaining this-milestone improvement items (imp-stats-schema-version was resolved this cycle). Confidence trend improving (0.92 -> 0.94 raw / ~0.95 adjusted). All PROMOTE conditions met per phase contract Step 3. 447/447 tests pass, build succeeds. Advance milestone to complete."
   },
   "analysis_result": {
     "phase": "analyzing",
-    "cycle": 9,
-    "timestamp": "2026-04-05T15:00:00.000Z",
+    "cycle": 10,
+    "timestamp": "2026-04-05T00:00:00Z",
     "confidence_trend": {
-      "current": 0.93,
-      "previous": 0.95,
-      "delta": -0.02,
-      "direction": "stable",
+      "current": 0.95,
+      "previous": 0.93,
+      "delta": 0.02,
+      "direction": "improving",
       "consecutive_same_direction": 1,
       "flags": [
         "none"
       ],
       "note": "Cycle 9 is the FIRST evaluation of stats-streaks-persistence milestone. Previous 0.95 was the final cycle of the now-promoted post-solve-experience milestone \u2014 not directly comparable. Delta -0.02 is at the stable band boundary. Milestone-over-milestone confidence path: foundation 0.90 \u2192 core-game-loop 0.93 \u2192 post-solve 0.95 \u2192 stats 0.93. No regression detected (first evaluation of new milestone). No plateau."
     },
-    "recommendation": "deepen:improvements",
-    "recommendation_reasoning": "4 of 5 PROMOTE conditions met: (1) PO verdict PRODUCTION_READY. (2) confidence_adjusted 0.93 >= 0.9. (3) Zero quality gaps \u2014 evaluation_report.qa.fix_tasks empty, no critical findings, zero criteria failures, 441/441 tests pass. (4) Not regressing (first eval of new milestone). Condition (5) FAILS: validated this-milestone improvement item imp-stats-schema-version exists. Per phase contract Step 2.7, deepen:improvements is required when validated this-milestone items exist, convergence guardrail has not triggered (first deepen cycle for this milestone), and confidence is promotion-ready. The fix is a single-file mechanical change to stats-engine.mjs/ts (add _schema_version field to getDefaultPlayerStats and migration logic on read). Grounding: milestones.json localstorage-stats-engine.notes explicitly states 'Include a schema version field for future migrations.' Health 95, AI audit clean. Expected to converge in one iteration per the established pattern of prior mechanical deepen:improvements cycles.",
+    "recommendation": "promote",
+    "recommendation_reasoning": "All PROMOTE conditions met: (1) PO verdict PRODUCTION_READY, (2) confidence_adjusted 0.95 >= 0.9, (3) zero critical quality gaps (zero gaps total), (4) trend improving not regressing, (5) zero validated this-milestone improvement items remaining \u2014 the single item (imp-stats-schema-version) that triggered the cycle 9 deepen:improvements was resolved this cycle by the 4-file mechanical fix (stats-engine.mjs/ts, card.ts, stats-engine.test.mjs). The _schema_version field with safe-migration fallback closes the spec quality gap called out in milestones.json localstorage-stats-engine.notes. All 6 Library heuristics pass (Completeness, Visibility, Accuracy & Integrity, Scope Discipline, Reversibility, Forward Compatibility). QA PASS with 441/441 tests green, 0 console errors, successful build. Single-iteration convergence matches the established pattern for this milestone's deepen:improvements cycles.",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
       "schema_debt": [],
       "silent_degradation": [],
-      "restructure_scope": "0% \u2014 no restructure needed",
+      "restructure_scope": "0% \u2014 no structural issues detected",
       "structural_issues_found": false
     },
-    "root_cause_analysis": [
-      {
-        "gap_id": "imp-stats-schema-version",
-        "gap_description": "No schema version field in localStorage stats JSON. Spec notes say 'Include a schema version field for future migrations.' Without it, a future format change would silently load incompatible data.",
-        "root_cause": "implementation_bug",
-        "classification_confidence": 0.9,
-        "evidence": "The milestone spec notes explicitly called out the schema version requirement. No factory_question flagged this area (builder did not log uncertainty). No factory_decision documents why it was omitted. The spec is clear ('Include a schema version field'), the pattern is well-known (cycle_context.json itself uses _schema_version: '1.0'), and implementation is trivial. This is an implementation oversight \u2014 the builder did not carry the explicit spec note through to code. QA coverage gap: no AC was generated to enforce the schema version requirement, so tests did not catch it.",
-        "related_factory_decision": null,
-        "related_factory_question": null,
-        "qa_coverage_gap": true
-      }
-    ],
+    "root_cause_analysis": [],
     "cross_cycle_patterns": [
       {
-        "pattern": "setTimeout cleanup not applied to new components after being fixed in existing ones",
-        "frequency": 3,
-        "systemic_cause": "The QA code audit identifies setTimeout cleanup issues (robustness dimension) but does not promote them to fix_tasks. The PO improvement_items pipeline catches them instead, requiring an extra deepen:improvements cycle. This is the third occurrence: (1) foundation rarity fix, (2) GameBoard setTimeout/ACTION_COLORS, (3) PostSolve setCopied setTimeout.",
-        "recommended_action": "Calibrate QA-to-fix-task threshold: AI code audit findings at MEDIUM or above in robustness or production_risks dimensions matching known patterns (setTimeout cleanup, useRef for timers) should be auto-promoted to fix_tasks. Three occurrences across 8 cycles is a confirmed pattern. All three converged in one iteration each."
-      },
-      {
-        "pattern": "deepen:improvements cycles converge in exactly 1 iteration for mechanical code quality fixes",
+        "pattern": "deepen:improvements cycles converging in a single iteration (rarity, GameBoard, PostSolve, stats-schema-version)",
         "frequency": 4,
-        "systemic_cause": "All four deepen:improvements cycles (rarity fix, GameBoard quality, PostSolve timeout, and now stats schema version \u2014 predicted) are single-file mechanical changes. The extra cycle cost is low but non-zero.",
-        "recommended_action": "Monitor in future milestones. If pattern persists (practice-mode, community-data), implement QA threshold calibration. Current approach functional but suboptimal."
-      },
-      {
-        "pattern": "Spec notes (not ACs) producing this-milestone improvement items",
-        "frequency": 1,
-        "systemic_cause": "Spec notes that mention requirements without generating ACs are not enforced by the test suite, so they become PO improvement items rather than failing criteria. imp-stats-schema-version is grounded in a milestone spec note that had no corresponding AC.",
-        "recommended_action": "First occurrence \u2014 monitor. If recurs, consider promoting spec notes to ACs during change-spec-generation or flagging spec-note requirements during QA test generation."
+        "systemic_cause": "Spec notes capture small completeness items that surface as low-priority improvement items; mechanical single-file fixes converge quickly",
+        "recommended_action": "Continue current pattern; no process change needed"
       }
     ],
-    "change_spec_briefs": [
-      {
-        "gap_id": "imp-stats-schema-version",
-        "root_cause": "implementation_bug",
-        "priority": "low",
-        "affected_screens": [
-          "Post-Solve Screen (stats panel)"
-        ],
-        "affected_journeys": [
-          "First-time player completes a game \u2192 stats written to localStorage",
-          "Returning player loads stats from localStorage \u2192 schema version checked for migration"
-        ],
-        "what_good_looks_like": "stats-engine.mjs getDefaultPlayerStats() returns an object that includes a _schema_version field (e.g. '1.0') at the top level. On read from localStorage, if _schema_version is missing or older, the engine applies a migration (or falls back to defaults for unknown versions). A unit test verifies that fresh stats include _schema_version, and that reads without the field are handled safely. Pattern matches cycle_context.json's own _schema_version: '1.0' usage.",
-        "requires_design_mode": false,
-        "approach_hint": "Add _schema_version: '1.0' to the top level of the default stats object returned by getDefaultPlayerStats(). On read (loadPlayerStats), check the version and handle missing/mismatched versions (simplest: if missing or mismatched, fall back to defaults or add the field in-place for the current version). Single-file change in src/lib/stats-engine.mjs + TypeScript mirror in stats-engine.ts. Add 2-3 tests: (1) fresh stats include _schema_version, (2) reading a legacy blob without the field succeeds, (3) reading a blob with a newer unknown version does not crash. Add 1 AC covering the schema version presence and 1 AC covering migration safety.",
-        "do_not_repeat": []
-      }
-    ],
+    "change_spec_briefs": [],
     "_cycle7_change_spec_briefs_archived": [
       {
         "gap_id": "imp-settimeout-copied-leak",
@@ -2751,7 +2844,7 @@
     ],
     "escalations": [],
     "improvement_routing": {
-      "this_milestone_count": 1,
+      "this_milestone_count": 0,
       "global_persisted_count": 0,
       "future_dropped_count": 0,
       "convergence_guardrail_triggered": false,
@@ -3045,6 +3138,13 @@
       "timestamp": "2026-04-05T15:00:00.000Z",
       "decision": "New cross-cycle pattern flagged: spec notes without ACs produce improvement items",
       "reasoning": "imp-stats-schema-version is grounded in a milestones.json spec note ('Include a schema version field for future migrations.') that had no corresponding acceptance criterion in active_spec. The test suite could not enforce it. First occurrence \u2014 monitor for recurrence. If it persists across future milestones, recommend promoting explicit spec notes to ACs during change-spec-generation, or having QA test generation scan milestone notes for requirements keywords."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 10,
+      "decision": "Recommend PROMOTE for stats-streaks-persistence milestone",
+      "reasoning": "PRODUCTION_READY + confidence_adjusted 0.95 + 0 gaps + 0 remaining this-milestone improvement items. imp-stats-schema-version (the sole item from cycle 9 deepen:improvements) was closed this cycle. All Step 3 PROMOTE conditions met. Alternative deepen:improvements rejected: no improvement items remain. Alternative continue rejected: no structural issues and confidence above threshold.",
+      "timestamp": "2026-04-05T00:00:00Z"
     }
   ],
   "change_specs_pending": [

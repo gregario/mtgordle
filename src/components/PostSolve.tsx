@@ -181,25 +181,28 @@ export default function PostSolve({
       </div>
 
       {/* AC-FA4-002: Share button immediately below score, above fold */}
-      <button
-        data-testid="share-button"
-        onClick={handleShare}
-        style={{
-          padding: '12px 32px',
-          fontSize: 'var(--font-size-base)',
-          fontFamily: 'var(--font-family)',
-          fontWeight: 700,
-          backgroundColor: 'var(--color-accent, #6366f1)',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 'var(--radius-md)',
-          cursor: 'pointer',
-          width: '100%',
-          maxWidth: '300px',
-        }}
-      >
-        {copied ? 'Copied!' : 'Share'}
-      </button>
+      {/* AC-FA6-009: Share button is NOT shown in practice mode */}
+      {mode !== 'practice' && (
+        <button
+          data-testid="share-button"
+          onClick={handleShare}
+          style={{
+            padding: '12px 32px',
+            fontSize: 'var(--font-size-base)',
+            fontFamily: 'var(--font-family)',
+            fontWeight: 700,
+            backgroundColor: 'var(--color-accent, #6366f1)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 'var(--radius-md)',
+            cursor: 'pointer',
+            width: '100%',
+            maxWidth: '300px',
+          }}
+        >
+          {copied ? 'Copied!' : 'Share'}
+        </button>
+      )}
 
       {/* AC-FA6-008: Play Again button (practice mode only) */}
       {onPlayAgain && (
@@ -222,6 +225,21 @@ export default function PostSolve({
         >
           Play Again
         </button>
+      )}
+
+      {/* AC-FA6-012: Back to Home link (practice mode only) */}
+      {mode === 'practice' && (
+        <a
+          data-testid="back-to-home"
+          href="/"
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-muted)',
+            textDecoration: 'underline',
+          }}
+        >
+          Back to Home
+        </a>
       )}
 
       {/* AC-FA4-003: Card art displayed large below share button */}
