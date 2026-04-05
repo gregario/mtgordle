@@ -562,6 +562,19 @@
       "tests_added": 13,
       "tests_passing": 13,
       "notes": "EXTEND story. Added Next.js viewport export (width=device-width, initialScale=1), reserved 36px minHeight guess-feedback-slot so guess input does not shift as flash toggles, added overflow-x:hidden to body as horizontal-scroll guard. Existing Layout (480px centered) and CardFrame (aspect-ratio 63/88, width:100%) already satisfied AC-FA8-011/013/014."
+    },
+    {
+      "task": "spoiler-protection",
+      "acceptance_criteria": [
+        "AC-FA8-016",
+        "AC-FA8-017",
+        "AC-FA8-018"
+      ],
+      "files_changed": [
+        "tests/spoiler-protection.test.mjs"
+      ],
+      "tests_added": 14,
+      "tests_passing": 14
     }
   ],
   "skipped": [
@@ -1586,6 +1599,34 @@
         "src/components/GameBoard.tsx",
         "tests/mobile-first-layout.test.mjs"
       ]
+    },
+    {
+      "decision": "Search Before Building audit for spoiler-protection story",
+      "context": "Pre-implementation code reuse analysis for AC-FA8-016, AC-FA8-017, AC-FA8-018",
+      "alternatives_considered": [],
+      "rationale": "Found: 0 BUILD production code, 0 EXTEND, 3 REUSE (HomePage renders TierSelection at /, share-grid.mjs produces bare-domain URL line via stripProtocol, HomePage imports no card data or game-engine). All three ACs already satisfied by existing architecture. Only new artifact: tests/spoiler-protection.test.mjs locking the invariants.",
+      "confidence": "high",
+      "affects": [
+        "tests/spoiler-protection.test.mjs"
+      ]
+    },
+    {
+      "decision": "spoiler-protection treated as verify-and-guard, not rebuild",
+      "context": "Three spoiler-protection ACs: inbound URL lands on game, unplayed visitor sees tier select, no answer in URL/source. All three already hold given existing design.",
+      "alternatives_considered": [
+        "Add query-string stripping middleware (unnecessary — no code path writes answer-bearing query params)",
+        "Add robots.txt / noindex on post-solve (scope creep — ACs are about URL/page-source contents, not indexing)",
+        "Redirect / to /play when visitor has a stats record (directly contradicts AC-FA8-017 — unplayed and played visitors must both see tier selection)"
+      ],
+      "rationale": "Share URL is the bare domain (share-grid stripProtocol, BASE_URL only, no answer-bearing params). HomePage / renders TierSelection unconditionally with no localStorage/completion gating. HomePage imports no card data or game-engine, so the / bundle cannot leak the answer. Writing 14 static source-analysis tests (same pattern as theme-contrast, mobile-first-layout) locks these invariants so a future refactor cannot silently add a redirect to post-solve, import card data into the landing page, or append ?answer= to the share URL. Higher leverage than rewriting working code.",
+      "confidence": "high",
+      "affects": [
+        "src/app/page.tsx",
+        "src/components/TierSelection.tsx",
+        "src/lib/share-grid.mjs",
+        "src/components/PostSolve.tsx",
+        "tests/spoiler-protection.test.mjs"
+      ]
     }
   ],
   "factory_questions": [
@@ -2530,20 +2571,17 @@
     ]
   },
   "story_result": {
-    "story_id": "mobile-first-layout",
+    "story_id": "spoiler-protection",
     "outcome": "pass",
     "files_changed": [
-      "src/app/layout.tsx",
-      "src/app/globals.css",
-      "src/components/GameBoard.tsx",
-      "tests/mobile-first-layout.test.mjs"
+      "tests/spoiler-protection.test.mjs"
     ],
-    "tests_added": 13,
-    "tests_passing": 13,
+    "tests_added": 14,
+    "tests_passing": 14,
     "env_limitations": [
-      "Static source-analysis tests, not live viewport rendering. Actual 375px rendering verification deferred to QA browse phase."
+      "Static source-analysis tests (readFileSync + assert). No live browser verification of inbound URL routing — that belongs to the QA browse phase."
     ],
-    "notes": "EXTEND-heavy story. Foundation Layout.tsx (480px centered column, 100dvh) + CardFrame (aspect-ratio 63/88, maxWidth 315px, width:100%) + GuessInput (width:100%) already satisfied AC-FA8-011, AC-FA8-013 (PostSolve order), and AC-FA8-014 (max-width:480px). Three gaps closed: (1) AC-FA8-010 — added Next.js viewport export (width=device-width, initialScale=1, viewportFit=cover) to src/app/layout.tsx, which was missing and would have let mobile browsers render at desktop width. (2) AC-FA8-012 — wrapped conditional guess-result feedback pill in a reserved 36px minHeight slot (data-testid guess-feedback-slot) so the guess input does not shift vertically when the flash toggles on/off between clue rounds. (3) AC-FA8-015 — added overflow-x:hidden to body in globals.css as a belt-and-braces guard against any accidental overflow causing horizontal scroll. 13 new static source-analysis tests lock all 6 ACs into CI. Full suite: 512/512 passing. Build clean: 8 static routes, 95.9KB first-load JS."
+    "notes": "Verify-and-guard story. Three ACs were already naturally satisfied by existing architecture: share URL is the bare base domain (no params/answer), HomePage at / renders TierSelection (not PostSolve/GameBoard), and the home bundle imports no card data or game-engine modules. Added 14 source-analysis tests that lock these invariants so future edits cannot regress spoiler protection."
   },
   "qa_fix_results": {
     "phase": "milestone-fix",
@@ -2612,7 +2650,7 @@
     "connection_string": "https://joxusnbbsoqkoocwztmz.supabase.co"
   },
   "_current_milestone": "visual-polish-theming",
-  "_current_story": "mobile-first-layout",
+  "_current_story": "spoiler-protection",
   "_foundation_phase_complete": true,
   "diff_scope": {
     "frontend": true,
