@@ -277,6 +277,53 @@
             "score-distribution-chart"
           ],
           "acceptance_criteria": []
+        },
+        {
+          "id": "fix-stats-schema-version",
+          "name": "Add _schema_version field to stats engine + safe fallback in loadStats",
+          "status": "pending",
+          "depends_on": [
+            "localstorage-stats-engine"
+          ],
+          "acceptance_criteria": [
+            {
+              "id": "AC-FIX-STATS-SV-001",
+              "description": "getDefaultPlayerStats() returns an object containing _schema_version: '1.0' at the top level"
+            },
+            {
+              "id": "AC-FIX-STATS-SV-002",
+              "description": "saveStats persists the _schema_version field to storage"
+            },
+            {
+              "id": "AC-FIX-STATS-SV-003",
+              "description": "loadStats safely falls back to defaults when the stored blob is missing _schema_version"
+            },
+            {
+              "id": "AC-FIX-STATS-SV-004",
+              "description": "loadStats safely falls back to defaults when the stored blob has an unknown/future _schema_version"
+            },
+            {
+              "id": "AC-FIX-STATS-SV-005",
+              "description": "loadStats preserves stored data when _schema_version matches the current version ('1.0')"
+            },
+            {
+              "id": "AC-FIX-STATS-SV-006",
+              "description": "npm run build and npm test pass with zero errors; PlayerStats type extended with optional _schema_version: string"
+            }
+          ],
+          "fix_metadata": {
+            "source_gap_id": "imp-stats-schema-version",
+            "root_cause": "implementation_bug",
+            "priority": "low",
+            "scope_files": [
+              "src/lib/stats-engine.mjs",
+              "src/lib/stats-engine.ts",
+              "src/types/card.ts",
+              "tests/stats-engine.test.mjs"
+            ],
+            "do_not_repeat": [],
+            "approach": "Add _schema_version: '1.0' to getDefaultPlayerStats return value. In loadStats, after JSON.parse, check parsed._schema_version; if missing or !== '1.0', return getDefaultPlayerStats(). Mirror in TypeScript file. Extend PlayerStats type with optional _schema_version: string. Add 3-5 unit tests covering presence, persistence, legacy-blob safety, unknown-version safety, matching-version preservation."
+          }
         }
       ]
     },

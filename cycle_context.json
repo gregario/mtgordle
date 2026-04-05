@@ -1691,13 +1691,48 @@
       "ai_code_audit": {
         "score": 89,
         "dimensions": {
-          "architecture": {"score": 90, "findings": ["Pure stats engine (stats-engine.mjs) + pure distribution helper (score-distribution.mjs). .mjs/.ts dual-export consistent with fuzzy-search/share-grid/lore-blurb. PostSolve integrates via useEffect + isDuplicateGame guard."]},
-          "consistency": {"score": 88, "findings": ["STATS_STORAGE_KEY mirrors BASE_URL pattern. StatTile inner component follows PostSolve ACTION_COLORS indicator pattern. useEffect stats hydration follows clipboard useEffect pattern."]},
-          "robustness": {"score": 86, "findings": ["loadStats try/catch. isDuplicateGame guard. window undefined SSR guard. recordGameResult immutable. LOW: no schema version validation in loadStats (spec note, not AC)."]},
-          "production_risks": {"score": 87, "findings": ["Named constant for storage key. isDuplicateGame guard for daily. Practice mode explicitly ignored. copiedTimeoutRef cleanup present. LOW: localStorage disabled in strict incognito = silent stat fail."]},
-          "security": {"score": 95, "findings": ["Static export. Stats from typed GameResult only. No user input to DOM."]},
-          "dead_hallucinated": {"score": 90, "findings": ["All exports consumed. computeDistributionRows consumed by ScoreDistributionChart. getWinPercentage consumed by PostSolve. modeLabel rendered. All imports used."]},
-          "tech_debt": {"score": 87, "findings": ["No ESLint (global-001). No schema version field (spec note, V1 acceptable). No React error boundary on GameBoard fetch (unchanged). execCommand deprecated (no alternative)."]}
+          "architecture": {
+            "score": 90,
+            "findings": [
+              "Pure stats engine (stats-engine.mjs) + pure distribution helper (score-distribution.mjs). .mjs/.ts dual-export consistent with fuzzy-search/share-grid/lore-blurb. PostSolve integrates via useEffect + isDuplicateGame guard."
+            ]
+          },
+          "consistency": {
+            "score": 88,
+            "findings": [
+              "STATS_STORAGE_KEY mirrors BASE_URL pattern. StatTile inner component follows PostSolve ACTION_COLORS indicator pattern. useEffect stats hydration follows clipboard useEffect pattern."
+            ]
+          },
+          "robustness": {
+            "score": 86,
+            "findings": [
+              "loadStats try/catch. isDuplicateGame guard. window undefined SSR guard. recordGameResult immutable. LOW: no schema version validation in loadStats (spec note, not AC)."
+            ]
+          },
+          "production_risks": {
+            "score": 87,
+            "findings": [
+              "Named constant for storage key. isDuplicateGame guard for daily. Practice mode explicitly ignored. copiedTimeoutRef cleanup present. LOW: localStorage disabled in strict incognito = silent stat fail."
+            ]
+          },
+          "security": {
+            "score": 95,
+            "findings": [
+              "Static export. Stats from typed GameResult only. No user input to DOM."
+            ]
+          },
+          "dead_hallucinated": {
+            "score": 90,
+            "findings": [
+              "All exports consumed. computeDistributionRows consumed by ScoreDistributionChart. getWinPercentage consumed by PostSolve. modeLabel rendered. All imports used."
+            ]
+          },
+          "tech_debt": {
+            "score": 87,
+            "findings": [
+              "No ESLint (global-001). No schema version field (spec note, V1 acceptable). No React error boundary on GameBoard fetch (unchanged). execCommand deprecated (no alternative)."
+            ]
+          }
         },
         "critical_findings": []
       },
@@ -1722,9 +1757,18 @@
       "health_score_breakdown": {
         "base": 100,
         "deductions": [
-          {"reason": "LOW: No ESLint config (global-001, unchanged)", "amount": -1},
-          {"reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable)", "amount": -2},
-          {"reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review not run", "amount": -2}
+          {
+            "reason": "LOW: No ESLint config (global-001, unchanged)",
+            "amount": -1
+          },
+          {
+            "reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable)",
+            "amount": -2
+          },
+          {
+            "reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review not run",
+            "amount": -2
+          }
         ],
         "wtf_likelihood": "0.1/min — Wordle-familiar stats panel, clean implementation, no confusing interactions.",
         "wtf_adjustment": 0,
@@ -1786,11 +1830,31 @@
         "passed": 5,
         "pass_rate_pct": 100,
         "results": [
-          {"heuristic": "Completeness", "verdict": "pass", "evidence": "All 17 stats ACs implemented. 441/441 tests pass. Stats placeholder ('Stats coming soon') fully replaced."},
-          {"heuristic": "Visibility of System Status", "verdict": "pass", "evidence": "4 stat tiles show live values. Distribution chart shows historical spread. Today's result highlighted immediately."},
-          {"heuristic": "Accuracy & Integrity", "verdict": "pass", "evidence": "isDuplicateGame prevents double-recording. Per-tier isolation verified. Practice mode excluded. Missed-day detection via puzzle number."},
-          {"heuristic": "Scope Discipline", "verdict": "pass", "evidence": "No separate stats page — spec says stats on post-solve only for V1. Practice exclusion at engine level (correct boundary)."},
-          {"heuristic": "Reversibility", "verdict": "pass", "evidence": "Pure function stats engine easy to extend. ScoreDistributionChart accepts tierStats as prop — reusable. No tight coupling."}
+          {
+            "heuristic": "Completeness",
+            "verdict": "pass",
+            "evidence": "All 17 stats ACs implemented. 441/441 tests pass. Stats placeholder ('Stats coming soon') fully replaced."
+          },
+          {
+            "heuristic": "Visibility of System Status",
+            "verdict": "pass",
+            "evidence": "4 stat tiles show live values. Distribution chart shows historical spread. Today's result highlighted immediately."
+          },
+          {
+            "heuristic": "Accuracy & Integrity",
+            "verdict": "pass",
+            "evidence": "isDuplicateGame prevents double-recording. Per-tier isolation verified. Practice mode excluded. Missed-day detection via puzzle number."
+          },
+          {
+            "heuristic": "Scope Discipline",
+            "verdict": "pass",
+            "evidence": "No separate stats page — spec says stats on post-solve only for V1. Practice exclusion at engine level (correct boundary)."
+          },
+          {
+            "heuristic": "Reversibility",
+            "verdict": "pass",
+            "evidence": "Pure function stats engine easy to extend. ScoreDistributionChart accepts tierStats as prop — reusable. No tight coupling."
+          }
         ]
       },
       "verdict": "PRODUCTION_READY",
@@ -1798,8 +1862,15 @@
       "confidence": 0.92,
       "confidence_adjusted": 0.93,
       "env_limited_impact": {
-        "excluded_criteria": ["AC-FA5-013"],
-        "excluded_checks": ["Lighthouse performance", "a11y automated scan", "visual design review", "live localStorage verification"],
+        "excluded_criteria": [
+          "AC-FA5-013"
+        ],
+        "excluded_checks": [
+          "Lighthouse performance",
+          "a11y automated scan",
+          "visual design review",
+          "live localStorage verification"
+        ],
         "rationale": "No deployment URL. AC-FA5-013 visual highlight requires browser — data-highlighted attribute code-verified. ENV_LIMITED does not meaningfully affect confidence_adjusted."
       },
       "recommended_action": "continue",
@@ -1826,9 +1897,18 @@
     "health_score_breakdown": {
       "base": 100,
       "deductions": [
-        {"reason": "LOW: No ESLint config (global-001, unchanged)", "amount": -1},
-        {"reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable)", "amount": -2},
-        {"reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review not run", "amount": -2}
+        {
+          "reason": "LOW: No ESLint config (global-001, unchanged)",
+          "amount": -1
+        },
+        {
+          "reason": "LOW: npm audit CRITICAL advisory (Next.js, inapplicable)",
+          "amount": -2
+        },
+        {
+          "reason": "ENV_LIMITED: No deployment URL — Lighthouse, a11y, design review not run",
+          "amount": -2
+        }
       ],
       "wtf_likelihood": "0.1/min — Wordle-familiar stats panel, clean implementation.",
       "wtf_adjustment": 0,
@@ -2531,26 +2611,26 @@
   },
   "dual_voice_po_review": true,
   "analysis_recommendation": {
-    "action": "promote",
-    "rationale": "post-solve-experience milestone: All 5 PROMOTE conditions verified by analyzing phase. (1) PO verdict PRODUCTION_READY. (2) confidence_adjusted 0.95 >= 0.9. (3) Zero quality gaps — no fix_tasks, no critical findings. (4) Confidence trend improving (+0.01, 0.94→0.95), not regressing. (5) Zero validated this-milestone improvement items — imp-settimeout-copied-leak resolved in cycle 8, imp-stats-placeholder dropped (future-milestone), imp-no-eslint already persisted as global-001. Decomposition health: no structural issues. 365/365 tests pass. Health 94. AI code audit 90/100. No escalations. Milestone is ready for promotion."
+    "action": "deepen:improvements",
+    "rationale": "stats-streaks-persistence milestone cycle 9: PO PRODUCTION_READY and confidence_adjusted 0.93 >= 0.9, BUT one validated this-milestone improvement item exists (imp-stats-schema-version, LOW). Per phase contract Step 2.7, deepen:improvements is required when validated this-milestone items exist. Grounded in milestones.json localstorage-stats-engine.notes: 'Include a schema version field for future migrations.' Single-file mechanical fix (stats-engine.mjs/ts) expected to converge in one iteration, following the established pattern of prior deepen:improvements cycles (rarity, GameBoard, PostSolve — all 1-iteration convergence)."
   },
   "analysis_result": {
     "phase": "analyzing",
-    "cycle": 8,
-    "timestamp": "2026-04-05T13:00:00.000Z",
+    "cycle": 9,
+    "timestamp": "2026-04-05T15:00:00.000Z",
     "confidence_trend": {
-      "current": 0.95,
-      "previous": 0.94,
-      "delta": 0.01,
+      "current": 0.93,
+      "previous": 0.95,
+      "delta": -0.02,
       "direction": "stable",
-      "consecutive_same_direction": 2,
+      "consecutive_same_direction": 1,
       "flags": [
         "none"
       ],
-      "note": "Confidence improved from 0.94 (cycle 7, first post-solve-experience evaluation) to 0.95 (cycle 8, after deepen:improvements fix). Delta +0.01 is within stable band (+/-0.02) but trending upward. Two consecutive cycles of stable/improving confidence. No regression, no plateau. Previous milestone (core-game-loop) promoted at 0.93."
+      "note": "Cycle 9 is the FIRST evaluation of stats-streaks-persistence milestone. Previous 0.95 was the final cycle of the now-promoted post-solve-experience milestone — not directly comparable. Delta -0.02 is at the stable band boundary. Milestone-over-milestone confidence path: foundation 0.90 → core-game-loop 0.93 → post-solve 0.95 → stats 0.93. No regression detected (first evaluation of new milestone). No plateau."
     },
-    "recommendation": "promote",
-    "recommendation_reasoning": "All 5 PROMOTE conditions verified: (1) PO verdict PRODUCTION_READY. (2) confidence_adjusted 0.95 >= 0.9 threshold. (3) Zero quality gaps — evaluation_report.qa.fix_tasks is empty, ai_code_audit.critical_findings is empty, zero criteria failures. (4) Confidence trend not regressing — stable/improving at 0.94→0.95. (5) Zero validated this-milestone improvement items — imp-settimeout-copied-leak resolved in cycle 8 (copiedTimeoutRef added to PostSolve.tsx, 4 new tests, 365/365 pass), imp-stats-placeholder dropped (future-milestone, stats-streaks-persistence), imp-no-eslint already persisted as global-001. Deepen:improvements cycle from cycle 7 converged in one iteration as predicted. Health 94, AI code audit 90/100. No escalations. Milestone ready for promotion.",
+    "recommendation": "deepen:improvements",
+    "recommendation_reasoning": "4 of 5 PROMOTE conditions met: (1) PO verdict PRODUCTION_READY. (2) confidence_adjusted 0.93 >= 0.9. (3) Zero quality gaps — evaluation_report.qa.fix_tasks empty, no critical findings, zero criteria failures, 441/441 tests pass. (4) Not regressing (first eval of new milestone). Condition (5) FAILS: validated this-milestone improvement item imp-stats-schema-version exists. Per phase contract Step 2.7, deepen:improvements is required when validated this-milestone items exist, convergence guardrail has not triggered (first deepen cycle for this milestone), and confidence is promotion-ready. The fix is a single-file mechanical change to stats-engine.mjs/ts (add _schema_version field to getDefaultPlayerStats and migration logic on read). Grounding: milestones.json localstorage-stats-engine.notes explicitly states 'Include a schema version field for future migrations.' Health 95, AI audit clean. Expected to converge in one iteration per the established pattern of prior mechanical deepen:improvements cycles.",
     "decomposition_health": {
       "foundation_gaps": [],
       "integration_gaps": [],
@@ -2559,7 +2639,18 @@
       "restructure_scope": "0% — no restructure needed",
       "structural_issues_found": false
     },
-    "root_cause_analysis": [],
+    "root_cause_analysis": [
+      {
+        "gap_id": "imp-stats-schema-version",
+        "gap_description": "No schema version field in localStorage stats JSON. Spec notes say 'Include a schema version field for future migrations.' Without it, a future format change would silently load incompatible data.",
+        "root_cause": "implementation_bug",
+        "classification_confidence": 0.9,
+        "evidence": "The milestone spec notes explicitly called out the schema version requirement. No factory_question flagged this area (builder did not log uncertainty). No factory_decision documents why it was omitted. The spec is clear ('Include a schema version field'), the pattern is well-known (cycle_context.json itself uses _schema_version: '1.0'), and implementation is trivial. This is an implementation oversight — the builder did not carry the explicit spec note through to code. QA coverage gap: no AC was generated to enforce the schema version requirement, so tests did not catch it.",
+        "related_factory_decision": null,
+        "related_factory_question": null,
+        "qa_coverage_gap": true
+      }
+    ],
     "cross_cycle_patterns": [
       {
         "pattern": "setTimeout cleanup not applied to new components after being fixed in existing ones",
@@ -2569,12 +2660,35 @@
       },
       {
         "pattern": "deepen:improvements cycles converge in exactly 1 iteration for mechanical code quality fixes",
-        "frequency": 3,
-        "systemic_cause": "All three deepen:improvements cycles (rarity fix, GameBoard quality, PostSolve timeout) were single-file mechanical changes. The extra cycle cost is low but non-zero.",
-        "recommended_action": "Monitor in future milestones. If pattern persists (stats-streaks-persistence, practice-mode), implement QA threshold calibration. Current approach functional but suboptimal."
+        "frequency": 4,
+        "systemic_cause": "All four deepen:improvements cycles (rarity fix, GameBoard quality, PostSolve timeout, and now stats schema version — predicted) are single-file mechanical changes. The extra cycle cost is low but non-zero.",
+        "recommended_action": "Monitor in future milestones. If pattern persists (practice-mode, community-data), implement QA threshold calibration. Current approach functional but suboptimal."
+      },
+      {
+        "pattern": "Spec notes (not ACs) producing this-milestone improvement items",
+        "frequency": 1,
+        "systemic_cause": "Spec notes that mention requirements without generating ACs are not enforced by the test suite, so they become PO improvement items rather than failing criteria. imp-stats-schema-version is grounded in a milestone spec note that had no corresponding AC.",
+        "recommended_action": "First occurrence — monitor. If recurs, consider promoting spec notes to ACs during change-spec-generation or flagging spec-note requirements during QA test generation."
       }
     ],
-    "change_spec_briefs": [],
+    "change_spec_briefs": [
+      {
+        "gap_id": "imp-stats-schema-version",
+        "root_cause": "implementation_bug",
+        "priority": "low",
+        "affected_screens": [
+          "Post-Solve Screen (stats panel)"
+        ],
+        "affected_journeys": [
+          "First-time player completes a game → stats written to localStorage",
+          "Returning player loads stats from localStorage → schema version checked for migration"
+        ],
+        "what_good_looks_like": "stats-engine.mjs getDefaultPlayerStats() returns an object that includes a _schema_version field (e.g. '1.0') at the top level. On read from localStorage, if _schema_version is missing or older, the engine applies a migration (or falls back to defaults for unknown versions). A unit test verifies that fresh stats include _schema_version, and that reads without the field are handled safely. Pattern matches cycle_context.json's own _schema_version: '1.0' usage.",
+        "requires_design_mode": false,
+        "approach_hint": "Add _schema_version: '1.0' to the top level of the default stats object returned by getDefaultPlayerStats(). On read (loadPlayerStats), check the version and handle missing/mismatched versions (simplest: if missing or mismatched, fall back to defaults or add the field in-place for the current version). Single-file change in src/lib/stats-engine.mjs + TypeScript mirror in stats-engine.ts. Add 2-3 tests: (1) fresh stats include _schema_version, (2) reading a legacy blob without the field succeeds, (3) reading a blob with a newer unknown version does not crash. Add 1 AC covering the schema version presence and 1 AC covering migration safety.",
+        "do_not_repeat": []
+      }
+    ],
     "_cycle7_change_spec_briefs_archived": [
       {
         "gap_id": "imp-settimeout-copied-leak",
@@ -2596,11 +2710,12 @@
     ],
     "escalations": [],
     "improvement_routing": {
-      "this_milestone_count": 0,
+      "this_milestone_count": 1,
       "global_persisted_count": 0,
-      "future_dropped_count": 1,
+      "future_dropped_count": 0,
       "convergence_guardrail_triggered": false,
-      "deepen_improvements_cycle_count": 1
+      "deepen_improvements_cycle_count": 0,
+      "note": "imp-stats-schema-version validated as this-milestone (grounded in milestones.json localstorage-stats-engine.notes). imp-no-eslint already persisted as global-001 — no duplicate write needed. No future-milestone items. First deepen:improvements cycle for stats-streaks-persistence milestone."
     }
   },
   "phase_decisions": [
@@ -2781,6 +2896,19 @@
     },
     {
       "phase": "change-spec-generation",
+      "cycle": 9,
+      "timestamp": "2026-04-05T15:30:00.000Z",
+      "decision": "Generated fix story fix-stats-schema-version for imp-stats-schema-version",
+      "reasoning": "Single brief from analyzing phase. Validated against vision: code-quality/data-integrity fix grounded in an explicit milestone spec note, no scope expansion, no vision conflict. Mechanical change to stats-engine.mjs + TypeScript mirror + PlayerStats type extension + 3-5 tests. 6 acceptance criteria covering schema version presence on default, persistence via saveStats, safe fallback when missing, safe fallback when unknown version, preservation of matching-version data, and build/test pass. No design mode needed. Expected to converge in one iteration per the established mechanical deepen:improvements pattern (rarity, GameBoard, PostSolve timeout all converged in 1 iteration).",
+      "alternatives_considered": [
+        "Group with other gaps — rejected: only one brief exists, no grouping possible",
+        "Defer as low-priority — rejected: phase contract Step 2 prioritizes writing specs for validated briefs; the analyzing phase already routed this to deepen:improvements",
+        "Design migration logic for future version bumps — rejected: scope creep; current change establishes v1.0 only, future migrations added when needed"
+      ]
+    },
+    {
+      "_archived_from_cycle_7": true,
+      "phase": "change-spec-generation",
       "cycle": 7,
       "timestamp": "2026-04-05T12:30:00.000Z",
       "decision": "Generated fix story fix-postsovle-settimeout-cleanup for imp-settimeout-copied-leak",
@@ -2829,10 +2957,186 @@
       "timestamp": "2026-04-05T13:00:00.000Z",
       "decision": "Confirmed pattern: setTimeout cleanup requiring deepen:improvements (third convergence, all 1-iteration)",
       "reasoning": "All three occurrences of the QA-threshold gap pattern have now converged: (1) rarity fix in cycle 2-3, (2) GameBoard quality in cycle 5-6, (3) PostSolve timeout in cycle 7-8. Each converged in exactly one deepen:improvements iteration. Pattern is confirmed and documented in cross_cycle_patterns. Recommend QA threshold calibration for future milestones to eliminate these extra cycles."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 9,
+      "timestamp": "2026-04-05T15:00:00.000Z",
+      "decision": "No circuit breaker detected — normal post-milestone analysis for stats-streaks-persistence",
+      "reasoning": "No _circuit_breaker flag in cycle_context.json. Proceeding with standard evaluation."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 9,
+      "timestamp": "2026-04-05T15:00:00.000Z",
+      "decision": "Override promote → deepen:improvements due to validated this-milestone improvement item imp-stats-schema-version",
+      "reasoning": "confidence_adjusted 0.93 >= 0.9 and PO verdict PRODUCTION_READY — all PROMOTE conditions met EXCEPT condition 5: validated this-milestone improvement item imp-stats-schema-version exists. Grounding validated: milestones.json localstorage-stats-engine.notes explicitly states 'Include a schema version field for future migrations.' This is a spec note the builder did not implement. First deepen:improvements cycle for this milestone, so convergence guardrail does not apply. Single-file mechanical fix expected to converge in one iteration.",
+      "alternatives_considered": [
+        "Promote directly — rejected: phase contract Step 2.7 requires deepen:improvements when validated this-milestone items exist and convergence guardrail has not triggered",
+        "Drop imp-stats-schema-version as ungrounded — rejected: grounded in an explicit spec note with direct precedent (cycle_context.json uses _schema_version: '1.0'). Dropping would leave a known production-risk footgun (future format change silently loading incompatible data).",
+        "Classify as global — rejected: schema versioning for localStorage stats is owned entirely by this milestone's stats-engine, not cross-cutting"
+      ]
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 9,
+      "timestamp": "2026-04-05T15:00:00.000Z",
+      "decision": "imp-stats-schema-version classified as implementation_bug (confidence 0.9)",
+      "reasoning": "Spec was unambiguous ('Include a schema version field for future migrations.'). No design choice involved (no UI). Context was available (cycle_context.json itself uses _schema_version). Pattern is well-known. Builder simply did not carry the explicit spec note through to code. No factory_question logged, no factory_decision justifies the omission — this is an oversight. QA coverage gap: no AC was generated from the spec note, so tests could not have caught it."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 9,
+      "timestamp": "2026-04-05T15:00:00.000Z",
+      "decision": "imp-no-eslint already persisted as global-001 — no duplicate write needed",
+      "reasoning": "global_improvements.json already contains global-001 with identical description. No new global items discovered in this cycle."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 9,
+      "timestamp": "2026-04-05T15:00:00.000Z",
+      "decision": "No decomposition health issues detected",
+      "reasoning": "stats-streaks-persistence was built on existing foundation: localStorage is available (no new infrastructure), the stats engine uses pure functions + typed TierStats/PlayerStats (defined in foundation), no schema migrations or ALTER TABLE needed (static app), no integration gaps (no new external APIs). Builder did not skip any features or substitute simpler alternatives. All 4 stories (localstorage-stats-engine, streak-tracking, score-distribution-chart, stats-post-solve-integration) implemented as specified. No silent degradation."
+    },
+    {
+      "phase": "analyzing",
+      "cycle": 9,
+      "timestamp": "2026-04-05T15:00:00.000Z",
+      "decision": "New cross-cycle pattern flagged: spec notes without ACs produce improvement items",
+      "reasoning": "imp-stats-schema-version is grounded in a milestones.json spec note ('Include a schema version field for future migrations.') that had no corresponding acceptance criterion in active_spec. The test suite could not enforce it. First occurrence — monitor for recurrence. If it persists across future milestones, recommend promoting explicit spec notes to ACs during change-spec-generation, or having QA test generation scan milestone notes for requirements keywords."
     }
   ],
   "change_specs_pending": [
     {
+      "spec_id": "fix-stats-schema-version",
+      "gap_ids": [
+        "imp-stats-schema-version"
+      ],
+      "priority": "low",
+      "requires_design_mode": false,
+      "design_passes_needed": [],
+      "criteria_count": 6,
+      "root_cause": "implementation_bug",
+      "affected_screens": [
+        "Post-Solve Screen (stats panel)"
+      ],
+      "affected_journeys": [
+        "First-time player completes a game → stats written to localStorage",
+        "Returning player loads stats from localStorage → schema version checked for migration"
+      ],
+      "approach_summary": "Add _schema_version: '1.0' field to getDefaultPlayerStats() top level. On loadStats, if the field is missing or mismatched, fall back to defaults (safe migration). Mirror change in TypeScript stats-engine.ts. Add tests for presence, legacy-blob read safety, and unknown-version safety.",
+      "gap_evidence": {
+        "gaps": [
+          {
+            "gap_id": "imp-stats-schema-version",
+            "category": "performance_improvement",
+            "severity": "low",
+            "root_cause": "implementation_bug",
+            "root_cause_evidence": "milestones.json localstorage-stats-engine.notes explicitly states 'Include a schema version field for future migrations.' This spec note was not implemented — getDefaultPlayerStats() in src/lib/stats-engine.mjs returns { simple, cryptic } with no _schema_version field. loadStats() blindly JSON.parses the blob and returns it without any version check. No AC was generated from the spec note, so QA tests did not catch the omission. Pattern precedent exists: cycle_context.json itself uses _schema_version: '1.0'.",
+            "current_state": "src/lib/stats-engine.mjs getDefaultPlayerStats() (line 23) returns { simple: getDefaultTierStats(), cryptic: getDefaultTierStats() } — no _schema_version field. loadStats() (line 109) returns JSON.parse(raw) directly with no schema version check or migration. If the stats object shape changes in a future release, a returning player's legacy blob would silently load as incompatible data.",
+            "po_review_assessment": "No schema version field in localStorage stats JSON. Spec notes say 'Include a schema version field for future migrations.' Without it, a future format change would silently load incompatible data.",
+            "heuristics_failed": [],
+            "previous_attempts": "First attempt."
+          }
+        ]
+      },
+      "target_state": {
+        "from_library_heuristics": "No Library heuristics violated — this is a data-format versioning pattern not covered by product heuristics.",
+        "from_reference_products": "N/A — data-integrity fix, no reference product comparison applicable. Pattern precedent: The Rouge's own cycle_context.json uses _schema_version: '1.0' for the same reason.",
+        "concrete_description": "After the fix: getDefaultPlayerStats() returns an object that includes _schema_version: '1.0' at the top level alongside simple and cryptic tier stats. loadStats() inspects the parsed blob's _schema_version on read — when missing or mismatched from the current version, it safely falls back to defaults (rather than returning potentially incompatible data). When the blob's version matches the current version, it returns as-is. Fresh stats written via saveStats include the _schema_version field automatically. Behavior for users: first-time players have _schema_version: '1.0' in their localStorage from the first write; returning players whose blob predates the change see a one-time reset to defaults (acceptable for a LOW-severity data-integrity fix on a product with no persisted production users yet). The TypeScript type PlayerStats is extended to include the optional _schema_version: string field. The mirror file src/lib/stats-engine.ts stays in sync."
+      },
+      "design_requirements": {
+        "requires_design_mode": false,
+        "design_mode_scope": "N/A — no visual or UX changes. Pure data-layer code quality fix.",
+        "design_direction": "N/A",
+        "design_constraints": "No visual output changes. The stats panel, score distribution chart, and streak displays must render identically before and after the fix for users with matching-version blobs. Users with legacy blobs see stats reset to zero — this is expected and acceptable at this stage."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "AC-FIX-STATS-SV-001",
+          "name": "Fresh stats include schema version",
+          "given": "A fresh call to getDefaultPlayerStats() in src/lib/stats-engine.mjs",
+          "when": "The returned object is inspected",
+          "then": "The object contains a _schema_version key at the top level with the string value '1.0'",
+          "measurement": "Unit test: call getDefaultPlayerStats(), assert result._schema_version === '1.0'. Assert simple and cryptic tier keys remain present.",
+          "closes_gap": "imp-stats-schema-version"
+        },
+        {
+          "id": "AC-FIX-STATS-SV-002",
+          "name": "saveStats persists schema version",
+          "given": "A fresh PlayerStats object from getDefaultPlayerStats()",
+          "when": "saveStats is called with that object and a mock storage",
+          "then": "The JSON written to storage contains \"_schema_version\":\"1.0\"",
+          "measurement": "Unit test: call saveStats(getDefaultPlayerStats(), mockStorage); parse mockStorage.setItem call argument; assert parsed._schema_version === '1.0'.",
+          "closes_gap": "imp-stats-schema-version"
+        },
+        {
+          "id": "AC-FIX-STATS-SV-003",
+          "name": "loadStats handles missing schema version safely",
+          "given": "A mock storage returning a legacy blob with no _schema_version field (e.g. JSON.stringify({ simple: getDefaultTierStats(), cryptic: getDefaultTierStats() }))",
+          "when": "loadStats(mockStorage) is called",
+          "then": "The call does not throw; the returned object includes _schema_version: '1.0' (i.e. returns defaults rather than the legacy data)",
+          "measurement": "Unit test: set mockStorage to return a legacy blob without _schema_version; call loadStats; assert no throw and result._schema_version === '1.0'.",
+          "closes_gap": "imp-stats-schema-version"
+        },
+        {
+          "id": "AC-FIX-STATS-SV-004",
+          "name": "loadStats handles unknown future version safely",
+          "given": "A mock storage returning a blob with _schema_version: '99.0' (a future/unknown version)",
+          "when": "loadStats(mockStorage) is called",
+          "then": "The call does not throw; the returned object is the current defaults (does not return the incompatible blob)",
+          "measurement": "Unit test: set mockStorage to return JSON with _schema_version: '99.0' and arbitrary shape; call loadStats; assert no throw and result deep-equals getDefaultPlayerStats().",
+          "closes_gap": "imp-stats-schema-version"
+        },
+        {
+          "id": "AC-FIX-STATS-SV-005",
+          "name": "loadStats preserves matching-version data",
+          "given": "A mock storage returning a valid blob with _schema_version: '1.0' and populated tier stats",
+          "when": "loadStats(mockStorage) is called",
+          "then": "The returned object equals the stored blob (data is preserved, not reset)",
+          "measurement": "Unit test: save populated stats via saveStats, then load via loadStats from same mock storage, assert deep equality with original.",
+          "closes_gap": "imp-stats-schema-version"
+        },
+        {
+          "id": "AC-FIX-STATS-SV-006",
+          "name": "Build and tests pass; TypeScript mirror in sync",
+          "given": "All stats-engine.mjs and stats-engine.ts changes applied, including PlayerStats type extension",
+          "when": "npm run build and npm test are executed",
+          "then": "Zero TypeScript errors, zero test failures, build succeeds, all existing 441+ tests continue to pass",
+          "measurement": "npm run build exits 0; npm test exits 0; no regressions in existing test suites. TypeScript PlayerStats type includes optional _schema_version: string field.",
+          "closes_gap": "imp-stats-schema-version"
+        }
+      ],
+      "scope": {
+        "in_scope": [
+          "src/lib/stats-engine.mjs — add _schema_version to getDefaultPlayerStats; add version check + safe fallback in loadStats",
+          "src/lib/stats-engine.ts — mirror the same changes for TypeScript consumers",
+          "src/types/card.ts — extend PlayerStats type with optional _schema_version: string field",
+          "tests/stats-engine.test.mjs (or equivalent) — add 3-5 tests covering version presence, legacy-blob safety, unknown-version safety, matching-version preservation"
+        ],
+        "out_of_scope": [
+          "streak tracking logic (recordGameResult) — unchanged",
+          "score distribution logic — unchanged",
+          "stats UI components (StatsPanel, ScoreDistributionChart) — unchanged; they read PlayerStats as before",
+          "PostSolve.tsx and other consumers — no signature changes",
+          "Migration logic for future version bumps — this change introduces version 1.0 only; future migrations are out of scope and will be added when a 2.0 shape actually arrives",
+          "localStorage key rename (STATS_STORAGE_KEY stays 'mtgordle-stats')"
+        ],
+        "regression_risk": [
+          "loadStats behavior change: legacy blobs without _schema_version now reset to defaults. Acceptable for LOW-severity fix on pre-launch product but must be explicitly verified in tests.",
+          "Existing 441/441 tests must continue to pass; any test that manually constructs a PlayerStats blob without _schema_version may need updating to include the field or rely on getDefaultPlayerStats().",
+          "TypeScript consumers of PlayerStats (PostSolve, StatsPanel, ScoreDistributionChart) must continue to compile — _schema_version is optional so no breaking change expected."
+        ]
+      },
+      "root_cause_context": {
+        "classification": "implementation_bug",
+        "what_went_wrong": "The stats-streaks-persistence milestone spec (milestones.json) included a note on the localstorage-stats-engine story: 'Include a schema version field for future migrations.' During implementation, the builder did not carry this spec note through to code. No factory_question was logged to flag uncertainty about it, and no factory_decision explains its omission — so this is a straightforward implementation oversight. The QA test generation stage did not produce an AC from the spec note (spec notes are not ACs), so tests could not detect the missing field. PO Review caught it as an improvement item.",
+        "why_previous_approach_failed": "N/A — first attempt for this gap.",
+        "whats_different_this_time": "Mechanical single-file-plus-mirror fix with a well-known pattern (schema versioning on persisted JSON). Precedent exists in The Rouge's own cycle_context.json (_schema_version: '1.0'). Tests explicitly cover the three safety cases (missing version, unknown version, matching version) that the PO Review flagged as the risk. Expected to converge in one iteration following the established pattern of prior mechanical deepen:improvements cycles."
+      }
+    },
+    {
+      "_archived_from_cycle_7": true,
       "spec_id": "fix-postsovle-settimeout-cleanup",
       "gap_ids": [
         "imp-settimeout-copied-leak"
@@ -2949,10 +3253,10 @@
   ],
   "change_spec_generation_summary": {
     "phase": "change-spec-generation",
-    "cycle": 7,
-    "timestamp": "2026-04-05T12:30:00.000Z",
+    "cycle": 9,
+    "timestamp": "2026-04-05T15:30:00.000Z",
     "total_specs_generated": 1,
-    "total_criteria_across_specs": 5,
+    "total_criteria_across_specs": 6,
     "gaps_addressed": 1,
     "gaps_deferred": [],
     "gaps_escalated": []
